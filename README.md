@@ -44,7 +44,7 @@ githubUsername: your-name
 
 `npm run fetch:github` fetches the public contribution calendar at build time. It requires `GITHUB_USERNAME` and `GITHUB_TOKEN`; neither token nor API data is requested by the visitor's browser.
 
-For GitHub Actions, create these repository variables under **Settings → Secrets and variables → Actions → Variables**:
+GitHub Actions defaults to the repository owner for activity and to `https://rushibalapure.site` for production URLs. These optional repository variables under **Settings → Secrets and variables → Actions → Variables** can override those defaults:
 
 - `GITHUB_USERNAME`: GitHub account shown in the activity bar.
 - `SITE_URL`: Complete production origin, such as `https://portfolio.example.com`.

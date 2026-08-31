@@ -37,12 +37,12 @@ jobs:
         run: npm run fetch:github
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_USERNAME: ${{ vars.GITHUB_USERNAME }}
+          GITHUB_USERNAME: ${{ vars.GITHUB_USERNAME || github.repository_owner }}
 
       - name: Build static site
         run: npm run build
         env:
-          SITE_URL: ${{ vars.SITE_URL }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://rushibalapure.site' }}
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

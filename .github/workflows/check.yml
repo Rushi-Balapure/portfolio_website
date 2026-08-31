@@ -26,4 +26,4 @@ jobs:
       - name: Check and build
         run: npm run build
         env:
-          SITE_URL: ${{ vars.SITE_URL }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://rushibalapure.site' }}
