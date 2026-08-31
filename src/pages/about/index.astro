@@ -1,0 +1,20 @@
+---
+import { getEntry, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const about = await getEntry("pages", "about");
+const publishedAbout = about && !about.data.draft ? about : undefined;
+const rendered = publishedAbout ? await render(publishedAbout) : undefined;
+const Content = rendered?.Content;
+---
+
+<BaseLayout title={publishedAbout?.data.title ?? "About"} description={publishedAbout?.data.summary ?? "About Rushi and the principles behind the work."}>
+  <article class="shell about" data-reveal>
+    {Content ? <div class="prose"><Content /></div> : <p class="empty-state">The about page is not published yet.</p>}
+  </article>
+</BaseLayout>
+
+<style>
+  .about { padding-block: clamp(5rem, 11vw, 10rem); }
+  .about :global(.prose > h1:first-child) { margin-top: 0; }
+</style>

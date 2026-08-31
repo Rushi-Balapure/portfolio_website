@@ -1,0 +1,36 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import DetailLayout from "../../layouts/DetailLayout.astro";
+
+export async function getStaticPaths() {
+  const publications = await getCollection("publications");
+
+  return publications
+    .filter(({ data }) => !data.draft)
+    .map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<"publications">;
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { data } = entry;
+const doiUrl = data.doi
+  ? `https://doi.org/${data.doi.replace(/^https?:\/\/(?:dx\.)?doi\.org\//, "")}`
+  : undefined;
+---
+
+<DetailLayout title={data.title} summary={data.summary} eyebrow={data.venue ?? "Publication"} date={data.date} tags={data.tags}>
+  {data.paperUrl && <a slot="links" class="button" href={data.paperUrl} target="_blank" rel="noreferrer">Read paper <span aria-hidden="true">↗</span></a>}
+  {doiUrl && <a slot="links" class="button button--quiet" href={doiUrl} target="_blank" rel="noreferrer">View DOI <span aria-hidden="true">↗</span></a>}
+  {data.authors && data.authors.length > 0 && <p class="byline">By {data.authors.join(", ")}</p>}
+  {data.citation && <blockquote class="citation">{data.citation}</blockquote>}
+  <Content />
+</DetailLayout>
+
+<style>
+  .byline { margin-top: 0; color: var(--muted); }
+  .citation { padding: 1rem 1.25rem; background: var(--surface); border-radius: 0 1rem 1rem 0; }
+</style>

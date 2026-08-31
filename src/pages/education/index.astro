@@ -1,0 +1,47 @@
+---
+import { getCollection } from "astro:content";
+import EntryCard from "../../components/EntryCard.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const education = (await getCollection("education"))
+  .filter(({ data }) => !data.draft)
+  .sort((a, b) => b.data.startDate.getTime() - a.data.startDate.getTime());
+
+const year = (date: Date) => date.getFullYear();
+const dateRange = (startDate: Date, endDate?: Date) =>
+  `${year(startDate)}–${endDate ? year(endDate) : "Present"}`;
+---
+
+<BaseLayout title="Education" description="Academic background and areas of study.">
+  <header class="shell archive-hero" data-reveal>
+    <p class="eyebrow">Academic timeline</p>
+    <h1 class="page-title">Education</h1>
+    <p class="lede">Formal study and the academic foundations behind the work.</p>
+  </header>
+  <section class="shell section" aria-labelledby="education-list">
+    <SectionHeading
+      eyebrow="Background"
+      title="What I’ve studied"
+      description={education.length ? `${education.length} published ${education.length === 1 ? "qualification" : "qualifications"}, newest first.` : "Academic history will appear here once verified entries are published."}
+    />
+    <h2 id="education-list" class="visually-hidden">Education timeline</h2>
+    <div class="grid">
+      {education.map(({ data }) => (
+        <EntryCard
+          eyebrow={`${data.institution} · ${dateRange(data.startDate, data.endDate)}`}
+          title={data.title}
+          summary={data.summary}
+          tags={[...(data.specialization ? [data.specialization] : []), ...(data.cgpa ? [`CGPA ${data.cgpa}`] : []), ...(data.university ? [data.university] : []), ...data.tags]}
+        />
+      ))}
+      {education.length === 0 && <p class="empty-state">No education entries are published yet. The current placeholder remains a draft and is not presented as real history.</p>}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .archive-hero { padding-block: clamp(5rem, 11vw, 10rem); }
+  .archive-hero .lede { max-width: 37rem; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+</style>

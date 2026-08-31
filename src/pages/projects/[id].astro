@@ -1,0 +1,28 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import DetailLayout from "../../layouts/DetailLayout.astro";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+
+  return projects
+    .filter(({ data }) => !data.draft)
+    .map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<"projects">;
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { data } = entry;
+const tags = [...new Set([...(data.stack ?? []), ...data.tags])];
+const eyebrow = [data.status?.replace("-", " "), data.role].filter(Boolean).join(" · ") || "Project";
+---
+
+<DetailLayout title={data.title} summary={data.summary} eyebrow={eyebrow} date={data.date} tags={tags}>
+  {data.repositoryUrl && <a slot="links" class="button" href={data.repositoryUrl} target="_blank" rel="noreferrer">View repository <span aria-hidden="true">↗</span></a>}
+  {data.demoUrl && <a slot="links" class="button button--quiet" href={data.demoUrl} target="_blank" rel="noreferrer">View live project <span aria-hidden="true">↗</span></a>}
+  <Content />
+</DetailLayout>

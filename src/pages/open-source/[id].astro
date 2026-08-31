@@ -1,0 +1,33 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import DetailLayout from "../../layouts/DetailLayout.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("openSource");
+
+  return entries
+    .filter(({ data }) => !data.draft)
+    .map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<"openSource">;
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { data } = entry;
+---
+
+<DetailLayout title={data.title} summary={data.summary} eyebrow={data.organization ?? "Open source"} date={data.date} tags={data.tags}>
+  {data.repositoryUrl && <a slot="links" class="button" href={data.repositoryUrl} target="_blank" rel="noreferrer">View repository <span aria-hidden="true">↗</span></a>}
+  {data.packageUrl && <a slot="links" class="button button--quiet" href={data.packageUrl} target="_blank" rel="noreferrer">View on PyPI <span aria-hidden="true">↗</span></a>}
+  {data.contributionUrl && <a slot="links" class="button button--quiet" href={data.contributionUrl} target="_blank" rel="noreferrer">View contribution <span aria-hidden="true">↗</span></a>}
+  {data.contributionSummary && <p class="context"><strong>Contribution:</strong> {data.contributionSummary}</p>}
+  {data.impact && <p class="context"><strong>Impact:</strong> {data.impact}</p>}
+  <Content />
+</DetailLayout>
+
+<style>
+  .context { padding: 1rem 1.25rem; margin: 0 0 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 1rem; }
+</style>

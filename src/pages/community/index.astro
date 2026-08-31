@@ -1,0 +1,47 @@
+---
+import { getCollection } from "astro:content";
+import EntryCard from "../../components/EntryCard.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const entries = (await getCollection("community"))
+  .filter(({ data }) => !data.draft)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString("en", { month: "short", year: "numeric" });
+---
+
+<BaseLayout title="Community" description="Speaking, organizing, workshops, and community participation.">
+  <header class="shell archive-hero" data-reveal>
+    <p class="eyebrow">Knowledge shared</p>
+    <h1 class="page-title">Community</h1>
+    <p class="lede">Talks, workshops, organizing, and the work of learning alongside others.</p>
+  </header>
+  <section class="shell section" aria-labelledby="community-list">
+    <SectionHeading
+      eyebrow="Participation"
+      title="In the community"
+      description={entries.length ? `${entries.length} published ${entries.length === 1 ? "activity" : "activities"}, newest first.` : "Community activities will appear here after they are documented."}
+    />
+    <h2 id="community-list" class="visually-hidden">Community activity list</h2>
+    <div class="grid">
+      {entries.map(({ id, data }) => (
+        <EntryCard
+          href={`/community/${id}/`}
+          eyebrow={`${data.eventOrOrganization ? `${data.eventOrOrganization} · ` : ""}${formatDate(data.date)}`}
+          title={data.title}
+          summary={data.summary}
+          tags={data.tags}
+        />
+      ))}
+      {entries.length === 0 && <p class="empty-state">No community activities are published yet. Draft placeholders are intentionally excluded.</p>}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .archive-hero { padding-block: clamp(5rem, 11vw, 10rem); }
+  .archive-hero .lede { max-width: 38rem; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+</style>

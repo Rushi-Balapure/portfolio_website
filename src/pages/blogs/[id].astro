@@ -1,0 +1,25 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import DetailLayout from "../../layouts/DetailLayout.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blogs");
+
+  return posts
+    .filter(({ data }) => !data.draft)
+    .map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<"blogs">;
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { data } = entry;
+---
+
+<DetailLayout title={data.title} summary={data.description ?? data.summary} eyebrow="Article" date={data.date} tags={data.tags}>
+  {data.canonicalUrl && <a slot="links" class="button button--quiet" href={data.canonicalUrl} target="_blank" rel="noreferrer">Read original <span aria-hidden="true">↗</span></a>}
+  <Content />
+</DetailLayout>

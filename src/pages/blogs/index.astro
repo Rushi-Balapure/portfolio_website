@@ -1,0 +1,44 @@
+---
+import { getCollection } from "astro:content";
+import EntryCard from "../../components/EntryCard.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const posts = (await getCollection("blogs"))
+  .filter(({ data }) => !data.draft)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<BaseLayout title="Blogs" description="Technical articles, notes, and lessons from the work.">
+  <header class="shell archive-hero" data-reveal>
+    <p class="eyebrow">Writing archive</p>
+    <h1 class="page-title">Blogs</h1>
+    <p class="lede">Technical articles, practical notes, and ideas refined through writing.</p>
+  </header>
+  <section class="shell section" aria-labelledby="blog-list">
+    <SectionHeading
+      eyebrow="Latest notes"
+      title="Ideas in writing"
+      description={posts.length ? `${posts.length} published ${posts.length === 1 ? "article" : "articles"}, newest first.` : "Long-form writing will appear here when it is ready."}
+    />
+    <h2 id="blog-list" class="visually-hidden">Blog post list</h2>
+    <div class="grid">
+      {posts.map(({ id, data }) => (
+        <EntryCard
+          href={`/blogs/${id}/`}
+          title={data.title}
+          summary={data.description ?? data.summary}
+          date={data.date}
+          tags={data.tags}
+        />
+      ))}
+      {posts.length === 0 && <p class="empty-state">The ideas are currently arguing over which one gets published first. Check back soon.</p>}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .archive-hero { padding-block: clamp(5rem, 11vw, 10rem); }
+  .archive-hero .lede { max-width: 37rem; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+</style>

@@ -1,0 +1,28 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import DetailLayout from "../../layouts/DetailLayout.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("community");
+
+  return entries
+    .filter(({ data }) => !data.draft)
+    .map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<"community">;
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { data } = entry;
+const eyebrow = [data.eventOrOrganization, data.location].filter(Boolean).join(" · ") || "Community";
+---
+
+<DetailLayout title={data.title} summary={data.summary} eyebrow={eyebrow} date={data.date} tags={data.tags}>
+  {data.slidesUrl && <a slot="links" class="button" href={data.slidesUrl} target="_blank" rel="noreferrer">View slides <span aria-hidden="true">↗</span></a>}
+  {data.recordingUrl && <a slot="links" class="button button--quiet" href={data.recordingUrl} target="_blank" rel="noreferrer">Watch recording <span aria-hidden="true">↗</span></a>}
+  {data.relatedLinks?.map((link) => <a slot="links" class="button button--quiet" href={link.url} target="_blank" rel="noreferrer">{link.label} <span aria-hidden="true">↗</span></a>)}
+  <Content />
+</DetailLayout>

@@ -1,0 +1,47 @@
+---
+import { getCollection } from "astro:content";
+import EntryCard from "../../components/EntryCard.astro";
+import SectionHeading from "../../components/SectionHeading.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const publications = (await getCollection("publications"))
+  .filter(({ data }) => !data.draft)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString("en", { month: "short", year: "numeric" });
+---
+
+<BaseLayout title="Publications" description="Research, papers, and published technical writing.">
+  <header class="shell archive-hero" data-reveal>
+    <p class="eyebrow">Research archive</p>
+    <h1 class="page-title">Publications</h1>
+    <p class="lede">Research and formal writing, with links to the record wherever available.</p>
+  </header>
+  <section class="shell section" aria-labelledby="publication-list">
+    <SectionHeading
+      eyebrow="Published work"
+      title="Research record"
+      description={publications.length ? `${publications.length} published ${publications.length === 1 ? "work" : "works"}, newest first.` : "Confirmed publications will be listed here."}
+    />
+    <h2 id="publication-list" class="visually-hidden">Publication list</h2>
+    <div class="grid">
+      {publications.map(({ id, data }) => (
+        <EntryCard
+          href={`/publications/${id}/`}
+          eyebrow={`${data.venue ? `${data.venue} · ` : ""}${formatDate(data.date)}`}
+          title={data.title}
+          summary={data.summary}
+          tags={data.tags}
+        />
+      ))}
+      {publications.length === 0 && <p class="empty-state">No publications are published yet. Unverified draft placeholders are not displayed.</p>}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .archive-hero { padding-block: clamp(5rem, 11vw, 10rem); }
+  .archive-hero .lede { max-width: 38rem; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+</style>

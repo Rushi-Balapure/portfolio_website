@@ -1,0 +1,34 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  summary: string;
+  eyebrow: string;
+  date?: Date;
+  tags?: string[];
+}
+
+const { title, summary, eyebrow, date, tags = [] } = Astro.props;
+---
+
+<BaseLayout title={title} description={summary}>
+  <article class="shell detail">
+    <header data-reveal>
+      <p class="eyebrow">{eyebrow}{date && ` · ${date.toLocaleDateString('en', { month: 'long', year: 'numeric' })}`}</p>
+      <h1 class="page-title">{title}</h1>
+      <p class="lede">{summary}</p>
+      {tags.length > 0 && <ul class="pill-list">{tags.map((tag) => <li class="pill">{tag}</li>)}</ul>}
+      <div class="links"><slot name="links" /></div>
+    </header>
+    <div class="prose content" data-reveal><slot /></div>
+  </article>
+</BaseLayout>
+
+<style>
+  .detail { padding-block: clamp(5rem, 10vw, 10rem); }
+  header { padding-bottom: clamp(4rem, 8vw, 8rem); border-bottom: 1px solid var(--line); }
+  .links { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
+  .links:empty { display: none; }
+  .content { padding-top: clamp(3rem, 7vw, 6rem); }
+</style>

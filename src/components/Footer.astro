@@ -1,0 +1,53 @@
+---
+interface Props {
+  name: string;
+  email?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  xUrl?: string;
+}
+
+const { name, email, githubUrl, linkedinUrl, xUrl } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<footer id="contact" class="footer">
+  <div class="shell footer-grid">
+    <div>
+      <p class="eyebrow">Start a conversation</p>
+      <h2>Have an idea worth exploring?</h2>
+    </div>
+    <div class="footer-actions">
+      {email ? <a class="button" href={`mailto:${email}`}>Send an email ↗</a> : <p>Add an email to <code>home.md</code> to enable direct contact.</p>}
+      <div class="socials">
+        {githubUrl && <a href={githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a>}
+        {linkedinUrl && <a href={linkedinUrl} target="_blank" rel="noreferrer">LinkedIn ↗</a>}
+        {xUrl && <a href={xUrl} target="_blank" rel="noreferrer">X ↗</a>}
+        <a href="/blogs/">Blogs</a>
+      </div>
+    </div>
+  </div>
+  <div class="shell legal">
+    <span>© {year} {name}</span>
+    <span>Built with Astro and Markdown.</span>
+  </div>
+</footer>
+
+<style>
+  .footer { padding: clamp(5rem, 10vw, 9rem) 0 2rem; color: #f7f5ee; background: var(--ink); }
+  .footer .eyebrow { color: #99adff; }
+  .footer-grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 2rem; align-items: end; }
+  h2 { max-width: 10ch; margin: 0; font-size: clamp(3rem, 7vw, 7rem); letter-spacing: -0.07em; line-height: 0.95; }
+  .footer-actions { display: grid; justify-items: start; gap: 1.5rem; }
+  .footer-actions .button { color: var(--ink); background: #f7f5ee; border-color: #f7f5ee; }
+  .footer-actions .button:hover { color: white; background: var(--accent); border-color: var(--accent); }
+  .footer-actions p { max-width: 25rem; color: #aaa9a3; }
+  .socials { display: flex; flex-wrap: wrap; gap: 1.2rem; }
+  .socials a { color: #c9c8c2; font-size: 0.9rem; }
+  .legal { display: flex; justify-content: space-between; gap: 1rem; padding-top: 5rem; margin-top: 5rem; color: #8d8c87; border-top: 1px solid #383834; font-size: 0.78rem; }
+  @media (max-width: 760px) {
+    .footer-grid { grid-template-columns: 1fr; }
+    .footer-actions { margin-top: 2rem; }
+    .legal { align-items: flex-start; flex-direction: column; margin-top: 3rem; padding-top: 2rem; }
+  }
+</style>

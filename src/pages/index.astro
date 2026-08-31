@@ -1,0 +1,179 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import EntryCard from '../components/EntryCard.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import GitHubActivity from '../components/GitHubActivity.astro';
+
+const home = await getEntry('pages', 'home');
+if (!home) throw new Error('Missing src/content/pages/home.md');
+const { Content: HomeContent } = await render(home);
+const profile = home.data;
+
+const newest = <T extends { data: { date: Date; draft: boolean; featured: boolean } }>(entries: T[]) =>
+  entries
+    .filter(({ data }) => !data.draft)
+    .sort((a, b) => Number(b.data.featured) - Number(a.data.featured) || b.data.date.getTime() - a.data.date.getTime());
+
+const experience = (await getCollection('experience'))
+  .filter(({ data }) => !data.draft)
+  .sort((a, b) => b.data.startDate.getTime() - a.data.startDate.getTime())
+  .slice(0, 3);
+const projects = (await getCollection('projects'))
+  .filter(({ data }) => !data.draft)
+  .sort((a, b) => b.data.priority - a.data.priority || Number(b.data.featured) - Number(a.data.featured) || b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 3);
+const openSource = newest(await getCollection('openSource')).slice(0, 2);
+const publications = newest(await getCollection('publications')).slice(0, 2);
+const community = newest(await getCollection('community')).slice(0, 2);
+const blogs = newest(await getCollection('blogs')).slice(0, 2);
+const education = (await getCollection('education'))
+  .filter(({ data }) => !data.draft)
+  .sort((a, b) => b.data.startDate.getTime() - a.data.startDate.getTime())
+  .slice(0, 2);
+
+const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.getFullYear() ?? 'Now'}`;
+---
+
+<BaseLayout description={profile.summary}>
+  <section class="hero shell">
+    <div class="hero-copy" data-reveal>
+      <p class="eyebrow">{profile.eyebrow ?? 'Portfolio'}</p>
+      <h1 class="display">Ideas into impact.</h1>
+      <p class="role">{profile.role}</p>
+      <div class="hero-prose"><HomeContent /></div>
+      <div class="hero-actions">
+        <a class="button" href="/projects/">Explore the work <span aria-hidden="true">↗</span></a>
+        <a class="button button--quiet" href="/about/">More about me</a>
+      </div>
+      {profile.availability && <p class="availability"><span aria-hidden="true"></span>{profile.availability}</p>}
+    </div>
+    <div class="hero-object" aria-hidden="true" data-reveal>
+      <div class="orbit orbit-one"></div>
+      <div class="orbit orbit-two"></div>
+      <div class="core">
+        {profile.cover ? <Image src={profile.cover} alt="" widths={[480, 720]} sizes="(max-width: 900px) 70vw, 34vw" /> : <span>{profile.name?.slice(0, 1) ?? 'R'}</span>}
+      </div>
+      <p>{profile.location ?? 'Code · Research · Community'}</p>
+    </div>
+    <div class="scroll-note" aria-hidden="true"><span></span> Scroll to explore</div>
+  </section>
+
+  <section class="section shell" id="experience">
+    <SectionHeading eyebrow="01 · Experience" title="Work with consequence." description="Roles, responsibilities, and outcomes, with the most recent work first." href="/experience/" linkLabel="Full experience" />
+    <div class="experience-list">
+      {experience.map(({ data }, index) => (
+        <article class="experience-row" data-reveal>
+          <span class="index">0{index + 1}</span>
+          <div><p>{data.organization}</p><h3>{data.role}</h3></div>
+          <p>{data.summary}</p>
+          <span>{yearRange(data.startDate, data.endDate)}</span>
+        </article>
+      ))}
+      {experience.length === 0 && <p class="empty-state">Experience entries are ready for your Markdown content.</p>}
+    </div>
+  </section>
+
+  <section class="section shell">
+    <SectionHeading eyebrow="02 · Projects" title="Built to be used." description="One collection for every project, centered on the problem, the decisions, and the outcome." href="/projects/" />
+    <div class="grid">
+      {projects.map(({ id, data }, index) => <EntryCard href={`/projects/${id}/`} eyebrow={data.status?.replace('-', ' ') ?? 'Project'} title={data.title} summary={data.summary} tags={data.stack ?? data.tags} large={index === 0} />)}
+      {projects.length === 0 && <p class="empty-state">Projects will appear here as soon as their draft flag is removed.</p>}
+    </div>
+  </section>
+
+  <section class="section shell">
+    <SectionHeading eyebrow="03 · Open source" title="Progress is collaborative." description="Public contributions, maintained work, and the activity behind them." href="/open-source/" />
+    <GitHubActivity username={profile.githubUsername} profileUrl={profile.githubUrl} />
+    <div class="grid contribution-grid">
+      {openSource.map(({ id, data }) => <EntryCard href={`/open-source/${id}/`} eyebrow={data.organization ?? 'Open source'} title={data.title} summary={data.summary} tags={data.tags} />)}
+    </div>
+  </section>
+
+  <section class="section shell">
+    <SectionHeading eyebrow="04 · Research" title="Questions worth pursuing." description="Published research and the ideas that continue beyond the paper." href="/publications/" linkLabel="All publications" />
+    <div class="grid">
+      {publications.map(({ id, data }) => <EntryCard href={`/publications/${id}/`} eyebrow={data.venue ?? 'Publication'} title={data.title} summary={data.summary} tags={data.tags} />)}
+      {publications.length === 0 && <p class="empty-state">Published papers will appear here after their Markdown entries are completed.</p>}
+    </div>
+  </section>
+
+  <section class="section shell">
+    <SectionHeading eyebrow="05 · Community & speaking" title="Knowledge grows when shared." description="Sessions, workshops, mentoring, organizing, and community work in one place." href="/community/" />
+    <div class="grid">
+      {community.map(({ id, data }) => <EntryCard href={`/community/${id}/`} eyebrow={data.eventOrOrganization ?? 'Community'} title={data.title} summary={data.summary} tags={data.tags} />)}
+      {community.length === 0 && <p class="empty-state">Community work and speaking sessions are ready for your Markdown entries.</p>}
+    </div>
+  </section>
+
+  <section class="section shell twin-section">
+    <div>
+      <SectionHeading eyebrow="06 · Blogs" title="Notes from the process." href="/blogs/" linkLabel="Read all blogs" />
+      <div class="stack">
+        {blogs.map(({ id, data }) => <EntryCard href={`/blogs/${id}/`} eyebrow={data.date.toLocaleDateString('en', { month: 'short', year: 'numeric' })} title={data.title} summary={data.summary} tags={data.tags} />)}
+        {blogs.length === 0 && <p class="empty-state">The ideas are currently arguing over which one gets published first. Check back soon.</p>}
+      </div>
+    </div>
+    <div>
+      <SectionHeading eyebrow="07 · Education" title="A foundation for curiosity." href="/education/" linkLabel="Education details" />
+      <div class="education-list">
+        {education.map(({ data }) => (
+          <article data-reveal><p>{yearRange(data.startDate, data.endDate)}{data.cgpa && ` · CGPA ${data.cgpa}`}</p><h3>{data.title}</h3><span>{data.institution}</span></article>
+        ))}
+        {education.length === 0 && <p class="empty-state">Education details are ready for your Markdown content.</p>}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero { position: relative; display: grid; grid-template-columns: 1.15fr 0.85fr; min-height: calc(100svh - var(--header-height)); padding-block: clamp(4rem, 8vw, 8rem); align-items: center; gap: 2rem; }
+  .role { margin: 1.75rem 0 0; color: var(--accent); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.11em; text-transform: uppercase; }
+  .hero-prose { max-width: 40rem; margin-top: 1.25rem; color: var(--muted); font-size: clamp(1.1rem, 1.8vw, 1.35rem); }
+  .hero-prose :global(p) { margin: 0.55rem 0; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 2rem; }
+  .availability { display: flex; align-items: center; gap: 0.6rem; max-width: 34rem; margin: 1.5rem 0 0; color: var(--muted); font-size: 0.82rem; }
+  .availability span { width: 0.55rem; height: 0.55rem; flex: 0 0 auto; background: #2f9e63; border: 3px solid #cdebdc; border-radius: 50%; box-sizing: content-box; }
+  .hero-object { position: relative; display: grid; aspect-ratio: 1; max-width: 35rem; place-items: center; justify-self: end; }
+  .orbit { position: absolute; border: 1px solid var(--line); border-radius: 50%; }
+  .orbit-one { inset: 5%; animation: spin 24s linear infinite; }
+  .orbit-one::after { position: absolute; top: 12%; left: 12%; width: 1rem; height: 1rem; background: var(--accent); border-radius: 50%; content: ''; box-shadow: 0 0 2rem var(--accent); }
+  .orbit-two { inset: 20%; border-style: dashed; animation: spin 18s linear infinite reverse; }
+  .core { display: grid; width: 68%; aspect-ratio: 0.82; place-items: center; overflow: hidden; color: white; background: var(--ink); border: 0.5rem solid rgba(255, 255, 255, 0.65); border-radius: 43% 57% 62% 38% / 43% 38% 62% 57%; box-shadow: 0 2rem 6rem rgba(49, 87, 213, 0.2); animation: morph 8s var(--ease) infinite alternate; }
+  .core span { font-size: clamp(4rem, 10vw, 8rem); font-weight: 600; letter-spacing: -0.08em; }
+  .core :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: 50% 44%; }
+  .hero-object > p { position: absolute; bottom: 8%; margin: 0; color: var(--muted); font-size: 0.65rem; font-weight: 750; letter-spacing: 0.14em; text-transform: uppercase; }
+  .scroll-note { position: absolute; bottom: 1.5rem; left: 0; display: flex; align-items: center; gap: 0.7rem; color: var(--muted); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .scroll-note span { width: 2.5rem; height: 1px; background: var(--line); }
+  .experience-list { border-top: 1px solid var(--line); }
+  .experience-row { display: grid; grid-template-columns: 3rem 1fr 1.2fr auto; gap: 1.5rem; align-items: start; padding-block: 2rem; border-bottom: 1px solid var(--line); }
+  .experience-row .index, .experience-row > span:last-child, .experience-row div p { color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; }
+  .experience-row div p { margin: 0 0 0.3rem; color: var(--accent); }
+  .experience-row h3 { margin: 0; font-size: 1.5rem; letter-spacing: -0.035em; }
+  .experience-row > p { margin: 0; color: var(--muted); }
+  .contribution-grid { margin-top: 1rem; }
+  .twin-section { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 6rem); }
+  .twin-section :global(.section-heading) { grid-template-columns: 1fr; }
+  .twin-section :global(.section-heading .aside) { justify-self: start; }
+  .twin-section :global(.entry-card) { min-height: 21rem; }
+  .education-list { border-top: 1px solid var(--line); }
+  .education-list article { padding: 1.5rem 0; border-bottom: 1px solid var(--line); }
+  .education-list article p, .education-list article span { margin: 0; color: var(--muted); font-size: 0.8rem; }
+  .education-list article h3 { margin: 0.5rem 0; font-size: 1.5rem; letter-spacing: -0.035em; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes morph { to { border-radius: 58% 42% 37% 63% / 52% 61% 39% 48%; transform: rotate(7deg); } }
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; padding-bottom: 6rem; }
+    .hero-object { width: min(100%, 30rem); justify-self: center; }
+    .experience-row { grid-template-columns: 2rem 1fr auto; }
+    .experience-row > p { grid-column: 2 / -1; }
+    .twin-section { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .hero-object { width: 90%; }
+    .experience-row { grid-template-columns: 1fr auto; }
+    .experience-row .index { display: none; }
+    .experience-row > p { grid-column: 1 / -1; }
+  }
+</style>
