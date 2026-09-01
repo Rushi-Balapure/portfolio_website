@@ -84,6 +84,14 @@ textarea {
   border-top: 0;
 }
 
+.archive-hero {
+  padding-block: clamp(4rem, 8vw, 7rem) clamp(2.5rem, 5vw, 4rem);
+}
+
+.archive-hero + .section {
+  padding-top: clamp(2.5rem, 5vw, 4rem);
+}
+
 .eyebrow {
   margin: 0 0 1rem;
   color: var(--accent);

@@ -40,7 +40,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   <section class="hero shell">
     <div class="hero-copy" data-reveal>
       <p class="eyebrow">{profile.eyebrow ?? 'Portfolio'}</p>
-      <h1 class="display">Ideas into impact.</h1>
+      <h1 class="display">Rushi Balapure</h1>
       <p class="role">{profile.role}</p>
       <div class="hero-prose"><HomeContent /></div>
       <div class="hero-actions">
@@ -61,7 +61,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   </section>
 
   <section class="section shell" id="experience">
-    <SectionHeading eyebrow="01 · Experience" title="Work with consequence." description="Roles, responsibilities, and outcomes, with the most recent work first." href="/experience/" linkLabel="Full experience" />
+    <SectionHeading eyebrow="01 · Experience" title="Work with consequence." href="/experience/" linkLabel="Full experience" />
     <div class="experience-list">
       {experience.map(({ data }, index) => (
         <article class="experience-row" data-reveal>
@@ -76,7 +76,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   </section>
 
   <section class="section shell">
-    <SectionHeading eyebrow="02 · Projects" title="Built to be used." description="One collection for every project, centered on the problem, the decisions, and the outcome." href="/projects/" />
+    <SectionHeading eyebrow="02 · Projects" title="Built to be used." href="/projects/" />
     <div class="grid">
       {projects.map(({ id, data }, index) => <EntryCard href={`/projects/${id}/`} eyebrow={data.status?.replace('-', ' ') ?? 'Project'} title={data.title} summary={data.summary} tags={data.stack ?? data.tags} large={index === 0} />)}
       {projects.length === 0 && <p class="empty-state">Projects will appear here as soon as their draft flag is removed.</p>}
@@ -84,7 +84,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   </section>
 
   <section class="section shell">
-    <SectionHeading eyebrow="03 · Open source" title="Progress is collaborative." description="Public contributions, maintained work, and the activity behind them." href="/open-source/" />
+    <SectionHeading eyebrow="03 · Open source" title="Progress is collaborative." href="/open-source/" />
     <GitHubActivity username={profile.githubUsername} profileUrl={profile.githubUrl} />
     <div class="grid contribution-grid">
       {openSource.map(({ id, data }) => <EntryCard href={`/open-source/${id}/`} eyebrow={data.organization ?? 'Open source'} title={data.title} summary={data.summary} tags={data.tags} />)}
@@ -92,7 +92,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   </section>
 
   <section class="section shell">
-    <SectionHeading eyebrow="04 · Research" title="Questions worth pursuing." description="Published research and the ideas that continue beyond the paper." href="/publications/" linkLabel="All publications" />
+    <SectionHeading eyebrow="04 · Research" title="Questions worth pursuing." href="/publications/" linkLabel="All publications" />
     <div class="grid">
       {publications.map(({ id, data }) => <EntryCard href={`/publications/${id}/`} eyebrow={data.venue ?? 'Publication'} title={data.title} summary={data.summary} tags={data.tags} />)}
       {publications.length === 0 && <p class="empty-state">Published papers will appear here after their Markdown entries are completed.</p>}
@@ -100,7 +100,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   </section>
 
   <section class="section shell">
-    <SectionHeading eyebrow="05 · Community & speaking" title="Knowledge grows when shared." description="Sessions, workshops, mentoring, organizing, and community work in one place." href="/community/" />
+    <SectionHeading eyebrow="05 · Community & speaking" title="Knowledge grows when shared." href="/community/" />
     <div class="grid">
       {community.map(({ id, data }) => <EntryCard href={`/community/${id}/`} eyebrow={data.eventOrOrganization ?? 'Community'} title={data.title} summary={data.summary} tags={data.tags} />)}
       {community.length === 0 && <p class="empty-state">Community work and speaking sessions are ready for your Markdown entries.</p>}
