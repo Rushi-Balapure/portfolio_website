@@ -1,7 +1,6 @@
 ---
 import { getCollection } from "astro:content";
 import EntryCard from "../../components/EntryCard.astro";
-import SectionHeading from "../../components/SectionHeading.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 const entries = (await getCollection("openSource"))
@@ -18,10 +17,6 @@ const formatDate = (date: Date) =>
     <h1 class="page-title">Open source</h1>
   </header>
   <section class="shell section" aria-labelledby="open-source-list">
-    <SectionHeading
-      eyebrow="Contributions"
-      title="Public work"
-    />
     <h2 id="open-source-list" class="visually-hidden">Open-source contribution list</h2>
     <div class="grid">
       {entries.map(({ id, data }) => (

@@ -1,7 +1,6 @@
 ---
 import { getCollection } from "astro:content";
 import EntryCard from "../../components/EntryCard.astro";
-import SectionHeading from "../../components/SectionHeading.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 const publications = (await getCollection("publications"))
@@ -18,10 +17,6 @@ const formatDate = (date: Date) =>
     <h1 class="page-title">Publications</h1>
   </header>
   <section class="shell section" aria-labelledby="publication-list">
-    <SectionHeading
-      eyebrow="Published work"
-      title="Research record"
-    />
     <h2 id="publication-list" class="visually-hidden">Publication list</h2>
     <div class="grid">
       {publications.map(({ id, data }) => (

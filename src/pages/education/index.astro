@@ -1,7 +1,6 @@
 ---
 import { getCollection } from "astro:content";
 import EntryCard from "../../components/EntryCard.astro";
-import SectionHeading from "../../components/SectionHeading.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 const education = (await getCollection("education"))
@@ -20,10 +19,6 @@ const dateRange = (startDate: Date, endDate?: Date) =>
     <p class="lede">Formal study and the academic foundations behind the work.</p>
   </header>
   <section class="shell section" aria-labelledby="education-list">
-    <SectionHeading
-      eyebrow="Background"
-      title="What I’ve studied"
-    />
     <h2 id="education-list" class="visually-hidden">Education timeline</h2>
     <div class="grid">
       {education.map(({ data }) => (

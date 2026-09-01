@@ -1,7 +1,6 @@
 ---
 import { getCollection } from "astro:content";
 import EntryCard from "../../components/EntryCard.astro";
-import SectionHeading from "../../components/SectionHeading.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 const posts = (await getCollection("blogs"))
@@ -15,10 +14,6 @@ const posts = (await getCollection("blogs"))
     <h1 class="page-title">Blogs</h1>
   </header>
   <section class="shell section" aria-labelledby="blog-list">
-    <SectionHeading
-      eyebrow="Latest notes"
-      title="Ideas in writing"
-    />
     <h2 id="blog-list" class="visually-hidden">Blog post list</h2>
     <div class="grid">
       {posts.map(({ id, data }) => (
