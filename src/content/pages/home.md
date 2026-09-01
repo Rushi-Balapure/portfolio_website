@@ -19,6 +19,4 @@ githubUsername: Rushi-Balapure
 cover: ../../../assests/profile_pic.webp
 ---
 
-I am a curious product engineer who loves learning how things work, building useful ideas, and connecting with people along the way.
-
-Based in Pune, I enjoy exchanging ideas, learning from others, and turning curiosity into practical work.
+My brain has three default modes: learning how things work, building useful ideas, and swapping stories with people who do the same. Proudly brainstorming and building out of Pune.

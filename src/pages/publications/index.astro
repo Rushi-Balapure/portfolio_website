@@ -16,13 +16,11 @@ const formatDate = (date: Date) =>
   <header class="shell archive-hero" data-reveal>
     <p class="eyebrow">Research archive</p>
     <h1 class="page-title">Publications</h1>
-    <p class="lede">Research and formal writing, with links to the record wherever available.</p>
   </header>
   <section class="shell section" aria-labelledby="publication-list">
     <SectionHeading
       eyebrow="Published work"
       title="Research record"
-      description={publications.length ? `${publications.length} published ${publications.length === 1 ? "work" : "works"}, newest first.` : "Confirmed publications will be listed here."}
     />
     <h2 id="publication-list" class="visually-hidden">Publication list</h2>
     <div class="grid">
@@ -41,7 +39,5 @@ const formatDate = (date: Date) =>
 </BaseLayout>
 
 <style>
-  .archive-hero { padding-block: clamp(5rem, 11vw, 10rem); }
-  .archive-hero .lede { max-width: 38rem; }
   .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 </style>
