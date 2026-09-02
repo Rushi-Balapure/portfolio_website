@@ -1,10 +1,9 @@
 ---
 interface Props {
   name: string;
-  email?: string;
 }
 
-const { name, email } = Astro.props;
+const { name } = Astro.props;
 const path = Astro.url.pathname;
 const links = [
   { href: '/experience/', label: 'Experience' },
@@ -12,8 +11,7 @@ const links = [
   { href: '/open-source/', label: 'Open Source' },
   { href: '/community/', label: 'Community' },
   { href: '/publications/', label: 'Publications' },
-  { href: '/blogs/', label: 'Blogs' },
-  { href: '/about/', label: 'About' },
+  { href: '/resume.pdf', label: 'Resume', external: true },
 ];
 ---
 
@@ -25,19 +23,16 @@ const links = [
 
     <nav class="desktop-nav" aria-label="Primary navigation">
       {links.map((link) => (
-        <a href={link.href} aria-current={path.startsWith(link.href) ? 'page' : undefined}>
+        <a href={link.href} target={link.external ? '_blank' : undefined} rel={link.external ? 'noreferrer' : undefined} aria-current={!link.external && path.startsWith(link.href) ? 'page' : undefined}>
           {link.label}
         </a>
       ))}
     </nav>
 
-    <a class="contact-link" href={email ? `mailto:${email}` : '/#contact'}>Let's talk</a>
-
     <details class="mobile-nav">
       <summary aria-label="Open navigation"><span></span><span></span></summary>
       <nav aria-label="Mobile navigation">
-        {links.map((link) => <a href={link.href}>{link.label}</a>)}
-        <a href={email ? `mailto:${email}` : '/#contact'}>Contact</a>
+        {links.map((link) => <a href={link.href} target={link.external ? '_blank' : undefined} rel={link.external ? 'noreferrer' : undefined}>{link.label}</a>)}
       </nav>
     </details>
   </div>
@@ -107,20 +102,10 @@ const links = [
     content: '';
   }
 
-  .contact-link {
-    padding: 0.48rem 0.8rem;
-    color: white;
-    background: var(--ink);
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 750;
-    text-decoration: none;
-  }
-
   .mobile-nav { display: none; }
 
   @media (max-width: 980px) {
-    .desktop-nav, .contact-link { display: none; }
+    .desktop-nav { display: none; }
     .mobile-nav { display: block; }
     .mobile-nav summary {
       display: grid;

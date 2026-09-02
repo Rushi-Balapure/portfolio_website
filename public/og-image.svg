@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">Rushi Balapure, Associate Product Engineer</title>
+  <desc id="description">Social preview for Rushi Balapure's portfolio.</desc>
+  <defs>
+    <radialGradient id="glow" cx="20%" cy="10%" r="85%">
+      <stop offset="0" stop-color="#dce4ff"/>
+      <stop offset="1" stop-color="#f4f2eb"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <circle cx="1030" cy="125" r="250" fill="none" stroke="#3157d5" stroke-opacity=".2" stroke-width="2"/>
+  <circle cx="1030" cy="125" r="155" fill="none" stroke="#151515" stroke-opacity=".12" stroke-dasharray="10 14" stroke-width="2"/>
+  <circle cx="870" cy="20" r="14" fill="#3157d5"/>
+  <text x="84" y="112" fill="#3157d5" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="4">ASSOCIATE PRODUCT ENGINEER</text>
+  <text x="78" y="280" fill="#151515" font-family="Inter, Arial, sans-serif" font-size="92" font-weight="700" letter-spacing="-5">Rushi Balapure</text>
+  <text x="84" y="365" fill="#494945" font-family="Inter, Arial, sans-serif" font-size="32">Enterprise security products · Applied ML · Open source</text>
+  <line x1="84" y1="480" x2="1116" y2="480" stroke="#151515" stroke-opacity=".14"/>
+  <text x="84" y="545" fill="#151515" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="600">rushibalapure.site</text>
+  <text x="1116" y="545" fill="#686863" font-family="Inter, Arial, sans-serif" font-size="24" text-anchor="end">Pune, India</text>
+</svg>

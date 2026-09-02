@@ -1,17 +1,23 @@
 ---
 title: Associate Product Engineer
-summary: Building enterprise security products across Cloud DSPM, Secure Web Gateway, and Data Loss Prevention at ProMobi Technologies.
+summary: Building Cloud DSPM, Secure Web Gateway, and Data Loss Prevention systems for enterprise customers at ProMobi Technologies.
 date: 2025-07-01
 featured: true
 draft: false
 tags:
   - Python
-  - Machine Learning
-  - LLMs
-  - Cloud Security
+  - Ruby
+  - Ruby on Rails
+  - Named Entity Recognition
+  - vLLM
+  - Google Drive and Onedrive
   - Data Loss Prevention
 organization: ProMobi Technologies
 role: Associate Product Engineer
+highlights:
+  - Built a three-layer sensitive-data detection architecture combining rules, NER, and a self-hosted LLM, reaching approximately 90% detection accuracy.
+  - Developed Google Drive, OneDrive, and S3 processing pipelines designed for at least 5 TB per customer, with current throughput of approximately 5 GB per hour.
+  - Co-developed a Secure Web Gateway serving approximately 100 customers and 6,000 devices, contributing to a 75% reduction in reported website misclassifications.
 startDate: 2025-07-01
 location: Pune, India
 organizationUrl: https://promobitech.com/

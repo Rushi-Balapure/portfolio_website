@@ -8,7 +8,6 @@ tags:
   - Multi-Party Computation
   - Cryptography
   - Blockchain
-  - Digital Assets
 authors:
   - Shital Girme
   - Rushi Balapure

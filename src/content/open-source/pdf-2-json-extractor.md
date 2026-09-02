@@ -1,15 +1,13 @@
 ---
 title: pdf-2-json-extractor
-summary: A maintained Python package that converts PDFs into structured, layout-aware JSON for document analysis and downstream LLM workflows.
+summary: Converts PDFs into layout-aware JSON while preserving heading hierarchy, multi-column reading order, Unicode, and optional OCR. Its documented 50-page benchmark runs in approximately 5–10 seconds on a modern CPU.
 date: 2026-08-24
 featured: true
 draft: false
 tags:
   - Python
-  - PDF Processing
-  - Document Intelligence
-  - CLI
-  - OCR
+  - PyMuPDF
+  - Layout Aware
 organization: PyPI
 repositoryUrl: https://github.com/Rushi-Balapure/pdf_2_json_extractor
 packageUrl: https://pypi.org/project/pdf-2-json-extractor/

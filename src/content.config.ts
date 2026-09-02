@@ -23,6 +23,7 @@ const experience = defineCollection({
         cover: image().optional(),
         organization: z.string().min(1),
         role: z.string().min(1),
+        highlights: z.array(z.string().min(1)).default([]),
         startDate: z.coerce.date(),
         endDate: z.coerce.date().optional(),
         location: z.string().min(1).optional(),

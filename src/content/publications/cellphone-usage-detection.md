@@ -8,7 +8,6 @@ tags:
   - Computer Vision
   - YOLOv8
   - Behavioral Analysis
-  - Education Technology
 authors:
   - Geetanjali V. Kale
   - Athrava Choudhari
