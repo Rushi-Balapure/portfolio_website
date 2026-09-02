@@ -140,7 +140,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   .orbit-one { inset: 5%; animation: spin 24s linear infinite; }
   .orbit-one::after { position: absolute; top: 12%; left: 12%; width: 1rem; height: 1rem; background: var(--accent); border-radius: 50%; content: ''; box-shadow: 0 0 2rem var(--accent); }
   .orbit-two { inset: 20%; border-style: dashed; animation: spin 18s linear infinite reverse; }
-  .core { display: grid; width: 68%; aspect-ratio: 0.82; place-items: center; overflow: hidden; color: white; background: var(--ink); border: 0.5rem solid rgba(255, 255, 255, 0.65); border-radius: 43% 57% 62% 38% / 43% 38% 62% 57%; box-shadow: 0 2rem 6rem rgba(49, 87, 213, 0.2); animation: morph 8s var(--ease) infinite alternate; }
+  .core { display: grid; width: 68%; aspect-ratio: 0.82; place-items: center; overflow: hidden; color: var(--button-text); background: var(--ink); border: 0.5rem solid var(--profile-border); border-radius: 43% 57% 62% 38% / 43% 38% 62% 57%; box-shadow: 0 2rem 6rem var(--accent-glow); animation: morph 8s var(--ease) infinite alternate; }
   .core span { font-size: clamp(4rem, 10vw, 8rem); font-weight: 600; letter-spacing: -0.08em; }
   .core :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: 50% 44%; }
   .scroll-note { position: absolute; bottom: 1.5rem; left: 0; display: flex; align-items: center; gap: 0.7rem; color: var(--muted); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -152,6 +152,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   .skills-strip dd { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
   .experience-list { border-top: 1px solid var(--line); }
   .experience-card { padding-block: clamp(2.5rem, 5vw, 4.5rem); border-bottom: 1px solid var(--line); }
+  .experience-card:last-child { border-bottom: 0; }
   .experience-card header { display: grid; grid-template-columns: 3rem 1fr auto; gap: 1.5rem; align-items: start; }
   .experience-card .index, .experience-card header div p, .experience-meta { color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; }
   .experience-card header div p { margin: 0 0 0.3rem; color: var(--accent); }

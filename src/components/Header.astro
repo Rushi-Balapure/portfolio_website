@@ -1,4 +1,6 @@
 ---
+import ThemeToggle from './ThemeToggle.astro';
+
 interface Props {
   name: string;
 }
@@ -28,6 +30,8 @@ const links = [
         </a>
       ))}
     </nav>
+
+    <ThemeToggle />
 
     <details class="mobile-nav">
       <summary aria-label="Open navigation"><span></span><span></span></summary>
@@ -127,10 +131,10 @@ const links = [
       left: 0.75rem;
       display: grid;
       padding: 1rem;
-      background: #faf9f5;
+      background: var(--menu-bg);
       border: 1px solid var(--line);
       border-radius: 1.25rem;
-      box-shadow: 0 1.5rem 5rem rgba(21, 21, 21, 0.12);
+      box-shadow: 0 1.5rem 5rem var(--shadow);
     }
     .mobile-nav nav a { padding: 0.7rem; font-weight: 700; text-decoration: none; }
   }

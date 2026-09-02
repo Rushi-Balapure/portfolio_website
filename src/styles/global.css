@@ -1,4 +1,37 @@
 :root {
+  color-scheme: dark;
+  --ink: #f4f2eb;
+  --muted: #aaa9a3;
+  --paper: #11120f;
+  --surface: rgba(255, 255, 255, 0.065);
+  --line: rgba(255, 255, 255, 0.14);
+  --accent: #8da7ff;
+  --accent-soft: #253361;
+  --on-accent: #101936;
+  --prose: #d3d2cc;
+  --accent-glow: rgba(93, 126, 255, 0.16);
+  --link-decoration: rgba(255, 255, 255, 0.35);
+  --card-hover: rgba(255, 255, 255, 0.1);
+  --shadow: rgba(0, 0, 0, 0.32);
+  --button-text: #11120f;
+  --menu-bg: #1a1b18;
+  --profile-border: rgba(255, 255, 255, 0.28);
+  --selection-text: #11120f;
+  --footer-bg: #080907;
+  --footer-text: #f7f5ee;
+  --footer-accent: #99adff;
+  --footer-muted: #aaa9a3;
+  --footer-link: #c9c8c2;
+  --footer-line: #383834;
+  --footer-button-bg: #f7f5ee;
+  --footer-button-text: #151515;
+  --max-width: 1240px;
+  --header-height: 4.75rem;
+  --radius: 1.5rem;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root[data-theme='light'] {
   color-scheme: light;
   --ink: #151515;
   --muted: #686863;
@@ -7,10 +40,16 @@
   --line: rgba(21, 21, 21, 0.13);
   --accent: #3157d5;
   --accent-soft: #dce4ff;
-  --max-width: 1240px;
-  --header-height: 4.75rem;
-  --radius: 1.5rem;
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --on-accent: #fff;
+  --prose: #3f3f3b;
+  --accent-glow: rgba(49, 87, 213, 0.1);
+  --link-decoration: rgba(21, 21, 21, 0.35);
+  --card-hover: rgba(255, 255, 255, 0.9);
+  --shadow: rgba(21, 21, 21, 0.1);
+  --button-text: #fff;
+  --menu-bg: #faf9f5;
+  --profile-border: rgba(255, 255, 255, 0.65);
+  --selection-text: #fff;
 }
 
 * {
@@ -26,7 +65,7 @@ body {
   margin: 0;
   color: var(--ink);
   background:
-    radial-gradient(circle at 12% 8%, rgba(49, 87, 213, 0.1), transparent 26rem),
+    radial-gradient(circle at 12% 8%, var(--accent-glow), transparent 26rem),
     var(--paper);
   font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 1rem;
@@ -44,13 +83,13 @@ body::before {
 }
 
 ::selection {
-  color: white;
+  color: var(--selection-text);
   background: var(--accent);
 }
 
 a {
   color: inherit;
-  text-decoration-color: rgba(21, 21, 21, 0.35);
+  text-decoration-color: var(--link-decoration);
   text-underline-offset: 0.2em;
 }
 
@@ -162,7 +201,7 @@ textarea {
   gap: 0.55rem;
   min-height: 3rem;
   padding: 0.7rem 1rem;
-  color: white;
+  color: var(--button-text);
   background: var(--ink);
   border: 1px solid var(--ink);
   border-radius: 999px;
@@ -185,7 +224,7 @@ textarea {
 }
 
 .button--quiet:hover {
-  color: white;
+  color: var(--on-accent);
 }
 
 .empty-state {
@@ -213,7 +252,7 @@ textarea {
 .prose h1 { font-size: clamp(2.5rem, 6vw, 5rem); }
 .prose h2 { font-size: clamp(1.8rem, 4vw, 3rem); }
 .prose p,
-.prose li { color: #3f3f3b; }
+.prose li { color: var(--prose); }
 .prose a { color: var(--accent); }
 .prose pre { overflow-x: auto; padding: 1.25rem; border-radius: 1rem; }
 .prose blockquote { margin-inline: 0; padding-left: 1.25rem; border-left: 3px solid var(--accent); }

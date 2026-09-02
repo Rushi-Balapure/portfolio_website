@@ -44,7 +44,43 @@ const structuredData = {
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#f4f2eb" />
+    <meta id="theme-color" name="theme-color" content="#11120f" />
+    <script is:inline>
+      (() => {
+        const key = 'theme-preference';
+        const allowed = ['dark', 'light', 'system'];
+        const media = window.matchMedia('(prefers-color-scheme: dark)');
+        const root = document.documentElement;
+
+        const readPreference = () => {
+          try {
+            const saved = localStorage.getItem(key);
+            return allowed.includes(saved) ? saved : 'dark';
+          } catch {
+            return 'dark';
+          }
+        };
+
+        const applyTheme = (preference, persist = false) => {
+          const resolved = preference === 'system' ? (media.matches ? 'dark' : 'light') : preference;
+          root.dataset.themePreference = preference;
+          root.dataset.theme = resolved;
+          root.style.colorScheme = resolved;
+
+          const themeColor = document.querySelector('#theme-color');
+          if (themeColor) themeColor.setAttribute('content', resolved === 'dark' ? '#11120f' : '#f4f2eb');
+
+          if (persist) {
+            try { localStorage.setItem(key, preference); } catch {}
+          }
+
+          window.dispatchEvent(new CustomEvent('themechange', { detail: { preference, resolved } }));
+        };
+
+        window.__portfolioTheme = { apply: applyTheme, read: readPreference, media };
+        applyTheme(readPreference());
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonical} />
     <meta property="og:type" content="website" />
@@ -98,7 +134,7 @@ const structuredData = {
     left: 0.75rem;
     z-index: 100;
     padding: 0.65rem 0.9rem;
-    color: white;
+    color: var(--on-accent);
     background: var(--accent);
     border-radius: 0.5rem;
     transform: translateY(-150%);

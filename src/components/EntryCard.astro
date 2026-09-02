@@ -42,7 +42,7 @@ const dateLabel = date?.toLocaleDateString('en', { month: 'short', year: 'numeri
     transition: transform 450ms var(--ease), box-shadow 450ms var(--ease), background 450ms var(--ease);
   }
   .entry-card.large { grid-column: span 8; min-height: 30rem; }
-  a.entry-card:hover { background: rgba(255, 255, 255, 0.9); box-shadow: 0 1.5rem 4rem rgba(21, 21, 21, 0.08); transform: translateY(-0.4rem); }
+  a.entry-card:hover { background: var(--card-hover); box-shadow: 0 1.5rem 4rem var(--shadow); transform: translateY(-0.4rem); }
   .card-top { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.75rem; font-weight: 720; letter-spacing: 0.07em; text-transform: uppercase; }
   h3 { max-width: 16ch; margin: 0; font-size: clamp(1.7rem, 3.5vw, 3rem); letter-spacing: -0.045em; line-height: 1.02; }
   p { max-width: 37rem; margin: 1rem 0 0; color: var(--muted); }
