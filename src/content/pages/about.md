@@ -1,6 +1,6 @@
 ---
 title: About
-summary: A curious product engineer who enjoys understanding difficult problems, building practical systems, and learning with others.
+summary: Associate Product Engineer at ProMobi Technologies building enterprise security products, open-source Python tools, and applied security research.
 date: 2026-08-31
 featured: false
 draft: false
@@ -14,30 +14,23 @@ seoTitle: About | Rushi Balapure
 
 # About
 
-I am Rushi Balapure, an Associate Product Engineer based in Pune. Curiosity is the thread that connects most of what I do: I enjoy understanding how systems work, asking why they fail, and turning what I learn into something practical.
+I am Rushi Balapure, an Associate Product Engineer at ProMobi Technologies in Pune. I work on enterprise security products across Cloud Data Security Posture Management, Secure Web Gateway, and Data Loss Prevention.
 
-## How I work
+## What I actually do
 
-I am most engaged when a problem has more than one layer. That might mean designing a sensitive-data detection pipeline, studying how a security system behaves at scale, experimenting with machine learning, or turning a research idea into working software.
+Day to day, I build sensitive-data detection systems and cloud file-processing pipelines. My current work combines deterministic rules, named entity recognition, and self-hosted language models, and supports security workflows across Google Drive, Microsoft OneDrive, and Amazon S3.
 
-I like moving between research and implementation. Reading helps me understand the shape of a problem; building, testing, and talking to people reveal what the problem actually needs.
+I studied Computer Engineering at Pune Institute of Computer Technology, graduating with a CGPA of 9.37. My research has covered multi-party computation for digital-asset custody and YOLOv8-based classroom cellphone detection.
 
-## What keeps me curious
+## Where I spend my time
 
-- Building security products that solve concrete problems rather than only demonstrating ideas.
-- Applying machine learning and LLMs where they add real value, with equal attention to their limitations and risks.
-- Creating open-source tools that make another developer's work a little easier.
-- Exploring research in cryptography, computer vision, and secure collaborative systems.
-- Sharing ideas through talks and hands-on sessions, then learning from the questions people ask.
+- **Security products:** sensitive-data detection, website categorization, cloud scanning, and managed-device DLP.
+- **ML and LLM security:** named entity recognition, self-hosted models, red teaming, prompt injection, and defensive system design.
+- **Open source:** I maintain [`pdf-2-json-extractor`](https://pypi.org/project/pdf-2-json-extractor/), a layout-aware PDF extraction package on PyPI.
+- **Speaking:** I ran an [LLM security workshop](https://github.com/Rushi-Balapure/LLM_Security_Workshop) for PICT Cyber Cell and gave an AI security lightning talk at Build Club x HPE.
 
-## Learning in public
+## Outside the day job
 
-For me, learning is rarely a solitary activity. I enjoy interacting with people who bring different perspectives, explaining what I have understood, and being comfortable enough to change my mind when a better idea appears.
+I built [Arise](https://github.com/Rushi-Balapure/arise), a Bash and Zsh utility that adds configurable terminal animations to Python virtual-environment activation while staying out of the way in scripts and non-interactive shells.
 
-That is why my work spans products, open source, research, and community sessions. Each one is a different way to investigate an idea and make the result useful to someone else.
-
-## The kind of work I value
-
-I enjoy collaborating with people who are thoughtful, direct, and willing to experiment. The best projects usually begin with a useful question, grow through honest discussion, and end with something clearer than where they started.
-
-If a conversation starts with "what if?", I am probably interested.
+Reach me at [rushibalapure2003@gmail.com](mailto:rushibalapure2003@gmail.com), [LinkedIn](https://in.linkedin.com/in/rushi-balapure-75148022a), or [GitHub](https://github.com/Rushi-Balapure). You can also [view my resume](/resume.pdf).

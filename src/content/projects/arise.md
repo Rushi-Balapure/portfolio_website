@@ -1,6 +1,6 @@
 ---
 title: Arise
-summary: A playful Bash and Zsh utility that turns Python virtual-environment activation into a configurable terminal animation.
+summary: A Bash and Zsh utility that adds ten configurable animations to Python virtual-environment activation, with automatic environment detection and a non-interactive bypass.
 date: 2026-01-15
 featured: false
 draft: false

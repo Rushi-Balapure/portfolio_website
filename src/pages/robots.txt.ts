@@ -1,5 +1,5 @@
 export function GET({ site }: { site?: URL }) {
-  const origin = site ?? new URL('https://example.com');
+  const origin = site ?? new URL('https://rushibalapure.site');
   const body = `User-agent: *\nAllow: /\n\nSitemap: ${new URL('sitemap-index.xml', origin)}\n`;
 
   return new Response(body, {

@@ -27,7 +27,6 @@ const projects = (await getCollection('projects'))
 const openSource = newest(await getCollection('openSource')).slice(0, 2);
 const publications = newest(await getCollection('publications')).slice(0, 2);
 const community = newest(await getCollection('community')).slice(0, 2);
-const blogs = newest(await getCollection('blogs')).slice(0, 2);
 const education = (await getCollection('education'))
   .filter(({ data }) => !data.draft)
   .sort((a, b) => b.data.startDate.getTime() - a.data.startDate.getTime())
@@ -40,35 +39,49 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   <section class="hero shell">
     <div class="hero-copy" data-reveal>
       <p class="eyebrow">{profile.eyebrow ?? 'Portfolio'}</p>
-      <h1 class="display">Rushi Balapure</h1>
-      <p class="role">{profile.role}</p>
+      <h1 class="display">{profile.name}</h1>
       <div class="hero-prose"><HomeContent /></div>
       <div class="hero-actions">
         <a class="button" href="/projects/">Explore the work <span aria-hidden="true">↗</span></a>
+        <a class="button button--quiet" href="/resume.pdf" target="_blank" rel="noreferrer">Resume <span aria-hidden="true">↓</span></a>
         <a class="button button--quiet" href="/about/">More about me</a>
       </div>
       {profile.availability && <p class="availability"><span aria-hidden="true"></span>{profile.availability}</p>}
     </div>
-    <div class="hero-object" aria-hidden="true" data-reveal>
-      <div class="orbit orbit-one"></div>
-      <div class="orbit orbit-two"></div>
+    <div class="hero-object" data-reveal>
+      <div class="orbit orbit-one" aria-hidden="true"></div>
+      <div class="orbit orbit-two" aria-hidden="true"></div>
       <div class="core">
-        {profile.cover ? <Image src={profile.cover} alt="" widths={[480, 720]} sizes="(max-width: 900px) 70vw, 34vw" /> : <span>{profile.name?.slice(0, 1) ?? 'R'}</span>}
+        {profile.cover ? <Image src={profile.cover} alt={`Portrait of ${profile.name}`} widths={[480, 720]} sizes="(max-width: 900px) 70vw, 34vw" /> : <span>{profile.name?.slice(0, 1) ?? 'R'}</span>}
       </div>
       <p>{profile.location ?? 'Code · Research · Community'}</p>
     </div>
     <div class="scroll-note" aria-hidden="true"><span></span> Scroll to explore</div>
   </section>
 
+  <section class="skills-strip shell" aria-labelledby="skills-title" data-reveal>
+    <h2 id="skills-title">Tech I use</h2>
+    <dl>
+      <div><dt>Languages</dt><dd>Python, TypeScript, SQL</dd></div>
+      <div><dt>Frameworks</dt><dd>Django, React, FastAPI</dd></div>
+      <div><dt>Security</dt><dd>Cloud DSPM, DLP, LLM Security</dd></div>
+      <div><dt>ML</dt><dd>PyTorch, scikit-learn, RAG</dd></div>
+    </dl>
+  </section>
+
   <section class="section shell" id="experience">
     <SectionHeading eyebrow="01 · Experience" title="Work with consequence." href="/experience/" linkLabel="Full experience" />
     <div class="experience-list">
       {experience.map(({ data }, index) => (
-        <article class="experience-row" data-reveal>
-          <span class="index">0{index + 1}</span>
-          <div><p>{data.organization}</p><h3>{data.role}</h3></div>
-          <p>{data.summary}</p>
-          <span>{yearRange(data.startDate, data.endDate)}</span>
+        <article class="experience-card" data-reveal>
+          <header>
+            <span class="index">0{index + 1}</span>
+            <div><p>{data.organization}</p><h3>{data.role}</h3></div>
+            <p class="experience-meta">{yearRange(data.startDate, data.endDate)}{data.location && ` · ${data.location}`}</p>
+          </header>
+          <p class="experience-summary">{data.summary}</p>
+          {data.highlights.length > 0 && <ul class="experience-highlights">{data.highlights.map((highlight) => <li>{highlight}</li>)}</ul>}
+          <ul class="pill-list">{data.tags.map((tag) => <li class="pill">{tag}</li>)}</ul>
         </article>
       ))}
       {experience.length === 0 && <p class="empty-state">Experience entries are ready for your Markdown content.</p>}
@@ -107,29 +120,19 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
     </div>
   </section>
 
-  <section class="section shell twin-section">
-    <div>
-      <SectionHeading eyebrow="06 · Blogs" title="Notes from the process." href="/blogs/" linkLabel="Read all blogs" />
-      <div class="stack">
-        {blogs.map(({ id, data }) => <EntryCard href={`/blogs/${id}/`} eyebrow={data.date.toLocaleDateString('en', { month: 'short', year: 'numeric' })} title={data.title} summary={data.summary} tags={data.tags} />)}
-        {blogs.length === 0 && <p class="empty-state">The ideas are currently arguing over which one gets published first. Check back soon.</p>}
-      </div>
-    </div>
-    <div>
-      <SectionHeading eyebrow="07 · Education" title="A foundation for curiosity." href="/education/" linkLabel="Education details" />
+  <section class="section shell">
+      <SectionHeading eyebrow="06 · Education" title="A foundation for the work." href="/education/" linkLabel="Education details" />
       <div class="education-list">
         {education.map(({ data }) => (
           <article data-reveal><p>{yearRange(data.startDate, data.endDate)}{data.cgpa && ` · CGPA ${data.cgpa}`}</p><h3>{data.title}</h3><span>{data.institution}</span></article>
         ))}
         {education.length === 0 && <p class="empty-state">Education details are ready for your Markdown content.</p>}
       </div>
-    </div>
   </section>
 </BaseLayout>
 
 <style>
   .hero { position: relative; display: grid; grid-template-columns: 1.15fr 0.85fr; min-height: calc(100svh - var(--header-height)); padding-block: clamp(4rem, 8vw, 8rem); align-items: center; gap: 2rem; }
-  .role { margin: 1.75rem 0 0; color: var(--accent); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.11em; text-transform: uppercase; }
   .hero-prose { max-width: 40rem; margin-top: 1.25rem; color: var(--muted); font-size: clamp(1.1rem, 1.8vw, 1.35rem); }
   .hero-prose :global(p) { margin: 0.55rem 0; }
   .hero-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 2rem; }
@@ -146,17 +149,22 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   .hero-object > p { position: absolute; bottom: 8%; margin: 0; color: var(--muted); font-size: 0.65rem; font-weight: 750; letter-spacing: 0.14em; text-transform: uppercase; }
   .scroll-note { position: absolute; bottom: 1.5rem; left: 0; display: flex; align-items: center; gap: 0.7rem; color: var(--muted); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
   .scroll-note span { width: 2.5rem; height: 1px; background: var(--line); }
+  .skills-strip { display: grid; grid-template-columns: 0.35fr 1.65fr; gap: 2rem; padding-block: 2rem; border-top: 1px solid var(--line); }
+  .skills-strip h2 { margin: 0; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; }
+  .skills-strip dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; margin: 0; }
+  .skills-strip dt { color: var(--accent); font-size: 0.72rem; font-weight: 750; text-transform: uppercase; }
+  .skills-strip dd { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
   .experience-list { border-top: 1px solid var(--line); }
-  .experience-row { display: grid; grid-template-columns: 3rem 1fr 1.2fr auto; gap: 1.5rem; align-items: start; padding-block: 2rem; border-bottom: 1px solid var(--line); }
-  .experience-row .index, .experience-row > span:last-child, .experience-row div p { color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; }
-  .experience-row div p { margin: 0 0 0.3rem; color: var(--accent); }
-  .experience-row h3 { margin: 0; font-size: 1.5rem; letter-spacing: -0.035em; }
-  .experience-row > p { margin: 0; color: var(--muted); }
+  .experience-card { padding-block: clamp(2.5rem, 5vw, 4.5rem); border-bottom: 1px solid var(--line); }
+  .experience-card header { display: grid; grid-template-columns: 3rem 1fr auto; gap: 1.5rem; align-items: start; }
+  .experience-card .index, .experience-card header div p, .experience-meta { color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; }
+  .experience-card header div p { margin: 0 0 0.3rem; color: var(--accent); }
+  .experience-card h3 { margin: 0; font-size: clamp(1.7rem, 3vw, 2.5rem); letter-spacing: -0.04em; }
+  .experience-meta { margin: 0; }
+  .experience-summary { max-width: 50rem; margin: 2rem 0 0 4.5rem; color: var(--muted); font-size: 1.08rem; }
+  .experience-highlights { display: grid; max-width: 58rem; gap: 0.8rem; margin: 1.5rem 0 0 4.5rem; padding-left: 1.2rem; }
+  .experience-card .pill-list { margin-left: 4.5rem; }
   .contribution-grid { margin-top: 1rem; }
-  .twin-section { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 6rem); }
-  .twin-section :global(.section-heading) { grid-template-columns: 1fr; }
-  .twin-section :global(.section-heading .aside) { justify-self: start; }
-  .twin-section :global(.entry-card) { min-height: 21rem; }
   .education-list { border-top: 1px solid var(--line); }
   .education-list article { padding: 1.5rem 0; border-bottom: 1px solid var(--line); }
   .education-list article p, .education-list article span { margin: 0; color: var(--muted); font-size: 0.8rem; }
@@ -166,14 +174,14 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   @media (max-width: 900px) {
     .hero { grid-template-columns: 1fr; padding-bottom: 6rem; }
     .hero-object { width: min(100%, 30rem); justify-self: center; }
-    .experience-row { grid-template-columns: 2rem 1fr auto; }
-    .experience-row > p { grid-column: 2 / -1; }
-    .twin-section { grid-template-columns: 1fr; }
+    .skills-strip { grid-template-columns: 1fr; }
+    .skills-strip dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 560px) {
     .hero-object { width: 90%; }
-    .experience-row { grid-template-columns: 1fr auto; }
-    .experience-row .index { display: none; }
-    .experience-row > p { grid-column: 1 / -1; }
+    .skills-strip dl { grid-template-columns: 1fr; }
+    .experience-card header { grid-template-columns: 1fr; }
+    .experience-card .index { display: none; }
+    .experience-summary, .experience-highlights, .experience-card .pill-list { margin-left: 0; }
   }
 </style>

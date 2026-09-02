@@ -25,7 +25,7 @@ const posts = (await getCollection("blogs"))
           tags={data.tags}
         />
       ))}
-      {posts.length === 0 && <p class="empty-state">The ideas are currently arguing over which one gets published first. Check back soon.</p>}
+      {posts.length === 0 && <p class="empty-state">No articles are published yet.</p>}
     </div>
   </section>
 </BaseLayout>

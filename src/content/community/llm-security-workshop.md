@@ -1,6 +1,6 @@
 ---
 title: Hands-on LLM Security Workshop
-summary: An offensive-and-defensive workshop on testing LLM applications, exploiting common weaknesses, and designing safer AI systems.
+summary: A hands-on PICT Cyber Cell workshop covering prompt injection, RAG attacks, excessive agency, Garak, Promptfoo, and defensive LLM system design, with public exercises and source code.
 date: 2026-05-19
 featured: true
 draft: false

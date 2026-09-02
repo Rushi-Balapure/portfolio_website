@@ -1,6 +1,6 @@
 ---
 title: "We've Got an AI for That: Existing AI Security Tools"
-summary: A lightning talk exploring how existing AI systems are being applied to deepfake detection, data security, threat detection, and incident response.
+summary: A Build Club x HPE lightning talk on existing tools for deepfake detection, sensitive-data protection, threat prioritization, and incident response.
 date: 2025-12-06
 featured: true
 draft: false

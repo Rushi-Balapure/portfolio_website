@@ -18,12 +18,17 @@ const year = new Date().getFullYear();
       <h2>Have an idea worth exploring?</h2>
     </div>
     <div class="footer-actions">
-      {email ? <a class="button" href={`mailto:${email}`}>Send an email ↗</a> : <p>Add an email to <code>home.md</code> to enable direct contact.</p>}
+      {email ? (
+        <div class="email-actions">
+          <a class="button" href={`mailto:${email}`}>Send an email ↗</a>
+          <button class="button button--quiet" type="button" data-copy-email={email}>Copy email</button>
+        </div>
+      ) : <p>Add an email to <code>home.md</code> to enable direct contact.</p>}
       <div class="socials">
         {githubUrl && <a href={githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a>}
         {linkedinUrl && <a href={linkedinUrl} target="_blank" rel="noreferrer">LinkedIn ↗</a>}
         {xUrl && <a href={xUrl} target="_blank" rel="noreferrer">X ↗</a>}
-        <a href="/blogs/">Blogs</a>
+        <a href="/resume.pdf" target="_blank" rel="noreferrer">Resume ↗</a>
       </div>
     </div>
   </div>
@@ -39,8 +44,10 @@ const year = new Date().getFullYear();
   .footer-grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 2rem; align-items: end; }
   h2 { max-width: 10ch; margin: 0; font-size: clamp(3rem, 7vw, 7rem); letter-spacing: -0.07em; line-height: 0.95; }
   .footer-actions { display: grid; justify-items: start; gap: 1.5rem; }
+  .email-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }
   .footer-actions .button { color: var(--ink); background: #f7f5ee; border-color: #f7f5ee; }
   .footer-actions .button:hover { color: white; background: var(--accent); border-color: var(--accent); }
+  .footer-actions .button--quiet { color: #f7f5ee; background: transparent; border-color: #5a5953; cursor: pointer; }
   .footer-actions p { max-width: 25rem; color: #aaa9a3; }
   .socials { display: flex; flex-wrap: wrap; gap: 1.2rem; }
   .socials a { color: #c9c8c2; font-size: 0.9rem; }
@@ -51,3 +58,29 @@ const year = new Date().getFullYear();
     .legal { align-items: flex-start; flex-direction: column; margin-top: 3rem; padding-top: 2rem; }
   }
 </style>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-copy-email]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const email = button.dataset.copyEmail;
+        if (!email) return;
+
+        try {
+          if (!navigator.clipboard || !window.isSecureContext) throw new Error('Clipboard unavailable');
+          await navigator.clipboard.writeText(email);
+
+          const originalLabel = button.textContent;
+          button.textContent = 'Copied';
+          button.setAttribute('aria-live', 'polite');
+          window.setTimeout(() => {
+            button.textContent = originalLabel;
+            button.removeAttribute('aria-live');
+          }, 2000);
+        } catch {
+          button.textContent = email;
+        }
+      });
+    });
+  });
+</script>

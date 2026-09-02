@@ -1,6 +1,6 @@
 ---
 title: Home
-summary: Associate Product Engineer who enjoys learning, building useful ideas, and connecting with people.
+summary: Rushi Balapure is an Associate Product Engineer in Pune building Cloud DSPM, Secure Web Gateway, and DLP products at ProMobi Technologies.
 date: 2026-08-31
 featured: false
 draft: false
@@ -8,9 +8,8 @@ tags: []
 seoTitle: Rushi Balapure | Associate Product Engineer
 name: Rushi Balapure
 role: Associate Product Engineer
-eyebrow: Curious by default
+eyebrow: Associate Product Engineer
 location: Pune, India
-availability: Open to interesting problems and conversations that begin with "what if?"
 email: rushibalapure2003@gmail.com
 githubUrl: https://github.com/Rushi-Balapure
 linkedinUrl: https://in.linkedin.com/in/rushi-balapure-75148022a
@@ -19,4 +18,6 @@ githubUsername: Rushi-Balapure
 cover: ../../../assests/profile_pic.webp
 ---
 
-My brain has three default modes: learning how things work, building useful ideas, and swapping stories with people who do the same. Proudly brainstorming and building out of Pune.
+Building enterprise security products at ProMobi: Cloud DSPM, Secure Web Gateway, and Data Loss Prevention.
+
+I work across Python, Django, React, and TypeScript, with a focus on applied ML and LLM security. Based in Pune, India.
