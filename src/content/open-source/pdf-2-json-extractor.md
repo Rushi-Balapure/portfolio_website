@@ -6,10 +6,8 @@ featured: true
 draft: false
 tags:
   - Python
-  - PDF Processing
-  - Document Intelligence
-  - CLI
-  - OCR
+  - PyMuPDF
+  - Layout Aware
 organization: PyPI
 repositoryUrl: https://github.com/Rushi-Balapure/pdf_2_json_extractor
 packageUrl: https://pypi.org/project/pdf-2-json-extractor/

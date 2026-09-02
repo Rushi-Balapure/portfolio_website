@@ -6,12 +6,11 @@ featured: true
 draft: false
 tags:
   - Python
-  - Django
-  - React
-  - TypeScript
-  - Machine Learning
-  - LLMs
-  - Cloud Security
+  - Ruby
+  - Ruby on Rails
+  - Named Entity Recognition
+  - vLLM
+  - Google Drive and Onedrive
   - Data Loss Prevention
 organization: ProMobi Technologies
 role: Associate Product Engineer

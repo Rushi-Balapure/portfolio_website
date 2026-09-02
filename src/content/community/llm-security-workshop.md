@@ -6,9 +6,8 @@ featured: true
 draft: false
 tags:
   - LLM Security
-  - Red Teaming
-  - Prompt Injection
-  - Secure AI
+  - Gen-AI Red Teaming
+  - Nvidia-Garak
 eventOrOrganization: PICT Cyber Cell
 location: PICT Pune, India
 relatedLinks:
