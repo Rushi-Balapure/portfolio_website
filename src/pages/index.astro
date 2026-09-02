@@ -44,7 +44,6 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
       <div class="hero-actions">
         <a class="button" href="/projects/">Explore the work <span aria-hidden="true">↗</span></a>
         <a class="button button--quiet" href="/resume.pdf" target="_blank" rel="noreferrer">Resume <span aria-hidden="true">↓</span></a>
-        <a class="button button--quiet" href="/about/">More about me</a>
       </div>
       {profile.availability && <p class="availability"><span aria-hidden="true"></span>{profile.availability}</p>}
     </div>
@@ -54,7 +53,6 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
       <div class="core">
         {profile.cover ? <Image src={profile.cover} alt={`Portrait of ${profile.name}`} widths={[480, 720]} sizes="(max-width: 900px) 70vw, 34vw" /> : <span>{profile.name?.slice(0, 1) ?? 'R'}</span>}
       </div>
-      <p>{profile.location ?? 'Code · Research · Community'}</p>
     </div>
     <div class="scroll-note" aria-hidden="true"><span></span> Scroll to explore</div>
   </section>
@@ -146,7 +144,6 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   .core { display: grid; width: 68%; aspect-ratio: 0.82; place-items: center; overflow: hidden; color: white; background: var(--ink); border: 0.5rem solid rgba(255, 255, 255, 0.65); border-radius: 43% 57% 62% 38% / 43% 38% 62% 57%; box-shadow: 0 2rem 6rem rgba(49, 87, 213, 0.2); animation: morph 8s var(--ease) infinite alternate; }
   .core span { font-size: clamp(4rem, 10vw, 8rem); font-weight: 600; letter-spacing: -0.08em; }
   .core :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: 50% 44%; }
-  .hero-object > p { position: absolute; bottom: 8%; margin: 0; color: var(--muted); font-size: 0.65rem; font-weight: 750; letter-spacing: 0.14em; text-transform: uppercase; }
   .scroll-note { position: absolute; bottom: 1.5rem; left: 0; display: flex; align-items: center; gap: 0.7rem; color: var(--muted); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
   .scroll-note span { width: 2.5rem; height: 1px; background: var(--line); }
   .skills-strip { display: grid; grid-template-columns: 0.35fr 1.65fr; gap: 2rem; padding-block: 2rem; border-top: 1px solid var(--line); }

@@ -18,6 +18,4 @@ githubUsername: Rushi-Balapure
 cover: ../../../assests/profile_pic.webp
 ---
 
-Building enterprise security products at ProMobi: Cloud DSPM, Secure Web Gateway, and Data Loss Prevention.
-
-I work across Python, Django, React, and TypeScript, with a focus on applied ML and LLM security. Based in Pune, India.
+I like figuring out how things work, then building something with what I learn — right now that's four different half-finished projects. Based in Pune.
