@@ -18,124 +18,459 @@ const links = [
 ---
 
 <header class="site-header">
-  <div class="header-inner shell">
+  <div class="header-inner shell material">
     <a class="brand" href="/" aria-label={`${name} home`}>
-      <span>{name}</span><i aria-hidden="true"></i>
+      <span>{name}</span>
     </a>
 
     <nav class="desktop-nav" aria-label="Primary navigation">
       {links.map((link) => (
-        <a href={link.href} target={link.external ? '_blank' : undefined} rel={link.external ? 'noreferrer' : undefined} aria-current={!link.external && path.startsWith(link.href) ? 'page' : undefined}>
+        <a
+          href={link.href}
+          target={link.external ? '_blank' : undefined}
+          rel={link.external ? 'noreferrer' : undefined}
+          aria-current={!link.external && path.startsWith(link.href) ? 'page' : undefined}
+        >
           {link.label}
         </a>
       ))}
     </nav>
 
-    <ThemeToggle />
-
-    <details class="mobile-nav">
-      <summary aria-label="Open navigation"><span></span><span></span></summary>
-      <nav aria-label="Mobile navigation">
-        {links.map((link) => <a href={link.href} target={link.external ? '_blank' : undefined} rel={link.external ? 'noreferrer' : undefined}>{link.label}</a>)}
-      </nav>
-    </details>
+    <div class="header-tools">
+      <ThemeToggle />
+      <button
+        class="menu-button"
+        type="button"
+        aria-expanded="false"
+        aria-controls="mobile-sheet"
+        data-sheet-open
+      >
+        <span class="visually-hidden">Open navigation</span>
+        <i aria-hidden="true"></i>
+        <i aria-hidden="true"></i>
+      </button>
+    </div>
   </div>
 </header>
+
+<div class="sheet-root" hidden data-sheet-root>
+  <div class="sheet-scrim" data-sheet-dismiss></div>
+  <div
+    class="sheet material"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="sheet-title"
+    id="mobile-sheet"
+    data-sheet
+  >
+    <div class="sheet-handle" data-sheet-handle aria-hidden="true"></div>
+    <div class="sheet-top">
+      <h2 id="sheet-title">Navigate</h2>
+      <button class="sheet-close" type="button" data-sheet-dismiss>Close</button>
+    </div>
+    <nav aria-label="Mobile navigation">
+      {links.map((link) => (
+        <a
+          href={link.href}
+          target={link.external ? '_blank' : undefined}
+          rel={link.external ? 'noreferrer' : undefined}
+          aria-current={!link.external && path.startsWith(link.href) ? 'page' : undefined}
+        >
+          {link.label}
+        </a>
+      ))}
+    </nav>
+  </div>
+</div>
 
 <style>
   .site-header {
     position: sticky;
     top: 0;
     z-index: 20;
-    height: var(--header-height);
-    background: color-mix(in srgb, var(--paper) 82%, transparent);
-    border-bottom: 1px solid var(--line);
-    backdrop-filter: blur(18px) saturate(140%);
+    padding: 0.75rem 0 0;
+    background: linear-gradient(to bottom, rgb(var(--paper-rgb)), rgba(var(--paper-rgb), 0.72) 58%, transparent);
   }
 
   .header-inner {
     display: flex;
     align-items: center;
-    height: 100%;
-    gap: 1.25rem;
+    min-height: 3.4rem;
+    padding: 0.35rem 0.45rem 0.35rem 1.05rem;
+    gap: 1rem;
+    border-radius: 999px;
   }
 
   .brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
     margin-right: auto;
-    font-size: 1.96rem;
-    font-weight: 800;
-    letter-spacing: -0.025em;
+    color: var(--ink);
+    font-size: 1.05rem;
+    font-weight: 590;
+    letter-spacing: -0.022em;
     text-decoration: none;
+    transition: transform var(--press);
   }
 
-  .brand i {
-    width: 0.45rem;
-    height: 0.45rem;
-    background: var(--accent);
-    border-radius: 50%;
-  }
+  .brand:active { transform: scale(0.97); }
 
   .desktop-nav {
     display: flex;
     align-items: center;
-    gap: clamp(0.8rem, 1.5vw, 1.5rem);
+    gap: clamp(0.7rem, 1.4vw, 1.25rem);
   }
 
   .desktop-nav a {
-    position: relative;
     color: var(--muted);
-    font-size: 0.78rem;
-    font-weight: 650;
+    font-size: 0.8125rem;
+    font-weight: 510;
+    letter-spacing: -0.01em;
     text-decoration: none;
-    transition: color 200ms ease;
+    transition-property: color, transform;
+    transition-duration: var(--press);
   }
 
   .desktop-nav a:hover,
   .desktop-nav a[aria-current='page'] { color: var(--ink); }
 
-  .desktop-nav a[aria-current='page']::after {
-    position: absolute;
-    right: 0;
-    bottom: -0.55rem;
-    left: 0;
-    height: 2px;
-    background: var(--accent);
-    content: '';
+  .desktop-nav a:active { transform: scale(0.97); }
+
+  .header-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
   }
 
-  .mobile-nav { display: none; }
+  .menu-button {
+    display: none;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    gap: 0.32rem;
+    color: var(--ink);
+    background: var(--elevated);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: transform var(--press);
+  }
+
+  .menu-button:active { transform: scale(0.96); }
+  .menu-button i {
+    display: block;
+    width: 0.95rem;
+    height: 1.5px;
+    background: currentColor;
+    border-radius: 999px;
+  }
+
+  .sheet-root {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+  }
+
+  .sheet-scrim {
+    position: absolute;
+    inset: 0;
+    background: var(--scrim);
+    opacity: 0;
+  }
+
+  .sheet {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.7rem 0.85rem calc(1.1rem + env(safe-area-inset-bottom));
+    border-radius: 1.75rem;
+    will-change: transform;
+    touch-action: none;
+  }
+
+  .sheet-handle {
+    width: 2.25rem;
+    height: 0.3rem;
+    margin: 0.15rem auto 0.55rem;
+    background: var(--line);
+    border-radius: 999px;
+  }
+
+  .sheet-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.15rem 0.35rem 0.7rem;
+  }
+
+  .sheet-top h2 {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 590;
+    letter-spacing: 0.01em;
+    color: var(--muted);
+  }
+
+  .sheet-close {
+    min-height: 2.5rem;
+    padding: 0 0.85rem;
+    color: var(--accent);
+    background: transparent;
+    border: 0;
+    border-radius: 999px;
+    font-weight: 590;
+    cursor: pointer;
+  }
+
+  .sheet-close:active { transform: scale(0.97); }
+
+  nav[aria-label='Mobile navigation'] {
+    display: grid;
+  }
+
+  nav[aria-label='Mobile navigation'] a {
+    display: flex;
+    align-items: center;
+    min-height: 3rem;
+    padding: 0 0.7rem;
+    border-radius: 0.9rem;
+    font-size: 1.125rem;
+    font-weight: 510;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+    transition: transform var(--press), background-color var(--press);
+  }
+
+  nav[aria-label='Mobile navigation'] a:active,
+  nav[aria-label='Mobile navigation'] a[aria-current='page'] {
+    background: var(--surface);
+  }
+
+  nav[aria-label='Mobile navigation'] a:active { transform: scale(0.985); }
 
   @media (max-width: 980px) {
     .desktop-nav { display: none; }
-    .mobile-nav { display: block; }
-    .mobile-nav summary {
-      display: grid;
-      width: 2.6rem;
-      height: 2.6rem;
-      place-content: center;
-      gap: 0.35rem;
-      cursor: pointer;
-      list-style: none;
-      border: 1px solid var(--line);
-      border-radius: 50%;
-    }
-    .mobile-nav summary::-webkit-details-marker { display: none; }
-    .mobile-nav summary span { width: 1rem; height: 1px; background: var(--ink); }
-    .mobile-nav nav {
-      position: absolute;
-      top: calc(100% + 0.5rem);
-      right: 0.75rem;
-      left: 0.75rem;
-      display: grid;
-      padding: 1rem;
-      background: var(--menu-bg);
-      border: 1px solid var(--line);
-      border-radius: 1.25rem;
-      box-shadow: 0 1.5rem 5rem var(--shadow);
-    }
-    .mobile-nav nav a { padding: 0.7rem; font-weight: 700; text-decoration: none; }
+    .menu-button { display: grid; }
   }
 </style>
+
+<script>
+  import { createSpring, project, rubberband } from '../scripts/fluid';
+
+  type SheetElements = {
+    root: HTMLElement;
+    sheet: HTMLElement;
+    scrim: HTMLElement;
+    openButtons: HTMLButtonElement[];
+  };
+
+  const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const getSheetHeight = (sheet: HTMLElement) => sheet.getBoundingClientRect().height;
+
+  const setSheetOffset = (sheet: HTMLElement, y: number) => {
+    sheet.style.transform = `translate3d(0, ${y}px, 0)`;
+  };
+
+  const bindSheet = () => {
+    const root = document.querySelector<HTMLElement>('[data-sheet-root]');
+    const sheet = document.querySelector<HTMLElement>('[data-sheet]');
+    const scrim = document.querySelector<HTMLElement>('.sheet-scrim');
+    const openButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-sheet-open]')];
+    if (!root || !sheet || !scrim || root.dataset.bound === 'true') return;
+
+    root.dataset.bound = 'true';
+    const elements: SheetElements = { root, sheet, scrim, openButtons };
+
+    let open = false;
+    let y = 0;
+    let velocity = 0;
+    let frame = 0;
+    let previousFocus: HTMLElement | null = null;
+    const samples: Array<{ y: number; t: number }> = [];
+
+    const stopAnimation = () => {
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+    };
+
+    const syncChrome = () => {
+      const height = Math.max(getSheetHeight(sheet), 1);
+      const progress = 1 - Math.min(Math.max(y / height, 0), 1);
+      scrim.style.opacity = String(progress);
+      openButtons.forEach((button) => button.setAttribute('aria-expanded', String(open)));
+      document.body.style.overflow = open ? 'hidden' : '';
+    };
+
+    const hideRoot = () => {
+      root.hidden = true;
+      sheet.style.transform = '';
+      scrim.style.opacity = '';
+      document.body.style.overflow = '';
+    };
+
+    const restoreFocus = () => {
+      previousFocus?.focus();
+      previousFocus = null;
+    };
+
+    const finishClose = () => {
+      open = false;
+      stopAnimation();
+      hideRoot();
+      openButtons.forEach((button) => button.setAttribute('aria-expanded', 'false'));
+      restoreFocus();
+    };
+
+    const animateTo = (target: number, initialVelocity: number, bounce: boolean) => {
+      stopAnimation();
+      const spring = createSpring({
+        damping: bounce ? 0.8 : 1,
+        response: bounce ? 0.3 : 0.35,
+      });
+      let position = y;
+      let currentVelocity = initialVelocity;
+      let last = performance.now();
+
+      const tick = (now: number) => {
+        const dt = Math.min((now - last) / 1000, 1 / 30);
+        last = now;
+        const next = spring.step(position, currentVelocity, target, dt);
+        position = next.position;
+        currentVelocity = next.velocity;
+        y = position;
+        velocity = currentVelocity;
+        setSheetOffset(sheet, y);
+        syncChrome();
+
+        if (spring.settled(position, currentVelocity, target)) {
+          y = target;
+          velocity = 0;
+          setSheetOffset(sheet, y);
+          syncChrome();
+          if (target > 0) finishClose();
+          return;
+        }
+
+        frame = requestAnimationFrame(tick);
+      };
+
+      frame = requestAnimationFrame(tick);
+    };
+
+    const openSheet = () => {
+      previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      root.hidden = false;
+      open = true;
+      const height = getSheetHeight(sheet);
+      y = prefersReducedMotion() ? 0 : height;
+      velocity = 0;
+      setSheetOffset(sheet, y);
+      syncChrome();
+      sheet.querySelector<HTMLElement>('[data-sheet-dismiss]')?.focus();
+
+      if (prefersReducedMotion()) {
+        y = 0;
+        setSheetOffset(sheet, 0);
+        scrim.style.opacity = '1';
+        return;
+      }
+
+      animateTo(0, 0, false);
+    };
+
+    const closeSheet = (releaseVelocity = 0) => {
+      if (!open) return;
+      if (prefersReducedMotion()) {
+        finishClose();
+        return;
+      }
+      animateTo(getSheetHeight(sheet), releaseVelocity, Math.abs(releaseVelocity) > 180);
+    };
+
+    const rememberSample = (pointY: number, time: number) => {
+      samples.push({ y: pointY, t: time });
+      if (samples.length > 5) samples.shift();
+    };
+
+    const sampleVelocity = () => {
+      if (samples.length < 2) return 0;
+      const first = samples[0];
+      const last = samples[samples.length - 1];
+      const dt = (last.t - first.t) / 1000;
+      return dt > 0 ? (last.y - first.y) / dt : 0;
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0 || !open) return;
+      const target = event.target as HTMLElement;
+      if (target.closest('a, button') && !target.closest('[data-sheet-handle]')) return;
+
+      stopAnimation();
+      sheet.setPointerCapture(event.pointerId);
+      const startY = event.clientY;
+      const origin = y;
+      samples.length = 0;
+      rememberSample(startY, event.timeStamp);
+
+      const onMove = (moveEvent: PointerEvent) => {
+        const pointerY = moveEvent.clientY;
+        rememberSample(pointerY, moveEvent.timeStamp);
+        const next = origin + (pointerY - startY);
+        y = next < 0 ? -rubberband(-next, getSheetHeight(sheet)) : next;
+        setSheetOffset(sheet, y);
+        syncChrome();
+      };
+
+      const onUp = (upEvent: PointerEvent) => {
+        sheet.releasePointerCapture(upEvent.pointerId);
+        sheet.removeEventListener('pointermove', onMove);
+        sheet.removeEventListener('pointerup', onUp);
+        sheet.removeEventListener('pointercancel', onUp);
+
+        const releaseVelocity = sampleVelocity();
+        const height = getSheetHeight(sheet);
+        const projected = y + project(releaseVelocity);
+        const shouldClose = releaseVelocity > 650 || projected > height * 0.28;
+        if (shouldClose) closeSheet(releaseVelocity);
+        else animateTo(0, releaseVelocity, Math.abs(releaseVelocity) > 180);
+      };
+
+      sheet.addEventListener('pointermove', onMove);
+      sheet.addEventListener('pointerup', onUp);
+      sheet.addEventListener('pointercancel', onUp);
+    };
+
+    openButtons.forEach((button) => button.addEventListener('click', openSheet));
+    root.querySelectorAll('[data-sheet-dismiss]').forEach((node) => {
+      node.addEventListener('click', () => closeSheet());
+    });
+    sheet.addEventListener('pointerdown', onPointerDown);
+
+    document.addEventListener('keydown', (event) => {
+      if (!open) return;
+      if (event.key === 'Escape') {
+        closeSheet();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const focusable = [...root.querySelectorAll<HTMLElement>('a, button')];
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+  };
+
+  document.addEventListener('astro:page-load', bindSheet);
+  if (document.readyState !== 'loading') bindSheet();
+  else document.addEventListener('DOMContentLoaded', bindSheet);
+</script>
