@@ -12,7 +12,7 @@ const year = new Date().getFullYear();
 ---
 
 <footer id="contact" class="footer">
-  <div class="shell footer-grid">
+  <div class="shell footer-panel material">
     <div>
       <p class="eyebrow">Start a conversation</p>
       <h2>Have an idea worth exploring?</h2>
@@ -20,15 +20,15 @@ const year = new Date().getFullYear();
     <div class="footer-actions">
       {email ? (
         <div class="email-actions">
-          <a class="button" href={`mailto:${email}`}>Send an email ↗</a>
+          <a class="button" href={`mailto:${email}`}>Send an email</a>
           <button class="button button--quiet" type="button" data-copy-email={email}>Copy email</button>
         </div>
       ) : <p>Add an email to <code>home.md</code> to enable direct contact.</p>}
       <div class="socials">
-        {githubUrl && <a href={githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a>}
-        {linkedinUrl && <a href={linkedinUrl} target="_blank" rel="noreferrer">LinkedIn ↗</a>}
-        {xUrl && <a href={xUrl} target="_blank" rel="noreferrer">X ↗</a>}
-        <a href="/resume.pdf" target="_blank" rel="noreferrer">Resume ↗</a>
+        {githubUrl && <a href={githubUrl} target="_blank" rel="noreferrer">GitHub</a>}
+        {linkedinUrl && <a href={linkedinUrl} target="_blank" rel="noreferrer">LinkedIn</a>}
+        {xUrl && <a href={xUrl} target="_blank" rel="noreferrer">X</a>}
+        <a href="/resume.pdf" target="_blank" rel="noreferrer">Resume</a>
       </div>
     </div>
   </div>
@@ -39,29 +39,84 @@ const year = new Date().getFullYear();
 </footer>
 
 <style>
-  .footer { padding: clamp(5rem, 10vw, 9rem) 0 2rem; color: var(--footer-text); background: var(--footer-bg); }
-  .footer .eyebrow { color: var(--footer-accent); }
-  .footer-grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 2rem; align-items: end; }
-  h2 { max-width: 10ch; margin: 0; font-size: clamp(3rem, 7vw, 7rem); letter-spacing: -0.07em; line-height: 0.95; }
-  .footer-actions { display: grid; justify-items: start; gap: 1.5rem; }
-  .email-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }
-  .footer-actions .button { color: var(--footer-button-text); background: var(--footer-button-bg); border-color: var(--footer-button-bg); }
-  .footer-actions .button:hover { color: var(--on-accent); background: var(--accent); border-color: var(--accent); }
-  .footer-actions .button--quiet { color: var(--footer-text); background: transparent; border-color: var(--footer-line); cursor: pointer; }
-  .footer-actions p { max-width: 25rem; color: var(--footer-muted); }
-  .socials { display: flex; flex-wrap: wrap; gap: 1.2rem; }
-  .socials a { color: var(--footer-link); font-size: 0.9rem; }
-  .legal { display: flex; justify-content: space-between; gap: 1rem; padding-top: 5rem; margin-top: 5rem; color: var(--footer-muted); border-top: 1px solid var(--footer-line); font-size: 0.78rem; }
+  .footer {
+    padding: clamp(3rem, 8vw, 5.5rem) 0 1.75rem;
+  }
+
+  .footer-panel {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 2rem;
+    align-items: end;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border-radius: calc(var(--radius) + 0.35rem);
+  }
+
+  h2 {
+    max-width: 12ch;
+    margin: 0;
+    font-size: clamp(2.25rem, 6vw, 4.25rem);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+    text-wrap: balance;
+  }
+
+  .footer-actions {
+    display: grid;
+    justify-items: start;
+    gap: 1.25rem;
+  }
+
+  .email-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .footer-actions p {
+    max-width: 25rem;
+    color: var(--muted);
+  }
+
+  .socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .socials a {
+    color: var(--muted);
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transition: color var(--press), transform var(--press);
+  }
+
+  .socials a:hover { color: var(--ink); }
+  .socials a:active { transform: scale(0.97); }
+
+  .legal {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1.75rem;
+    margin-top: 1.25rem;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+
   @media (max-width: 760px) {
-    .footer-grid { grid-template-columns: 1fr; }
-    .footer-actions { margin-top: 2rem; }
-    .legal { align-items: flex-start; flex-direction: column; margin-top: 3rem; padding-top: 2rem; }
+    .footer-panel { grid-template-columns: 1fr; }
+    .legal { align-items: flex-start; flex-direction: column; }
   }
 </style>
 
-<script is:inline>
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-copy-email]').forEach((button) => {
+<script>
+  const bindCopyButtons = () => {
+    document.querySelectorAll<HTMLButtonElement>('[data-copy-email]').forEach((button) => {
+      if (button.dataset.bound === 'true') return;
+      button.dataset.bound = 'true';
+
       button.addEventListener('click', async () => {
         const email = button.dataset.copyEmail;
         if (!email) return;
@@ -69,7 +124,6 @@ const year = new Date().getFullYear();
         try {
           if (!navigator.clipboard || !window.isSecureContext) throw new Error('Clipboard unavailable');
           await navigator.clipboard.writeText(email);
-
           const originalLabel = button.textContent;
           button.textContent = 'Copied';
           button.setAttribute('aria-live', 'polite');
@@ -82,5 +136,9 @@ const year = new Date().getFullYear();
         }
       });
     });
-  });
+  };
+
+  document.addEventListener('astro:page-load', bindCopyButtons);
+  if (document.readyState !== 'loading') bindCopyButtons();
+  else document.addEventListener('DOMContentLoaded', bindCopyButtons);
 </script>
