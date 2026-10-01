@@ -259,13 +259,6 @@ const links = [
 <script>
   import { createSpring, project, rubberband } from '../scripts/fluid';
 
-  type SheetElements = {
-    root: HTMLElement;
-    sheet: HTMLElement;
-    scrim: HTMLElement;
-    openButtons: HTMLButtonElement[];
-  };
-
   const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const getSheetHeight = (sheet: HTMLElement) => sheet.getBoundingClientRect().height;
@@ -282,7 +275,8 @@ const links = [
     if (!root || !sheet || !scrim || root.dataset.bound === 'true') return;
 
     root.dataset.bound = 'true';
-    const elements: SheetElements = { root, sheet, scrim, openButtons };
+    const controller = new AbortController();
+    const { signal } = controller;
 
     let open = false;
     let y = 0;
@@ -443,11 +437,11 @@ const links = [
       sheet.addEventListener('pointercancel', onUp);
     };
 
-    openButtons.forEach((button) => button.addEventListener('click', openSheet));
+    openButtons.forEach((button) => button.addEventListener('click', openSheet, { signal }));
     root.querySelectorAll('[data-sheet-dismiss]').forEach((node) => {
-      node.addEventListener('click', () => closeSheet());
+      node.addEventListener('click', () => closeSheet(), { signal });
     });
-    sheet.addEventListener('pointerdown', onPointerDown);
+    sheet.addEventListener('pointerdown', onPointerDown, { signal });
 
     document.addEventListener('keydown', (event) => {
       if (!open) return;
@@ -467,7 +461,13 @@ const links = [
         event.preventDefault();
         first.focus();
       }
-    });
+    }, { signal });
+
+    document.addEventListener('astro:before-preparation', () => {
+      stopAnimation();
+      document.body.style.overflow = '';
+      controller.abort();
+    }, { signal });
   };
 
   document.addEventListener('astro:page-load', bindSheet);
