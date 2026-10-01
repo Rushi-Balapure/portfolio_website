@@ -55,7 +55,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
     <div class="hero-portrait" data-reveal>
       <div class="portrait">
         {profile.cover
-          ? <Image src={profile.cover} alt={`Portrait of ${profile.name}`} widths={[480, 720]} sizes="(max-width: 900px) 70vw, 28vw" />
+          ? <Image src={profile.cover} alt={`Portrait of ${profile.name}`} widths={[480, 720]} sizes="(max-width: 900px) 70vw, 28vw" loading="eager" fetchpriority="high" />
           : <span>{profile.name?.slice(0, 1) ?? 'R'}</span>}
       </div>
     </div>
