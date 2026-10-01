@@ -280,7 +280,6 @@ const links = [
 
     let open = false;
     let y = 0;
-    let velocity = 0;
     let frame = 0;
     let previousFocus: HTMLElement | null = null;
     const samples: Array<{ y: number; t: number }> = [];
@@ -335,7 +334,6 @@ const links = [
         position = next.position;
         currentVelocity = next.velocity;
         y = position;
-        velocity = currentVelocity;
         setSheetOffset(sheet, y);
         syncChrome();
 
@@ -360,7 +358,6 @@ const links = [
       open = true;
       const height = getSheetHeight(sheet);
       y = prefersReducedMotion() ? 0 : height;
-      velocity = 0;
       setSheetOffset(sheet, y);
       syncChrome();
       sheet.querySelector<HTMLElement>('[data-sheet-dismiss]')?.focus();
