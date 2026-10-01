@@ -26,9 +26,23 @@ const { title, summary, eyebrow, date, tags = [] } = Astro.props;
 </BaseLayout>
 
 <style>
-  .detail { padding-block: clamp(5rem, 10vw, 10rem); }
-  header { padding-bottom: clamp(4rem, 8vw, 8rem); border-bottom: 1px solid var(--line); }
-  .links { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
+  .detail {
+    padding-block: clamp(5rem, 10vw, 8rem) clamp(4rem, 8vw, 6.5rem);
+  }
+
+  header {
+    max-width: 46rem;
+    padding-bottom: clamp(2.25rem, 5vw, 3.5rem);
+    margin-bottom: clamp(2.25rem, 5vw, 3.5rem);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 1.75rem;
+  }
+
   .links:empty { display: none; }
-  .content { padding-top: clamp(3rem, 7vw, 6rem); }
 </style>

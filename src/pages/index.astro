@@ -38,47 +38,52 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
 <BaseLayout description={profile.summary}>
   <section class="hero shell">
     <div class="hero-copy" data-reveal>
-      <p class="eyebrow">{profile.eyebrow ?? 'Portfolio'}</p>
+      <p class="eyebrow">{profile.eyebrow ?? profile.role ?? 'Portfolio'}</p>
       <h1 class="display">{profile.name}</h1>
       <div class="hero-prose"><HomeContent /></div>
       <div class="hero-actions">
-        <a class="button" href="/projects/">Explore the work <span aria-hidden="true">↗</span></a>
-        <a class="button button--quiet" href="/resume.pdf" target="_blank" rel="noreferrer">Resume <span aria-hidden="true">↓</span></a>
+        <a class="button" href="/projects/">Explore the work</a>
+        <a class="button button--quiet" href="/resume.pdf" target="_blank" rel="noreferrer">Resume</a>
       </div>
-      {profile.availability && <p class="availability"><span aria-hidden="true"></span>{profile.availability}</p>}
+      {profile.availability && (
+        <p class="availability">
+          <span aria-hidden="true"></span>
+          {profile.availability}
+        </p>
+      )}
     </div>
-    <div class="hero-object" data-reveal>
-      <div class="orbit orbit-one" aria-hidden="true"></div>
-      <div class="orbit orbit-two" aria-hidden="true"></div>
-      <div class="core">
-        {profile.cover ? <Image src={profile.cover} alt={`Portrait of ${profile.name}`} widths={[480, 720]} sizes="(max-width: 900px) 70vw, 34vw" /> : <span>{profile.name?.slice(0, 1) ?? 'R'}</span>}
+    <div class="hero-portrait" data-reveal>
+      <div class="portrait">
+        {profile.cover
+          ? <Image src={profile.cover} alt={`Portrait of ${profile.name}`} widths={[480, 720]} sizes="(max-width: 900px) 70vw, 28vw" loading="eager" fetchpriority="high" />
+          : <span>{profile.name?.slice(0, 1) ?? 'R'}</span>}
       </div>
     </div>
-    <div class="scroll-note" aria-hidden="true"><span></span> Scroll to explore</div>
   </section>
 
   <section class="skills-strip shell" aria-labelledby="skills-title" data-reveal>
-    <h2 id="skills-title">Tech I use</h2>
-    <dl>
+    <div class="skills-copy">
+      <h2 id="skills-title">Tech I use</h2>
+      <p>The stack behind the products I ship.</p>
+    </div>
+    <dl class="skills-panel">
       <div><dt>Languages</dt><dd>Python, Ruby, SQL</dd></div>
       <div><dt>Frameworks</dt><dd>FastAPI, PyTorch, Scikit-learn, Hugging Face Transformers, LangChain</dd></div>
-      <div><dt>Database</dt><dd>Postgres, MySQL, Pinecone, Milvus </dd></div>
+      <div><dt>Databases</dt><dd>Postgres, MySQL, Pinecone, Milvus</dd></div>
     </dl>
   </section>
 
   <section class="section shell" id="experience">
-    <SectionHeading eyebrow="01 · Experience" title="Work with consequence." href="/experience/" linkLabel="Full experience" />
-    <div class="experience-list">
-      {experience.map(({ data }, index) => (
-        <article class="experience-card" data-reveal>
-          <header>
-            <span class="index">0{index + 1}</span>
-            <div><p>{data.organization}</p><h3>{data.role}</h3></div>
-            <p class="experience-meta">{yearRange(data.startDate, data.endDate)}{data.location && ` · ${data.location}`}</p>
-          </header>
-          <p class="experience-summary">{data.summary}</p>
-          {data.highlights.length > 0 && <ul class="experience-highlights">{data.highlights.map((highlight) => <li>{highlight}</li>)}</ul>}
-          <ul class="pill-list">{data.tags.map((tag) => <li class="pill">{tag}</li>)}</ul>
+    <SectionHeading eyebrow="Experience" title="Roles with shipped products." href="/experience/" linkLabel="Full experience" />
+    <div class="grouped-list">
+      {experience.map(({ data }) => (
+        <article class="grouped-row" data-reveal>
+          <div>
+            <p class="row-meta">{data.organization}</p>
+            <h3>{data.role}</h3>
+            <p class="row-copy">{data.summary}</p>
+          </div>
+          <p class="row-aside">{yearRange(data.startDate, data.endDate)}{data.location && ` · ${data.location}`}</p>
         </article>
       ))}
       {experience.length === 0 && <p class="empty-state">Experience entries are ready for your Markdown content.</p>}
@@ -86,7 +91,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   </section>
 
   <section class="section shell">
-    <SectionHeading eyebrow="02 · Projects" title="Built to be used." href="/projects/" />
+    <SectionHeading eyebrow="Projects" title="Built to be used." href="/projects/" />
     <div class="grid">
       {projects.map(({ id, data }, index) => <EntryCard href={`/projects/${id}/`} eyebrow={data.status?.replace('-', ' ') ?? 'Project'} title={data.title} summary={data.summary} tags={data.stack ?? data.tags} large={index === 0} />)}
       {projects.length === 0 && <p class="empty-state">Projects will appear here as soon as their draft flag is removed.</p>}
@@ -94,7 +99,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   </section>
 
   <section class="section shell">
-    <SectionHeading eyebrow="03 · Open source" title="Progress is collaborative." href="/open-source/" />
+    <SectionHeading eyebrow="Open source" title="Work that stays public." href="/open-source/" />
     <GitHubActivity username={profile.githubUsername} profileUrl={profile.githubUrl} />
     <div class="grid contribution-grid">
       {openSource.map(({ id, data }) => <EntryCard href={`/open-source/${id}/`} eyebrow={data.organization ?? 'Open source'} title={data.title} summary={data.summary} tags={data.tags} />)}
@@ -102,7 +107,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   </section>
 
   <section class="section shell">
-    <SectionHeading eyebrow="04 · Research" title="Questions worth pursuing." href="/publications/" linkLabel="All publications" />
+    <SectionHeading eyebrow="Research" title="Questions worth pursuing." href="/publications/" linkLabel="All publications" />
     <div class="grid">
       {publications.map(({ id, data }) => <EntryCard href={`/publications/${id}/`} eyebrow={data.venue ?? 'Publication'} title={data.title} summary={data.summary} tags={data.tags} />)}
       {publications.length === 0 && <p class="empty-state">Published papers will appear here after their Markdown entries are completed.</p>}
@@ -110,7 +115,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   </section>
 
   <section class="section shell">
-    <SectionHeading eyebrow="05 · Community & speaking" title="Knowledge grows when shared." href="/community/" />
+    <SectionHeading eyebrow="Community" title="Knowledge grows when shared." href="/community/" />
     <div class="grid">
       {community.map(({ id, data }) => <EntryCard href={`/community/${id}/`} eyebrow={data.eventOrOrganization ?? 'Community'} title={data.title} summary={data.summary} tags={data.tags} />)}
       {community.length === 0 && <p class="empty-state">Community work and speaking sessions are ready for your Markdown entries.</p>}
@@ -118,67 +123,220 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   </section>
 
   <section class="section shell">
-      <SectionHeading eyebrow="06 · Education" title="A foundation for the work." href="/education/" linkLabel="Education details" />
-      <div class="education-list">
-        {education.map(({ data }) => (
-          <article data-reveal><p>{yearRange(data.startDate, data.endDate)}{data.cgpa && ` · CGPA ${data.cgpa}`}</p><h3>{data.title}</h3><span>{data.institution}</span></article>
-        ))}
-        {education.length === 0 && <p class="empty-state">Education details are ready for your Markdown content.</p>}
-      </div>
+    <SectionHeading eyebrow="Education" title="Where the foundation was built." href="/education/" linkLabel="Education details" />
+    <div class="grouped-list">
+      {education.map(({ data }) => (
+        <article class="grouped-row" data-reveal>
+          <div>
+            <p class="row-meta">{data.institution}</p>
+            <h3>{data.title}</h3>
+          </div>
+          <p class="row-aside">{yearRange(data.startDate, data.endDate)}{data.cgpa && ` · CGPA ${data.cgpa}`}</p>
+        </article>
+      ))}
+      {education.length === 0 && <p class="empty-state">Education details are ready for your Markdown content.</p>}
+    </div>
   </section>
 </BaseLayout>
 
 <style>
-  .hero { position: relative; display: grid; grid-template-columns: 1.15fr 0.85fr; min-height: calc(100svh - var(--header-height)); padding-block: clamp(4rem, 8vw, 8rem); align-items: center; gap: 2rem; }
-  .hero-prose { max-width: 40rem; margin-top: 1.25rem; color: var(--muted); font-size: clamp(1.1rem, 1.8vw, 1.35rem); }
-  .hero-prose :global(p) { margin: 0.55rem 0; }
-  .hero-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 2rem; }
-  .availability { display: flex; align-items: center; gap: 0.6rem; max-width: 34rem; margin: 1.5rem 0 0; color: var(--muted); font-size: 0.82rem; }
-  .availability span { width: 0.55rem; height: 0.55rem; flex: 0 0 auto; background: #2f9e63; border: 3px solid #cdebdc; border-radius: 50%; box-sizing: content-box; }
-  .hero-object { position: relative; display: grid; aspect-ratio: 1; max-width: 35rem; place-items: center; justify-self: end; }
-  .orbit { position: absolute; border: 1px solid var(--line); border-radius: 50%; }
-  .orbit-one { inset: 5%; animation: spin 24s linear infinite; }
-  .orbit-one::after { position: absolute; top: 12%; left: 12%; width: 1rem; height: 1rem; background: var(--accent); border-radius: 50%; content: ''; box-shadow: 0 0 2rem var(--accent); }
-  .orbit-two { inset: 20%; border-style: dashed; animation: spin 18s linear infinite reverse; }
-  .core { display: grid; width: 68%; aspect-ratio: 0.82; place-items: center; overflow: hidden; color: var(--button-text); background: var(--ink); border: 0.5rem solid var(--profile-border); border-radius: 43% 57% 62% 38% / 43% 38% 62% 57%; box-shadow: 0 2rem 6rem var(--accent-glow); animation: morph 8s var(--ease) infinite alternate; }
-  .core span { font-size: clamp(4rem, 10vw, 8rem); font-weight: 600; letter-spacing: -0.08em; }
-  .core :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: 50% 44%; }
-  .scroll-note { position: absolute; bottom: 1.5rem; left: 0; display: flex; align-items: center; gap: 0.7rem; color: var(--muted); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
-  .scroll-note span { width: 2.5rem; height: 1px; background: var(--line); }
-  .skills-strip { display: grid; grid-template-columns: 0.35fr 1.65fr; gap: 2rem; padding-block: 2rem; border-top: 1px solid var(--line); }
-  .skills-strip h2 { margin: 0; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; }
-  .skills-strip dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; margin: 0; }
-  .skills-strip dt { color: var(--accent); font-size: 0.72rem; font-weight: 750; text-transform: uppercase; }
-  .skills-strip dd { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
-  .experience-list { border-top: 1px solid var(--line); }
-  .experience-card { padding-block: clamp(2.5rem, 5vw, 4.5rem); border-bottom: 1px solid var(--line); }
-  .experience-card:last-child { border-bottom: 0; }
-  .experience-card header { display: grid; grid-template-columns: 3rem 1fr auto; gap: 1.5rem; align-items: start; }
-  .experience-card .index, .experience-card header div p, .experience-meta { color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; }
-  .experience-card header div p { margin: 0 0 0.3rem; color: var(--accent); }
-  .experience-card h3 { margin: 0; font-size: clamp(1.7rem, 3vw, 2.5rem); letter-spacing: -0.04em; }
-  .experience-meta { margin: 0; }
-  .experience-summary { max-width: 50rem; margin: 2rem 0 0 4.5rem; color: var(--muted); font-size: 1.08rem; }
-  .experience-highlights { display: grid; max-width: 58rem; gap: 0.8rem; margin: 1.5rem 0 0 4.5rem; padding-left: 1.2rem; }
-  .experience-card .pill-list { margin-left: 4.5rem; }
-  .contribution-grid { margin-top: 1rem; }
-  .education-list { border-top: 1px solid var(--line); }
-  .education-list article { padding: 1.5rem 0; border-bottom: 1px solid var(--line); }
-  .education-list article p, .education-list article span { margin: 0; color: var(--muted); font-size: 0.8rem; }
-  .education-list article h3 { margin: 0.5rem 0; font-size: 1.5rem; letter-spacing: -0.035em; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes morph { to { border-radius: 58% 42% 37% 63% / 52% 61% 39% 48%; transform: rotate(7deg); } }
-  @media (max-width: 900px) {
-    .hero { grid-template-columns: 1fr; padding-bottom: 6rem; }
-    .hero-object { width: min(100%, 30rem); justify-self: center; }
-    .skills-strip { grid-template-columns: 1fr; }
-    .skills-strip dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    min-height: calc(100svh - 6.5rem);
+    align-items: center;
+    gap: clamp(2rem, 5vw, 4rem);
+    padding-block: clamp(3.5rem, 8vw, 6rem) clamp(2.5rem, 6vw, 4rem);
   }
+
+  .hero-prose {
+    max-width: 36rem;
+    margin-top: 1.1rem;
+    color: var(--muted);
+    font-size: clamp(1.1rem, 1.8vw, 1.3rem);
+    letter-spacing: -0.012em;
+    line-height: 1.45;
+  }
+
+  .hero-prose :global(p) { margin: 0.45rem 0; }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 1.75rem;
+  }
+
+  .availability {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 1.25rem 0 0;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  .availability span {
+    width: 0.5rem;
+    height: 0.5rem;
+    background: #30d158;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px color-mix(in srgb, #30d158 18%, transparent);
+  }
+
+  .hero-portrait {
+    justify-self: end;
+    width: min(100%, 22rem);
+  }
+
+  .portrait {
+    overflow: hidden;
+    aspect-ratio: 4 / 5;
+    display: grid;
+    place-items: center;
+    color: var(--button-text);
+    background: var(--elevated);
+    border: 1px solid var(--profile-border);
+    border-radius: calc(var(--radius) + 0.35rem);
+    box-shadow: var(--material-shadow);
+  }
+
+  .portrait span {
+    font-size: clamp(4rem, 10vw, 6.5rem);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+  }
+
+  .portrait :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 44%;
+  }
+
+  .skills-strip {
+    display: grid;
+    grid-template-columns: 0.42fr 1.58fr;
+    gap: 1.5rem;
+    align-items: start;
+    padding-bottom: clamp(2rem, 5vw, 3rem);
+  }
+
+  .skills-copy h2 {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 590;
+    color: var(--muted);
+  }
+
+  .skills-copy p {
+    margin: 0.4rem 0 0;
+    color: var(--ink);
+    font-size: 1.05rem;
+    letter-spacing: -0.015em;
+  }
+
+  .skills-panel {
+    margin: 0;
+    overflow: hidden;
+    background: var(--elevated);
+    border: 1px solid var(--line);
+    border-radius: calc(var(--radius) + 0.15rem);
+    box-shadow: var(--material-shadow);
+  }
+
+  .skills-panel div {
+    display: grid;
+    grid-template-columns: 8.5rem 1fr;
+    gap: 1rem;
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .skills-panel div:last-child { border-bottom: 0; }
+  .skills-panel dt {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 590;
+  }
+  .skills-panel dd {
+    margin: 0;
+    color: var(--ink);
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+
+  .grouped-list {
+    overflow: hidden;
+    background: var(--elevated);
+    border: 1px solid var(--line);
+    border-radius: calc(var(--radius) + 0.15rem);
+    box-shadow: var(--material-shadow);
+  }
+
+  .grouped-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1.25rem;
+    padding: 1.25rem 1.3rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .grouped-row:last-child { border-bottom: 0; }
+
+  .row-meta,
+  .row-aside {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: 510;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .grouped-row h3 {
+    margin: 0.2rem 0 0;
+    font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+    font-weight: 590;
+    letter-spacing: -0.025em;
+  }
+
+  .row-copy {
+    max-width: 42rem;
+    margin: 0.45rem 0 0;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .row-aside {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .contribution-grid { margin-top: 0.85rem; }
+
+  @media (max-width: 900px) {
+    .hero {
+      grid-template-columns: 1fr;
+      min-height: auto;
+    }
+
+    .hero-portrait {
+      order: -1;
+      width: min(100%, 18rem);
+      justify-self: start;
+    }
+
+    .skills-strip,
+    .grouped-row { grid-template-columns: 1fr; }
+
+    .row-aside {
+      text-align: left;
+      white-space: normal;
+    }
+  }
+
   @media (max-width: 560px) {
-    .hero-object { width: 90%; }
-    .skills-strip dl { grid-template-columns: 1fr; }
-    .experience-card header { grid-template-columns: 1fr; }
-    .experience-card .index { display: none; }
-    .experience-summary, .experience-highlights, .experience-card .pill-list { margin-left: 0; }
+    .skills-panel div { grid-template-columns: 1fr; gap: 0.3rem; }
   }
 </style>

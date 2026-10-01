@@ -15,19 +15,44 @@ const { eyebrow, title, href, linkLabel = 'View all' } = Astro.props;
     <h2>{title}</h2>
   </div>
   {href && (
-    <div class="aside">
-      <a href={href}>{linkLabel} <span aria-hidden="true">↗</span></a>
-    </div>
+    <a href={href}>{linkLabel}</a>
   )}
 </header>
 
 <style>
-  .section-heading { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: end; margin-bottom: clamp(2.5rem, 5vw, 4.5rem); }
-  h2 { max-width: 12ch; margin: 0; font-size: clamp(2.6rem, 5vw, 5rem); font-weight: 620; letter-spacing: -0.06em; line-height: 0.98; }
-  .aside { max-width: 29rem; justify-self: center; text-align: center; }
-  .aside a { color: var(--accent); font-size: 0.88rem; font-weight: 750; }
+  .section-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: clamp(1.75rem, 4vw, 2.75rem);
+  }
+
+  h2 {
+    max-width: 14ch;
+    margin: 0;
+    font-size: clamp(2rem, 4.4vw, 3.25rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  a {
+    flex: 0 0 auto;
+    color: var(--accent);
+    font-size: 0.9375rem;
+    font-weight: 590;
+    text-decoration: none;
+    transition: transform var(--press);
+  }
+
+  a:active { transform: scale(0.97); }
+
   @media (max-width: 700px) {
-    .section-heading { grid-template-columns: 1fr; }
-    .aside { justify-self: center; }
+    .section-heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
   }
 </style>
