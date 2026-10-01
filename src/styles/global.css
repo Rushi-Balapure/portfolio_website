@@ -38,7 +38,7 @@
   --elevated: #ffffff;
   --surface: rgba(255, 255, 255, 0.72);
   --line: rgba(29, 29, 31, 0.1);
-  --accent: #0071e3;
+  --accent: #0058b0;
   --accent-soft: rgba(0, 113, 227, 0.1);
   --on-accent: #ffffff;
   --prose: #424245;
@@ -359,6 +359,7 @@ textarea {
     --material: var(--elevated);
     --material-edge: var(--ink);
     --surface: var(--elevated);
+    --accent: #004c98;
   }
 
   .button,

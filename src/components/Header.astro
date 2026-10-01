@@ -45,7 +45,7 @@ const links = [
         aria-controls="mobile-sheet"
         data-sheet-open
       >
-        <span class="visually-hidden">Open navigation</span>
+        <span class="visually-hidden" data-menu-label>Open navigation</span>
         <i aria-hidden="true"></i>
         <i aria-hidden="true"></i>
       </button>
@@ -289,12 +289,24 @@ const links = [
       frame = 0;
     };
 
+    const lockBackground = (locked: boolean) => {
+      document.querySelectorAll('header.site-header, #main-content, footer').forEach((node) => {
+        if (locked) node.setAttribute('inert', '');
+        else node.removeAttribute('inert');
+      });
+    };
+
     const syncChrome = () => {
       const height = Math.max(getSheetHeight(sheet), 1);
       const progress = 1 - Math.min(Math.max(y / height, 0), 1);
       scrim.style.opacity = String(progress);
-      openButtons.forEach((button) => button.setAttribute('aria-expanded', String(open)));
+      openButtons.forEach((button) => {
+        button.setAttribute('aria-expanded', String(open));
+        const label = button.querySelector('[data-menu-label]');
+        if (label) label.textContent = open ? 'Close navigation' : 'Open navigation';
+      });
       document.body.style.overflow = open ? 'hidden' : '';
+      lockBackground(open);
     };
 
     const hideRoot = () => {
@@ -302,6 +314,7 @@ const links = [
       sheet.style.transform = '';
       scrim.style.opacity = '';
       document.body.style.overflow = '';
+      lockBackground(false);
     };
 
     const restoreFocus = () => {
@@ -339,7 +352,6 @@ const links = [
 
         if (spring.settled(position, currentVelocity, target)) {
           y = target;
-          velocity = 0;
           setSheetOffset(sheet, y);
           syncChrome();
           if (target > 0) finishClose();
@@ -407,6 +419,7 @@ const links = [
       rememberSample(startY, event.timeStamp);
 
       const onMove = (moveEvent: PointerEvent) => {
+        if (signal.aborted) return;
         const pointerY = moveEvent.clientY;
         rememberSample(pointerY, moveEvent.timeStamp);
         const next = origin + (pointerY - startY);
@@ -416,10 +429,12 @@ const links = [
       };
 
       const onUp = (upEvent: PointerEvent) => {
-        sheet.releasePointerCapture(upEvent.pointerId);
-        sheet.removeEventListener('pointermove', onMove);
-        sheet.removeEventListener('pointerup', onUp);
-        sheet.removeEventListener('pointercancel', onUp);
+        try {
+          sheet.releasePointerCapture(upEvent.pointerId);
+        } catch {
+          // Capture may already be released during a route swap.
+        }
+        if (signal.aborted) return;
 
         const releaseVelocity = sampleVelocity();
         const height = getSheetHeight(sheet);
@@ -429,9 +444,9 @@ const links = [
         else animateTo(0, releaseVelocity, Math.abs(releaseVelocity) > 180);
       };
 
-      sheet.addEventListener('pointermove', onMove);
-      sheet.addEventListener('pointerup', onUp);
-      sheet.addEventListener('pointercancel', onUp);
+      sheet.addEventListener('pointermove', onMove, { signal });
+      sheet.addEventListener('pointerup', onUp, { signal });
+      sheet.addEventListener('pointercancel', onUp, { signal });
     };
 
     openButtons.forEach((button) => button.addEventListener('click', openSheet, { signal }));
