@@ -1,0 +1,80 @@
+---
+const groups = [
+  { id: 'languages', label: 'Languages', items: [['Py', 'Python', 'The everyday driver'], ['Rb', 'Ruby', 'Product backends'], ['SQL', 'SQL', 'Making data useful']] },
+  { id: 'frameworks', label: 'AI & frameworks', items: [['F', 'FastAPI', 'APIs that move fast'], ['Pt', 'PyTorch', 'Models & experiments'], ['HF', 'Transformers', 'Applied language models'], ['LC', 'LangChain', 'LLM workflows'], ['Sk', 'Scikit-learn', 'Practical ML']] },
+  { id: 'data', label: 'Data', items: [['Pg', 'Postgres', 'Relational foundations'], ['My', 'MySQL', 'Production data'], ['Pi', 'Pinecone', 'Vector search'], ['Mv', 'Milvus', 'Similarity at scale']] },
+];
+---
+
+<section class="tech-section shell" aria-labelledby="skills-title" data-reveal data-tech-stack>
+  <div class="tech-header"><div><p class="eyebrow">The toolkit</p><h2 id="skills-title">Good tools. Better possibilities.</h2></div>
+    <div class="tech-tabs" role="tablist" aria-label="Technology categories" hidden>
+      {groups.map(({ id, label }, index) => <button type="button" role="tab" id={`tab-${id}`} aria-controls={`panel-${id}`} aria-selected={index === 0 ? 'true' : 'false'} tabindex={index === 0 ? 0 : -1}>{label}</button>)}
+    </div>
+  </div>
+  {groups.map(({ id, label, items }) => (
+    <div class="tech-panel" id={`panel-${id}`} data-tech-panel>
+      <h3 class="fallback-heading">{label}</h3>
+      <div class="tech-items">{items.map(([mark, name, detail]) => <div class="tech-item"><span class="tech-mark" aria-hidden="true">{mark}</span><div><strong>{name}</strong><span>{detail}</span></div></div>)}</div>
+    </div>
+  ))}
+</section>
+
+<script>
+  function initStack(root: HTMLElement) {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const panels = root.querySelectorAll<HTMLElement>('[data-tech-panel]');
+    function selectTab(selected: number) {
+      tabs.forEach((tab, index) => {
+        tab.setAttribute('aria-selected', String(index === selected));
+        tab.tabIndex = index === selected ? 0 : -1;
+        panels[index].hidden = index !== selected;
+      });
+    }
+    panels.forEach((panel, index) => {
+      panel.setAttribute('role', 'tabpanel');
+      panel.setAttribute('aria-labelledby', tabs[index].id);
+      panel.tabIndex = 0;
+    });
+    root.querySelector<HTMLElement>('[role="tablist"]')!.hidden = false;
+    root.classList.add('is-enhanced');
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => selectTab(index));
+      tab.addEventListener('keydown', (event) => {
+        const next = { ArrowRight: (index + 1) % tabs.length, ArrowLeft: (index - 1 + tabs.length) % tabs.length, Home: 0, End: tabs.length - 1 }[event.key];
+        if (next === undefined) return;
+        event.preventDefault();
+        selectTab(next);
+        tabs[next].focus();
+      });
+    });
+    selectTab(0);
+  }
+  document.querySelectorAll<HTMLElement>('[data-tech-stack]').forEach(initStack);
+</script>
+
+<style>
+  .tech-section { padding-block: 2.5rem 3.5rem; border-top: 1px solid var(--line); }
+  .tech-header { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
+  .eyebrow { margin-bottom: 0.4rem; }
+  h2 { margin: 0; font-size: 1.2rem; font-weight: 500; letter-spacing: -0.025em; }
+  .tech-tabs { display: flex; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; }
+  .tech-tabs[hidden], .tech-panel[hidden] { display: none; }
+  .tech-tabs button { min-height: 40px; padding: 0.35rem 0.8rem; color: var(--muted); background: transparent; border: 0; border-radius: 6px; cursor: pointer; font-size: 0.75rem; white-space: nowrap; transition: background 160ms, color 160ms; }
+  .tech-tabs button[aria-selected='true'] { color: var(--ink); background: var(--raised); box-shadow: 0 1px 4px #0002; }
+  .tech-panel { padding-block: 0.3rem; }
+  .tech-panel:focus-visible { outline-offset: 8px; }
+  .is-enhanced .fallback-heading { display: none; }
+  .tech-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1.2rem; }
+  .tech-item { display: flex; align-items: center; gap: 0.8rem; min-width: 0; }
+  .tech-mark { display: grid; flex-shrink: 0; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 10px; color: var(--accent); background: var(--surface); font: 600 0.85rem var(--font-mono); }
+  .tech-item strong { display: block; font-size: 0.85rem; font-weight: 550; }
+  .tech-item div > span { display: block; color: var(--muted); font-size: 0.7rem; }
+  @media (max-width: 650px) {
+    .tech-header { align-items: start; flex-direction: column; }
+    .tech-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tech-item { gap: 0.55rem; }
+    .tech-mark { width: 36px; height: 36px; font-size: 0.7rem; }
+    .tech-item div > span { font-size: 0.64rem; }
+  }
+</style>

@@ -44,7 +44,7 @@ const structuredData = {
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
-    <meta id="theme-color" name="theme-color" content="#11120f" />
+    <meta id="theme-color" name="theme-color" content="#0d0f12" />
     <script is:inline>
       (() => {
         const key = 'theme-preference';
@@ -68,7 +68,7 @@ const structuredData = {
           root.style.colorScheme = resolved;
 
           const themeColor = document.querySelector('#theme-color');
-          if (themeColor) themeColor.setAttribute('content', resolved === 'dark' ? '#11120f' : '#f4f2eb');
+          if (themeColor) themeColor.setAttribute('content', resolved === 'dark' ? '#0d0f12' : '#f6f5f1');
 
           if (persist) {
             try { localStorage.setItem(key, preference); } catch {}
@@ -120,6 +120,7 @@ const structuredData = {
           });
         }, { threshold: 0.08, rootMargin: '0px 0px -5% 0px' });
         items.forEach((item) => observer.observe(item));
+        document.documentElement.classList.add('reveal-ready');
       };
       reveal();
       document.addEventListener('astro:page-load', reveal);
