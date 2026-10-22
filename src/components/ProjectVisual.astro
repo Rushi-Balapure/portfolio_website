@@ -1,0 +1,54 @@
+---
+interface Props { project: string; }
+const { project } = Astro.props;
+---
+
+<div class:list={['project-visual', `visual-${project}`]} aria-hidden="true">
+  {project === 'insidia-labs' ? (
+    <div class="scan-visual"><div class="scan-top"><span class="scan-mark">i.</span><span>INSIDIA LABS</span><span class="local">LOCAL FIRST</span></div><div class="scan-flow"><span>AI app<br/><small>your target</small></span><i>→</i><span class="scan-engine">insidia<br/><small>scan + review</small></span><i>→</i><span>Evidence<br/><small>your next move</small></span></div><div class="scan-bottom"><span>prompt injection</span><span>data leakage</span><span>API security</span></div></div>
+  ) : project === 'arise' ? (
+    <div class="arise-visual"><div class="mini-bar"><i></i><i></i><i></i><span>~/experiments</span></div><div class="arise-code"><span class="code-muted">$</span> arise --style matrix<br/><span class="matrix">01 10 01 11 00 10 01<br/>10 01 <b>A R I S E</b> 10<br/>00 11 10 01 11 00 10</span><br/><span class="code-muted">(.venv)</span> <span class="code-green">ready to build</span> <span class="code-cursor">▌</span></div></div>
+  ) : (
+    <div class="analysis-visual"><div class="analysis-label"><span></span> TWO SIGNALS. ONE INVESTIGATION.</div><div class="analysis-sources"><div><span class="source-icon">&lt;/&gt;</span><strong>Source code</strong><small>Static analysis</small></div><span class="source-plus">+</span><div><span class="source-icon">⌁</span><strong>Network traffic</strong><small>Behavioral analysis</small></div></div><div class="signal-line"></div><span class="analysis-output">Vulnerability analysis ↗</span></div>
+  )}
+</div>
+
+<style>
+  .project-visual { display: grid; place-items: center; min-height: 16rem; padding: clamp(1rem, 3vw, 2.5rem); overflow: hidden; background: var(--visual-bg); border-bottom: 1px solid var(--line); }
+  .visual-insidia-labs { background: radial-gradient(ellipse at 50% 120%, #c96b2c20, transparent 70%), var(--visual-bg); }
+  .scan-visual { width: 100%; max-width: 40rem; }
+  .scan-top { display: flex; align-items: center; gap: 0.6rem; font: 0.6rem var(--font-mono); color: var(--muted); }
+  .scan-mark { display: grid; place-items: center; width: 28px; height: 28px; color: #151515; background: #e9a26f; border-radius: 6px; font: 650 1.3rem system-ui; }
+  .local { margin-left: auto; color: var(--green); font-size: 0.5rem; }
+  .scan-flow { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding-block: 2.2rem; }
+  .scan-flow > span { padding: 0.8rem; min-width: 22%; text-align: center; background: var(--raised); border: 1px solid var(--line); border-radius: 8px; font-size: 0.8rem; }
+  .scan-flow .scan-engine { border-color: var(--accent); }
+  .scan-flow small { color: var(--muted); font-size: 0.55rem; }
+  .scan-flow i { color: var(--muted); font-style: normal; }
+  .scan-bottom { display: flex; justify-content: center; gap: 1.3rem; color: var(--muted); font: 0.5rem var(--font-mono); }
+  .arise-visual { width: 100%; max-width: 25rem; overflow: hidden; background: #101614; color: #d6e5df; border: 1px solid #ffffff20; border-radius: 10px; box-shadow: 0 15px 30px #0002; }
+  .mini-bar { display: flex; align-items: center; gap: 4px; padding: 0.6rem 0.8rem; border-bottom: 1px solid #ffffff10; }
+  .mini-bar i { width: 5px; height: 5px; border-radius: 50%; background: #727c76; }
+  .mini-bar span { margin-left: auto; color: #8e9b94; font: 0.5rem var(--font-mono); }
+  .arise-code { padding: 1.2rem 1.5rem; font: 0.65rem/1.8 var(--font-mono); }
+  .code-muted { color: #91a199; }
+  .matrix { display: block; padding-top: 0.8rem; color: #4f7762; letter-spacing: 0.15em; text-align: center; }
+  .matrix b, .code-green, .code-cursor { color: #a9e5c4; }
+  .analysis-visual { display: grid; justify-items: center; width: 100%; max-width: 28rem; }
+  .analysis-label { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); font: 0.5rem var(--font-mono); letter-spacing: 0.04em; }
+  .analysis-label > span { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+  .analysis-sources { display: flex; align-items: center; gap: 2rem; margin-top: 1.5rem; text-align: center; }
+  .analysis-sources strong, .analysis-sources small { display: block; }
+  .source-icon { display: grid; place-items: center; width: 44px; height: 44px; margin: 0 auto 0.6rem; border: 1px solid var(--line); background: var(--raised); border-radius: 10px; color: var(--accent); font: 1.1rem var(--font-mono); }
+  .analysis-sources strong { font-size: 0.75rem; font-weight: 500; }
+  .analysis-sources small { color: var(--muted); font-size: 0.6rem; }
+  .source-plus { color: var(--muted); }
+  .signal-line { width: 1px; height: 1.2rem; margin: 0.5rem 0; background: var(--line); }
+  .analysis-output { color: var(--green); font: 0.6rem var(--font-mono); }
+  @media (max-width: 480px) {
+    .project-visual { min-height: 15rem; }
+    .scan-flow { gap: 0.35rem; }
+    .scan-flow > span { padding: 0.6rem 0.4rem; font-size: 0.7rem; }
+    .scan-bottom { gap: 0.6rem; font-size: 0.45rem; }
+  }
+</style>

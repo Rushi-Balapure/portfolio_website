@@ -26,6 +26,8 @@ const formatDate = (date: Date) =>
           title={data.title}
           summary={data.summary}
           tags={data.stack ?? data.tags}
+          project={id}
+          large={id === 'insidia-labs'}
         />
       ))}
       {projects.length === 0 && <p class="empty-state">No projects are published yet. The current project entries are drafts, so they are intentionally not shown.</p>}

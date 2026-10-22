@@ -5,180 +5,150 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import EntryCard from '../components/EntryCard.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import GitHubActivity from '../components/GitHubActivity.astro';
+import TechStack from '../components/TechStack.astro';
 
 const home = await getEntry('pages', 'home');
 if (!home) throw new Error('Missing src/content/pages/home.md');
 const { Content: HomeContent } = await render(home);
 const profile = home.data;
-
-const newest = <T extends { data: { date: Date; draft: boolean; featured: boolean } }>(entries: T[]) =>
-  entries
-    .filter(({ data }) => !data.draft)
-    .sort((a, b) => Number(b.data.featured) - Number(a.data.featured) || b.data.date.getTime() - a.data.date.getTime());
-
-const experience = (await getCollection('experience'))
+const [firstName, ...lastName] = (profile.name ?? 'Rushi Balapure').split(' ');
+const newest = <T extends { data: { date: Date; draft: boolean; featured: boolean } }>(entries: T[]) => entries
   .filter(({ data }) => !data.draft)
-  .sort((a, b) => b.data.startDate.getTime() - a.data.startDate.getTime())
-  .slice(0, 3);
-const projects = (await getCollection('projects'))
-  .filter(({ data }) => !data.draft)
-  .sort((a, b) => b.data.priority - a.data.priority || Number(b.data.featured) - Number(a.data.featured) || b.data.date.getTime() - a.data.date.getTime())
-  .slice(0, 3);
+  .sort((a, b) => Number(b.data.featured) - Number(a.data.featured) || b.data.date.getTime() - a.data.date.getTime());
+const experience = (await getCollection('experience')).filter(({ data }) => !data.draft)
+  .sort((a, b) => b.data.startDate.getTime() - a.data.startDate.getTime()).slice(0, 3);
+const projects = (await getCollection('projects')).filter(({ data }) => !data.draft)
+  .sort((a, b) => b.data.priority - a.data.priority || Number(b.data.featured) - Number(a.data.featured) || b.data.date.getTime() - a.data.date.getTime()).slice(0, 3);
 const openSource = newest(await getCollection('openSource')).slice(0, 2);
 const publications = newest(await getCollection('publications')).slice(0, 2);
 const community = newest(await getCollection('community')).slice(0, 2);
-const education = (await getCollection('education'))
-  .filter(({ data }) => !data.draft)
-  .sort((a, b) => b.data.startDate.getTime() - a.data.startDate.getTime())
-  .slice(0, 2);
-
+const education = (await getCollection('education')).filter(({ data }) => !data.draft)
+  .sort((a, b) => b.data.startDate.getTime() - a.data.startDate.getTime()).slice(0, 2);
 const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.getFullYear() ?? 'Now'}`;
 ---
 
 <BaseLayout description={profile.summary}>
-  <section class="hero shell">
+  <section class="hero shell" aria-labelledby="intro-title">
     <div class="hero-copy" data-reveal>
       <p class="eyebrow">{profile.eyebrow ?? 'Portfolio'}</p>
-      <h1 class="display">{profile.name}</h1>
+      <h1 class="display" id="intro-title">{firstName}<br/>{lastName.join(' ')}</h1>
       <div class="hero-prose"><HomeContent /></div>
       <div class="hero-actions">
         <a class="button" href="/projects/">Explore the work <span aria-hidden="true">↗</span></a>
         <a class="button button--quiet" href="/resume.pdf" target="_blank" rel="noreferrer">Resume <span aria-hidden="true">↓</span></a>
       </div>
-      {profile.availability && <p class="availability"><span aria-hidden="true"></span>{profile.availability}</p>}
-    </div>
-    <div class="hero-object" data-reveal>
-      <div class="orbit orbit-one" aria-hidden="true"></div>
-      <div class="orbit orbit-two" aria-hidden="true"></div>
-      <div class="core">
-        {profile.cover ? <Image src={profile.cover} alt={`Portrait of ${profile.name}`} widths={[480, 720]} sizes="(max-width: 900px) 70vw, 34vw" /> : <span>{profile.name?.slice(0, 1) ?? 'R'}</span>}
+      <div class="hero-socials" aria-label="Find me online">
+        {profile.githubUrl && <a href={profile.githubUrl} target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>}
+        {profile.linkedinUrl && <a href={profile.linkedinUrl} target="_blank" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>}
+        {profile.email && <a href={`mailto:${profile.email}`}>Send an email <span aria-hidden="true">↗</span></a>}
       </div>
+      {profile.availability && <p class="availability">{profile.availability}</p>}
     </div>
-    <div class="scroll-note" aria-hidden="true"><span></span> Scroll to explore</div>
+    {profile.cover && <figure class="hero-portrait" data-reveal>
+      <Image src={profile.cover} alt={`Portrait of ${profile.name}`} widths={[400, 640]} sizes="(max-width: 900px) min(100vw, 352px), 352px" loading="eager" fetchpriority="high" />
+    </figure>}
+    <div class="hero-bottom" aria-hidden="true"><span>Scroll to explore ↓</span></div>
   </section>
 
-  <section class="skills-strip shell" aria-labelledby="skills-title" data-reveal>
-    <h2 id="skills-title">Tech I use</h2>
-    <dl>
-      <div><dt>Languages</dt><dd>Python, Ruby, SQL</dd></div>
-      <div><dt>Frameworks</dt><dd>FastAPI, PyTorch, Scikit-learn, Hugging Face Transformers, LangChain</dd></div>
-      <div><dt>Database</dt><dd>Postgres, MySQL, Pinecone, Milvus </dd></div>
-    </dl>
-  </section>
+  <TechStack />
 
   <section class="section shell" id="experience">
     <SectionHeading eyebrow="01 · Experience" title="Work with consequence." href="/experience/" linkLabel="Full experience" />
     <div class="experience-list">
-      {experience.map(({ data }, index) => (
+      {experience.map(({ data }) => (
         <article class="experience-card" data-reveal>
-          <header>
-            <span class="index">0{index + 1}</span>
-            <div><p>{data.organization}</p><h3>{data.role}</h3></div>
-            <p class="experience-meta">{yearRange(data.startDate, data.endDate)}{data.location && ` · ${data.location}`}</p>
-          </header>
-          <p class="experience-summary">{data.summary}</p>
-          {data.highlights.length > 0 && <ul class="experience-highlights">{data.highlights.map((highlight) => <li>{highlight}</li>)}</ul>}
-          <ul class="pill-list">{data.tags.map((tag) => <li class="pill">{tag}</li>)}</ul>
+          <div class="experience-timeline"><span class="timeline-dot" aria-hidden="true"></span><span>{yearRange(data.startDate, data.endDate)}</span></div>
+          <div class="experience-body"><header><div><p class="eyebrow">{data.organization}</p><h3>{data.role}</h3></div><span class="location">{data.location}</span></header>
+            <p class="experience-summary">{data.summary}</p>
+            {data.highlights.length > 0 && <ul class="experience-highlights">{data.highlights.map((highlight) => <li>{highlight}</li>)}</ul>}
+            <ul class="pill-list">{data.tags.map((tag) => <li class="pill">{tag}</li>)}</ul>
+          </div>
         </article>
       ))}
       {experience.length === 0 && <p class="empty-state">Experience entries are ready for your Markdown content.</p>}
     </div>
   </section>
 
-  <section class="section shell">
+  <section class="section shell" id="selected-work" aria-label="Selected projects">
     <SectionHeading eyebrow="02 · Projects" title="Built to be used." href="/projects/" />
     <div class="grid">
-      {projects.map(({ id, data }, index) => <EntryCard href={`/projects/${id}/`} eyebrow={data.status?.replace('-', ' ') ?? 'Project'} title={data.title} summary={data.summary} tags={data.stack ?? data.tags} large={index === 0} />)}
+      {projects.map(({ id, data }, index) => <EntryCard href={`/projects/${id}/`} eyebrow={data.status?.replace('-', ' ') ?? 'Project'} title={data.title} summary={data.summary} tags={data.stack ?? data.tags} large={index === 0} project={id} />)}
       {projects.length === 0 && <p class="empty-state">Projects will appear here as soon as their draft flag is removed.</p>}
     </div>
   </section>
 
-  <section class="section shell">
+  <section class="section shell" aria-label="Open source">
     <SectionHeading eyebrow="03 · Open source" title="Progress is collaborative." href="/open-source/" />
     <GitHubActivity username={profile.githubUsername} profileUrl={profile.githubUrl} />
-    <div class="grid contribution-grid">
-      {openSource.map(({ id, data }) => <EntryCard href={`/open-source/${id}/`} eyebrow={data.organization ?? 'Open source'} title={data.title} summary={data.summary} tags={data.tags} />)}
-    </div>
+    <div class="grid contribution-grid">{openSource.map(({ id, data }) => <EntryCard href={`/open-source/${id}/`} eyebrow={data.organization ?? 'Open source'} title={data.title} summary={data.summary} tags={data.tags} />)}</div>
   </section>
 
-  <section class="section shell">
+  <section class="section shell" aria-label="Research">
     <SectionHeading eyebrow="04 · Research" title="Questions worth pursuing." href="/publications/" linkLabel="All publications" />
-    <div class="grid">
-      {publications.map(({ id, data }) => <EntryCard href={`/publications/${id}/`} eyebrow={data.venue ?? 'Publication'} title={data.title} summary={data.summary} tags={data.tags} />)}
-      {publications.length === 0 && <p class="empty-state">Published papers will appear here after their Markdown entries are completed.</p>}
-    </div>
+    <div class="grid">{publications.map(({ id, data }) => <EntryCard href={`/publications/${id}/`} eyebrow={data.venue ?? 'Publication'} title={data.title} summary={data.summary} tags={data.tags} />)}{publications.length === 0 && <p class="empty-state">Published papers will appear here after their Markdown entries are completed.</p>}</div>
   </section>
 
-  <section class="section shell">
+  <section class="section shell" aria-label="Community and speaking">
     <SectionHeading eyebrow="05 · Community & speaking" title="Knowledge grows when shared." href="/community/" />
-    <div class="grid">
-      {community.map(({ id, data }) => <EntryCard href={`/community/${id}/`} eyebrow={data.eventOrOrganization ?? 'Community'} title={data.title} summary={data.summary} tags={data.tags} />)}
-      {community.length === 0 && <p class="empty-state">Community work and speaking sessions are ready for your Markdown entries.</p>}
-    </div>
+    <div class="grid">{community.map(({ id, data }) => <EntryCard href={`/community/${id}/`} eyebrow={data.eventOrOrganization ?? 'Community'} title={data.title} summary={data.summary} tags={data.tags} />)}{community.length === 0 && <p class="empty-state">Community work and speaking sessions are ready for your Markdown entries.</p>}</div>
   </section>
 
-  <section class="section shell">
-      <SectionHeading eyebrow="06 · Education" title="A foundation for the work." href="/education/" linkLabel="Education details" />
-      <div class="education-list">
-        {education.map(({ data }) => (
-          <article data-reveal><p>{yearRange(data.startDate, data.endDate)}{data.cgpa && ` · CGPA ${data.cgpa}`}</p><h3>{data.title}</h3><span>{data.institution}</span></article>
-        ))}
-        {education.length === 0 && <p class="empty-state">Education details are ready for your Markdown content.</p>}
-      </div>
+  <section class="section shell" aria-label="Education">
+    <SectionHeading eyebrow="06 · Education" title="A foundation for the work." href="/education/" linkLabel="Education details" />
+    {education.map(({ data }) => <article class="education-row" data-reveal><div class="education-icon" aria-hidden="true">↗</div><div><p>{data.institution}</p><h3>{data.title}</h3></div><span>{yearRange(data.startDate, data.endDate)}{data.cgpa && <small>CGPA {data.cgpa}</small>}</span></article>)}
+    {education.length === 0 && <p class="empty-state">Education details are ready for your Markdown content.</p>}
   </section>
 </BaseLayout>
 
 <style>
-  .hero { position: relative; display: grid; grid-template-columns: 1.15fr 0.85fr; min-height: calc(100svh - var(--header-height)); padding-block: clamp(4rem, 8vw, 8rem); align-items: center; gap: 2rem; }
-  .hero-prose { max-width: 40rem; margin-top: 1.25rem; color: var(--muted); font-size: clamp(1.1rem, 1.8vw, 1.35rem); }
-  .hero-prose :global(p) { margin: 0.55rem 0; }
-  .hero-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 2rem; }
-  .availability { display: flex; align-items: center; gap: 0.6rem; max-width: 34rem; margin: 1.5rem 0 0; color: var(--muted); font-size: 0.82rem; }
-  .availability span { width: 0.55rem; height: 0.55rem; flex: 0 0 auto; background: #2f9e63; border: 3px solid #cdebdc; border-radius: 50%; box-sizing: content-box; }
-  .hero-object { position: relative; display: grid; aspect-ratio: 1; max-width: 35rem; place-items: center; justify-self: end; }
-  .orbit { position: absolute; border: 1px solid var(--line); border-radius: 50%; }
-  .orbit-one { inset: 5%; animation: spin 24s linear infinite; }
-  .orbit-one::after { position: absolute; top: 12%; left: 12%; width: 1rem; height: 1rem; background: var(--accent); border-radius: 50%; content: ''; box-shadow: 0 0 2rem var(--accent); }
-  .orbit-two { inset: 20%; border-style: dashed; animation: spin 18s linear infinite reverse; }
-  .core { display: grid; width: 68%; aspect-ratio: 0.82; place-items: center; overflow: hidden; color: var(--button-text); background: var(--ink); border: 0.5rem solid var(--profile-border); border-radius: 43% 57% 62% 38% / 43% 38% 62% 57%; box-shadow: 0 2rem 6rem var(--accent-glow); animation: morph 8s var(--ease) infinite alternate; }
-  .core span { font-size: clamp(4rem, 10vw, 8rem); font-weight: 600; letter-spacing: -0.08em; }
-  .core :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: 50% 44%; }
-  .scroll-note { position: absolute; bottom: 1.5rem; left: 0; display: flex; align-items: center; gap: 0.7rem; color: var(--muted); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
-  .scroll-note span { width: 2.5rem; height: 1px; background: var(--line); }
-  .skills-strip { display: grid; grid-template-columns: 0.35fr 1.65fr; gap: 2rem; padding-block: 2rem; border-top: 1px solid var(--line); }
-  .skills-strip h2 { margin: 0; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; }
-  .skills-strip dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; margin: 0; }
-  .skills-strip dt { color: var(--accent); font-size: 0.72rem; font-weight: 750; text-transform: uppercase; }
-  .skills-strip dd { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
-  .experience-list { border-top: 1px solid var(--line); }
-  .experience-card { padding-block: clamp(2.5rem, 5vw, 4.5rem); border-bottom: 1px solid var(--line); }
-  .experience-card:last-child { border-bottom: 0; }
-  .experience-card header { display: grid; grid-template-columns: 3rem 1fr auto; gap: 1.5rem; align-items: start; }
-  .experience-card .index, .experience-card header div p, .experience-meta { color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; }
-  .experience-card header div p { margin: 0 0 0.3rem; color: var(--accent); }
-  .experience-card h3 { margin: 0; font-size: clamp(1.7rem, 3vw, 2.5rem); letter-spacing: -0.04em; }
-  .experience-meta { margin: 0; }
-  .experience-summary { max-width: 50rem; margin: 2rem 0 0 4.5rem; color: var(--muted); font-size: 1.08rem; }
-  .experience-highlights { display: grid; max-width: 58rem; gap: 0.8rem; margin: 1.5rem 0 0 4.5rem; padding-left: 1.2rem; }
-  .experience-card .pill-list { margin-left: 4.5rem; }
+  .hero { position: relative; display: grid; grid-template-columns: 0.95fr 1.05fr; align-items: center; gap: 2rem; padding-block: clamp(3.5rem, 6vw, 6rem) 5rem; }
+  .hero-copy { position: relative; z-index: 1; min-width: 0; }
+  .hero-portrait { width: min(90%, 22rem); aspect-ratio: 4 / 5; justify-self: center; overflow: hidden; margin: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  .hero-portrait :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; }
+  .hero-prose { max-width: 24rem; margin-top: 1rem; color: var(--muted); font-size: 0.85rem; line-height: 1.8; }
+  .hero-prose :global(p) { margin: 0; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 1.75rem; }
+  .hero-socials { display: flex; gap: 1.3rem; margin-top: 1.2rem; }
+  .hero-socials a { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 36px; color: var(--muted); font-size: 0.68rem; text-decoration: none; }
+  .hero-socials a:hover { color: var(--accent); }
+  .hero-socials a span { font-size: 0.65rem; }
+  .availability { font-size: 0.75rem; color: var(--green); }
+  .hero-bottom { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; color: var(--muted); font: 0.53rem var(--font-mono); letter-spacing: 0.09em; }
+  #selected-work { scroll-margin-top: calc(var(--header-height) + 1rem); }
+  .experience-card { display: grid; grid-template-columns: 10rem 1fr; gap: 2rem; padding-block: 1rem; }
+  .experience-timeline { display: flex; align-items: start; gap: 0.7rem; padding-top: 0.2rem; color: var(--muted); font: 0.65rem var(--font-mono); }
+  .timeline-dot { width: 7px; height: 7px; flex-shrink: 0; margin-top: 3px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 0 5px var(--accent-glow); }
+  .experience-body { border-left: 1px solid var(--line); padding-left: 2rem; }
+  .experience-body header { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+  .experience-body .eyebrow { margin-bottom: 0.55rem; }
+  .experience-body h3 { margin: 0; font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 500; letter-spacing: -0.035em; }
+  .location { color: var(--muted); font-size: 0.65rem; }
+  .experience-summary { max-width: 40rem; color: var(--muted); font-size: 0.85rem; margin-block: 1.3rem; }
+  .experience-highlights { display: grid; gap: 0.7rem; padding-left: 1rem; color: var(--prose); font-size: 0.8rem; }
+  .experience-highlights li::marker { color: var(--accent); }
   .contribution-grid { margin-top: 1rem; }
-  .education-list { border-top: 1px solid var(--line); }
-  .education-list article { padding: 1.5rem 0; border-bottom: 1px solid var(--line); }
-  .education-list article p, .education-list article span { margin: 0; color: var(--muted); font-size: 0.8rem; }
-  .education-list article h3 { margin: 0.5rem 0; font-size: 1.5rem; letter-spacing: -0.035em; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes morph { to { border-radius: 58% 42% 37% 63% / 52% 61% 39% 48%; transform: rotate(7deg); } }
+  .education-row { display: flex; align-items: center; gap: 1.5rem; padding-block: 1rem; }
+  .education-icon { display: grid; place-items: center; flex-shrink: 0; width: 54px; height: 54px; border: 1px solid var(--line); border-radius: 12px; color: var(--accent); background: var(--surface); font-size: 1.3rem; }
+  .education-row p { margin: 0 0 0.4rem; color: var(--muted); font-size: 0.75rem; }
+  .education-row h3 { margin: 0; font-size: 1.05rem; font-weight: 500; letter-spacing: -0.02em; }
+  .education-row > span { margin-left: auto; flex-shrink: 0; text-align: right; font: 0.65rem/1.8 var(--font-mono); color: var(--muted); }
+  .education-row small { display: block; font: inherit; }
   @media (max-width: 900px) {
-    .hero { grid-template-columns: 1fr; padding-bottom: 6rem; }
-    .hero-object { width: min(100%, 30rem); justify-self: center; }
-    .skills-strip { grid-template-columns: 1fr; }
-    .skills-strip dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hero { grid-template-columns: 1fr; gap: 0; padding-top: 3rem; padding-bottom: 2rem; }
+    .hero-copy { max-width: 35rem; }
+    .hero-prose { max-width: 30rem; }
+    .hero-portrait { width: min(100%, 22rem); margin-top: 2rem; justify-self: start; }
+    .hero-bottom { margin-top: 3rem; }
+    .experience-card { grid-template-columns: 7rem 1fr; gap: 1rem; }
   }
   @media (max-width: 560px) {
-    .hero-object { width: 90%; }
-    .skills-strip dl { grid-template-columns: 1fr; }
-    .experience-card header { grid-template-columns: 1fr; }
-    .experience-card .index { display: none; }
-    .experience-summary, .experience-highlights, .experience-card .pill-list { margin-left: 0; }
+    .hero-bottom { font-size: 0.45rem; }
+    .hero-bottom > span:last-child { max-width: 20ch; text-align: right; }
+    .experience-card { grid-template-columns: 1fr; gap: 1.5rem; }
+    .experience-body { padding-left: 1.2rem; }
+    .experience-body header { flex-direction: column; gap: 0.6rem; }
+    .education-row { flex-wrap: wrap; gap: 1rem; }
+    .education-row > div:nth-child(2) { flex: 1; }
+    .education-row > span { margin-left: 70px; text-align: left; }
   }
 </style>

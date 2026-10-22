@@ -6,11 +6,12 @@ interface Props {
   profileUrl?: string;
 }
 
+interface ContributionWeek {
+  days: { date: string; count: number; level: number }[];
+}
+
 const { username = activity.username ?? undefined, profileUrl } = Astro.props;
-const emptyWeeks = Array.from({ length: 52 }, () => ({
-  days: Array.from({ length: 7 }, () => ({ date: '', count: 0, level: 0 })),
-}));
-const weeks = activity.weeks.length ? activity.weeks : emptyWeeks;
+const weeks: ContributionWeek[] = activity.weeks;
 const updated = activity.updatedAt
   ? new Date(activity.updatedAt).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })
   : undefined;
@@ -25,13 +26,13 @@ const updated = activity.updatedAt
     {profileUrl && <a href={profileUrl} target="_blank" rel="noreferrer">@{username ?? 'GitHub'} ↗</a>}
   </div>
 
-  <div class="calendar-scroll" tabindex="0" aria-label="GitHub contribution calendar">
+  {weeks.length > 0 && <div class="calendar-scroll" tabindex="0" aria-label="GitHub contribution calendar">
     <div class="calendar" aria-hidden="true">
       {weeks.flatMap((week) => week.days).map((day) => (
         <span class={`level-${day.level}`} title={day.date ? `${day.count} contributions on ${day.date}` : 'No activity data'}></span>
       ))}
     </div>
-  </div>
+  </div>}
 
   <div class="activity-bottom">
     <p>
@@ -39,26 +40,26 @@ const updated = activity.updatedAt
         ? `Public activity over the last year${updated ? ` · refreshed ${updated}` : ''}.`
         : 'Add githubUsername and githubUrl to home.md, then set the GITHUB_USERNAME repository variable to load public activity.'}
     </p>
-    <div class="legend" aria-label="Contribution intensity from less to more">
+    {weeks.length > 0 && <div class="legend" aria-label="Contribution intensity from less to more">
       <span>Less</span><i class="level-0"></i><i class="level-1"></i><i class="level-2"></i><i class="level-3"></i><i class="level-4"></i><span>More</span>
-    </div>
+    </div>}
   </div>
 </div>
 
 <style>
-  .activity { padding: clamp(1.5rem, 4vw, 3rem); color: #f6f5ef; background: #171816; border-radius: calc(var(--radius) * 1.2); overflow: hidden; }
-  .activity .eyebrow { color: #99adff; }
+  .activity { padding: clamp(1.5rem, 4vw, 2.5rem); color: var(--ink); background: radial-gradient(ellipse at 100% 0, var(--accent-glow), transparent 60%), var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .activity .eyebrow { color: var(--accent); }
   .activity-top, .activity-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; }
-  h3 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); letter-spacing: -0.055em; line-height: 1; }
-  a { color: #c5cff9; font-size: 0.85rem; font-weight: 700; }
+  h3 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); font-weight: 500; letter-spacing: -0.045em; line-height: 1.2; }
+  a { color: var(--accent); font-size: 0.75rem; font-weight: 500; }
   .calendar-scroll { margin-block: 3rem; padding-bottom: 0.5rem; overflow-x: auto; }
   .calendar { display: grid; grid-template-rows: repeat(7, 0.72rem); grid-auto-flow: column; grid-auto-columns: 0.72rem; gap: 0.24rem; width: max-content; min-width: 100%; justify-content: space-between; }
-  .calendar span, .legend i { display: block; width: 0.72rem; height: 0.72rem; background: #30322f; border-radius: 0.18rem; }
-  .calendar .level-1, .legend .level-1 { background: #2f4ca4; }
-  .calendar .level-2, .legend .level-2 { background: #4264cf; }
-  .calendar .level-3, .legend .level-3 { background: #6d89ea; }
-  .calendar .level-4, .legend .level-4 { background: #adbefc; }
-  .activity-bottom { align-items: center; color: #92948e; font-size: 0.72rem; }
+  .calendar span, .legend i { display: block; width: 0.72rem; height: 0.72rem; background: var(--raised); border: 1px solid var(--line); border-radius: 0.18rem; }
+  .calendar .level-1, .legend .level-1 { background: #294c3c; }
+  .calendar .level-2, .legend .level-2 { background: #407559; }
+  .calendar .level-3, .legend .level-3 { background: #6ba786; }
+  .calendar .level-4, .legend .level-4 { background: #a5dfbe; }
+  .activity-bottom { align-items: center; margin-top: 1.5rem; color: var(--muted); font-size: 0.75rem; }
   .activity-bottom p { margin: 0; }
   .legend { display: flex; align-items: center; gap: 0.25rem; white-space: nowrap; }
   @media (max-width: 640px) {

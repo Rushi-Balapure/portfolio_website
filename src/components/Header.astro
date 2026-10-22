@@ -17,10 +17,10 @@ const links = [
 ];
 ---
 
-<header class="site-header">
+<header class="site-header" transition:name="site-header" transition:animate="none">
   <div class="header-inner shell">
     <a class="brand" href="/" aria-label={`${name} home`}>
-      <span>{name}</span><i aria-hidden="true"></i>
+      <span class="brand-mark" aria-hidden="true">rb<span>↗</span></span><span>{name}</span>
     </a>
 
     <nav class="desktop-nav" aria-label="Primary navigation">
@@ -34,7 +34,7 @@ const links = [
     <ThemeToggle />
 
     <details class="mobile-nav">
-      <summary aria-label="Open navigation"><span></span><span></span></summary>
+      <summary aria-label="Toggle navigation"><span></span><span></span></summary>
       <nav aria-label="Mobile navigation">
         {links.map((link) => <a href={link.href} target={link.external ? '_blank' : undefined} rel={link.external ? 'noreferrer' : undefined}>{link.label}</a>)}
       </nav>
@@ -48,7 +48,7 @@ const links = [
     top: 0;
     z-index: 20;
     height: var(--header-height);
-    background: color-mix(in srgb, var(--paper) 82%, transparent);
+    background: color-mix(in srgb, var(--paper) 90%, transparent);
     border-bottom: 1px solid var(--line);
     backdrop-filter: blur(18px) saturate(140%);
   }
@@ -63,32 +63,31 @@ const links = [
   .brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.7rem;
     margin-right: auto;
-    font-size: 1.96rem;
-    font-weight: 800;
+    font-size: 0.85rem;
+    font-weight: 550;
     letter-spacing: -0.025em;
     text-decoration: none;
   }
 
-  .brand i {
-    width: 0.45rem;
-    height: 0.45rem;
-    background: var(--accent);
-    border-radius: 50%;
-  }
+  .brand-mark { display: flex; align-items: center; justify-content: center; gap: 1px; width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); font-size: 1.05rem; font-weight: 600; }
+  .brand-mark span { align-self: start; margin-top: 5px; color: var(--accent); font-size: 0.6rem; }
 
   .desktop-nav {
     display: flex;
     align-items: center;
-    gap: clamp(0.8rem, 1.5vw, 1.5rem);
+    gap: clamp(0.6rem, 1.5vw, 1.3rem);
   }
 
   .desktop-nav a {
     position: relative;
     color: var(--muted);
-    font-size: 0.78rem;
-    font-weight: 650;
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 0.7rem;
+    font-weight: 500;
     text-decoration: none;
     transition: color 200ms ease;
   }
@@ -99,7 +98,7 @@ const links = [
   .desktop-nav a[aria-current='page']::after {
     position: absolute;
     right: 0;
-    bottom: -0.55rem;
+    bottom: 0.2rem;
     left: 0;
     height: 2px;
     background: var(--accent);
@@ -113,17 +112,19 @@ const links = [
     .mobile-nav { display: block; }
     .mobile-nav summary {
       display: grid;
-      width: 2.6rem;
-      height: 2.6rem;
+      width: 2.75rem;
+      height: 2.75rem;
       place-content: center;
       gap: 0.35rem;
       cursor: pointer;
       list-style: none;
       border: 1px solid var(--line);
-      border-radius: 50%;
+      border-radius: 9px;
     }
     .mobile-nav summary::-webkit-details-marker { display: none; }
-    .mobile-nav summary span { width: 1rem; height: 1px; background: var(--ink); }
+    .mobile-nav summary span { width: 1rem; height: 1px; background: var(--ink); transition: transform 220ms var(--ease); }
+    .mobile-nav summary[aria-expanded='true'] span:first-child { transform: translateY(3.3px) rotate(45deg); }
+    .mobile-nav summary[aria-expanded='true'] span:last-child { transform: translateY(-3.3px) rotate(-45deg); }
     .mobile-nav nav {
       position: absolute;
       top: calc(100% + 0.5rem);
@@ -138,4 +139,65 @@ const links = [
     }
     .mobile-nav nav a { padding: 0.7rem; font-weight: 700; text-decoration: none; }
   }
+  @media (max-width: 400px) { .brand > span:last-child { max-width: 5rem; font-size: 0.75rem; line-height: 1.2; } .header-inner { gap: 0.65rem; } }
+  @media (max-width: 360px) { .brand > span:last-child { display: none; } }
+  @media (prefers-reduced-transparency: reduce) { .site-header { background: var(--paper); backdrop-filter: none; } }
 </style>
+
+<script>
+  interface MenuState { open: boolean; animation?: Animation; }
+  function setMenuOpen(menu: HTMLDetailsElement, panel: HTMLElement, state: MenuState, open: boolean) {
+    if (state.open === open) return;
+    const wasOpen = menu.open;
+    const current = getComputedStyle(panel);
+    const from = { opacity: wasOpen ? current.opacity : '0', transform: wasOpen ? current.transform : 'translateY(-8px)' };
+    state.animation?.cancel();
+    state.open = open;
+    menu.querySelector('summary')?.setAttribute('aria-expanded', String(open));
+    panel.inert = !open;
+    if (open) menu.open = true;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      menu.open = open;
+      return;
+    }
+    const animation = panel.animate([from, { opacity: open ? '1' : '0', transform: open ? 'none' : 'translateY(-8px)' }], { duration: open ? 260 : 180, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' });
+    state.animation = animation;
+    animation.onfinish = () => {
+      if (state.animation !== animation) return;
+      menu.open = state.open;
+      state.animation = undefined;
+      animation.cancel();
+    };
+  }
+  let cleanupMenu: (() => void) | undefined;
+  function initMenu() {
+    cleanupMenu?.();
+    const menu = document.querySelector<HTMLDetailsElement>('.mobile-nav');
+    const panel = menu?.querySelector<HTMLElement>('nav');
+    const summary = menu?.querySelector('summary');
+    if (!menu || !panel || !summary) return;
+    const controller = new AbortController();
+    const options = { signal: controller.signal };
+    const state: MenuState = { open: menu.open };
+    const close = () => setMenuOpen(menu, panel, state, false);
+    summary.setAttribute('aria-expanded', String(state.open));
+    panel.inert = !state.open;
+    summary.addEventListener('click', (event) => {
+      event.preventDefault();
+      setMenuOpen(menu, panel, state, !state.open);
+    }, options);
+    menu.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      close();
+      summary.focus();
+    }, options);
+    document.addEventListener('click', (event) => {
+      if (state.open && event.target instanceof Node && !menu.contains(event.target)) close();
+    }, options);
+    window.matchMedia('(min-width: 981px)').addEventListener('change', (event) => { if (event.matches) close(); }, options);
+    cleanupMenu = () => { controller.abort(); state.animation?.cancel(); };
+  }
+  initMenu();
+  document.addEventListener('astro:page-load', initMenu);
+  document.addEventListener('astro:before-swap', () => cleanupMenu?.());
+</script>
