@@ -20,8 +20,8 @@ const updated = activity.updatedAt
 <div class="activity" data-reveal>
   <div class="activity-top">
     <div>
-      <p class="eyebrow">GitHub / Building in public</p>
-      <h3>{activity.weeks.length ? `${activity.totalContributions.toLocaleString()} contributions` : 'The work behind the work.'}</h3>
+      <p class="eyebrow">GitHub pulse</p>
+      <h3>{activity.weeks.length ? `${activity.totalContributions.toLocaleString()} contributions` : 'Contribution activity'}</h3>
     </div>
     {profileUrl && <a href={profileUrl} target="_blank" rel="noreferrer">@{username ?? 'GitHub'} ↗</a>}
   </div>
@@ -38,7 +38,7 @@ const updated = activity.updatedAt
     <p>
       {activity.weeks.length
         ? `Public activity over the last year${updated ? ` · refreshed ${updated}` : ''}.`
-        : 'Experiments, useful tools, and things I learn along the way. Explore my public activity on GitHub.'}
+        : 'Add githubUsername and githubUrl to home.md, then set the GITHUB_USERNAME repository variable to load public activity.'}
     </p>
     {weeks.length > 0 && <div class="legend" aria-label="Contribution intensity from less to more">
       <span>Less</span><i class="level-0"></i><i class="level-1"></i><i class="level-2"></i><i class="level-3"></i><i class="level-4"></i><span>More</span>

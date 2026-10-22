@@ -1,13 +1,13 @@
 ---
 const groups = [
-  { id: 'languages', label: 'Languages', items: [['Py', 'Python', 'The everyday driver'], ['Rb', 'Ruby', 'Product backends'], ['SQL', 'SQL', 'Making data useful']] },
-  { id: 'frameworks', label: 'AI & frameworks', items: [['F', 'FastAPI', 'APIs that move fast'], ['Pt', 'PyTorch', 'Models & experiments'], ['HF', 'Transformers', 'Applied language models'], ['LC', 'LangChain', 'LLM workflows'], ['Sk', 'Scikit-learn', 'Practical ML']] },
-  { id: 'data', label: 'Data', items: [['Pg', 'Postgres', 'Relational foundations'], ['My', 'MySQL', 'Production data'], ['Pi', 'Pinecone', 'Vector search'], ['Mv', 'Milvus', 'Similarity at scale']] },
+  { id: 'languages', label: 'Languages', items: [['Py', 'Python'], ['Rb', 'Ruby'], ['SQL', 'SQL']] },
+  { id: 'frameworks', label: 'Frameworks', items: [['F', 'FastAPI'], ['Pt', 'PyTorch'], ['Sk', 'Scikit-learn'], ['HF', 'Hugging Face Transformers'], ['LC', 'LangChain']] },
+  { id: 'data', label: 'Database', items: [['Pg', 'Postgres'], ['My', 'MySQL'], ['Pi', 'Pinecone'], ['Mv', 'Milvus']] },
 ];
 ---
 
 <section class="tech-section shell" aria-labelledby="skills-title" data-reveal data-tech-stack>
-  <div class="tech-header"><div><p class="eyebrow">The toolkit</p><h2 id="skills-title">Good tools. Better possibilities.</h2></div>
+  <div class="tech-header"><h2 id="skills-title">Tech I use</h2>
     <div class="tech-tabs" role="tablist" aria-label="Technology categories" hidden>
       {groups.map(({ id, label }, index) => <button type="button" role="tab" id={`tab-${id}`} aria-controls={`panel-${id}`} aria-selected={index === 0 ? 'true' : 'false'} tabindex={index === 0 ? 0 : -1}>{label}</button>)}
     </div>
@@ -15,7 +15,7 @@ const groups = [
   {groups.map(({ id, label, items }) => (
     <div class="tech-panel" id={`panel-${id}`} data-tech-panel>
       <h3 class="fallback-heading">{label}</h3>
-      <div class="tech-items">{items.map(([mark, name, detail]) => <div class="tech-item"><span class="tech-mark" aria-hidden="true">{mark}</span><div><strong>{name}</strong><span>{detail}</span></div></div>)}</div>
+      <div class="tech-items">{items.map(([mark, name]) => <div class="tech-item"><span class="tech-mark" aria-hidden="true">{mark}</span><strong>{name}</strong></div>)}</div>
     </div>
   ))}
 </section>
@@ -56,7 +56,6 @@ const groups = [
 <style>
   .tech-section { padding-block: 2.5rem 3.5rem; border-top: 1px solid var(--line); }
   .tech-header { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
-  .eyebrow { margin-bottom: 0.4rem; }
   h2 { margin: 0; font-size: 1.2rem; font-weight: 500; letter-spacing: -0.025em; }
   .tech-tabs { display: flex; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; }
   .tech-tabs[hidden], .tech-panel[hidden] { display: none; }
@@ -69,12 +68,10 @@ const groups = [
   .tech-item { display: flex; align-items: center; gap: 0.8rem; min-width: 0; }
   .tech-mark { display: grid; flex-shrink: 0; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 10px; color: var(--accent); background: var(--surface); font: 600 0.85rem var(--font-mono); }
   .tech-item strong { display: block; font-size: 0.85rem; font-weight: 550; }
-  .tech-item div > span { display: block; color: var(--muted); font-size: 0.7rem; }
   @media (max-width: 650px) {
     .tech-header { align-items: start; flex-direction: column; }
     .tech-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .tech-item { gap: 0.55rem; }
     .tech-mark { width: 36px; height: 36px; font-size: 0.7rem; }
-    .tech-item div > span { font-size: 0.64rem; }
   }
 </style>

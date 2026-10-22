@@ -1,10 +1,10 @@
 ---
 import { getCollection, getEntry, render } from 'astro:content';
+import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import EntryCard from '../components/EntryCard.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import GitHubActivity from '../components/GitHubActivity.astro';
-import LaptopShowcase from '../components/LaptopShowcase.astro';
 import TechStack from '../components/TechStack.astro';
 
 const home = await getEntry('pages', 'home');
@@ -18,48 +18,42 @@ const newest = <T extends { data: { date: Date; draft: boolean; featured: boolea
 const experience = (await getCollection('experience')).filter(({ data }) => !data.draft)
   .sort((a, b) => b.data.startDate.getTime() - a.data.startDate.getTime()).slice(0, 3);
 const projects = (await getCollection('projects')).filter(({ data }) => !data.draft)
-  .sort((a, b) => b.data.priority - a.data.priority || b.data.date.getTime() - a.data.date.getTime()).slice(0, 3);
+  .sort((a, b) => b.data.priority - a.data.priority || Number(b.data.featured) - Number(a.data.featured) || b.data.date.getTime() - a.data.date.getTime()).slice(0, 3);
 const openSource = newest(await getCollection('openSource')).slice(0, 2);
 const publications = newest(await getCollection('publications')).slice(0, 2);
 const community = newest(await getCollection('community')).slice(0, 2);
 const education = (await getCollection('education')).filter(({ data }) => !data.draft)
   .sort((a, b) => b.data.startDate.getTime() - a.data.startDate.getTime()).slice(0, 2);
-const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}—${end?.getFullYear() ?? 'Now'}`;
+const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.getFullYear() ?? 'Now'}`;
 ---
 
 <BaseLayout description={profile.summary}>
   <section class="hero shell" aria-labelledby="intro-title">
     <div class="hero-copy" data-reveal>
-      <p class="hero-kicker"><span aria-hidden="true">✳</span> {profile.role} <span class="kicker-divider">/</span> {profile.location}</p>
-      <h1 class="display" id="intro-title">{firstName}<br/>{lastName.join(' ')}<span class="name-period">.</span></h1>
-      <p class="hero-tagline">Curiosity in.<br/><span>Something useful out.</span></p>
+      <p class="eyebrow">{profile.eyebrow ?? 'Portfolio'}</p>
+      <h1 class="display" id="intro-title">{firstName}<br/>{lastName.join(' ')}</h1>
       <div class="hero-prose"><HomeContent /></div>
       <div class="hero-actions">
-        <a class="button" href="#selected-work">Explore my work <span aria-hidden="true">↗</span></a>
+        <a class="button" href="/projects/">Explore the work <span aria-hidden="true">↗</span></a>
         <a class="button button--quiet" href="/resume.pdf" target="_blank" rel="noreferrer">Resume <span aria-hidden="true">↓</span></a>
       </div>
       <div class="hero-socials" aria-label="Find me online">
         {profile.githubUrl && <a href={profile.githubUrl} target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>}
         {profile.linkedinUrl && <a href={profile.linkedinUrl} target="_blank" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>}
-        {profile.email && <a href={`mailto:${profile.email}`}>Say hello <span aria-hidden="true">↗</span></a>}
+        {profile.email && <a href={`mailto:${profile.email}`}>Send an email <span aria-hidden="true">↗</span></a>}
       </div>
       {profile.availability && <p class="availability">{profile.availability}</p>}
     </div>
-    <LaptopShowcase />
-    <div class="hero-bottom" aria-hidden="true"><span>PERSONAL PORTFOLIO / {new Date().getFullYear()}</span><span>A FEW THINGS I'VE PUT MY MIND TO ↓</span></div>
+    {profile.cover && <figure class="hero-portrait" data-reveal>
+      <Image src={profile.cover} alt={`Portrait of ${profile.name}`} widths={[400, 640]} sizes="(max-width: 900px) min(100vw, 352px), 352px" loading="eager" fetchpriority="high" />
+    </figure>}
+    <div class="hero-bottom" aria-hidden="true"><span>Scroll to explore ↓</span></div>
   </section>
 
   <TechStack />
 
-  <section class="section shell" id="selected-work" aria-label="Selected projects">
-    <SectionHeading eyebrow="01 / Selected work" title="Ideas made tangible." href="/projects/" linkLabel="All projects" />
-    <div class="grid">
-      {projects.map(({ id, data }, index) => <EntryCard href={`/projects/${id}/`} eyebrow={`${String(index + 1).padStart(2, '0')} / ${data.status?.replace('-', ' ') ?? 'Project'}`} title={data.title} summary={data.summary} tags={data.stack ?? data.tags} large={index === 0} project={id} />)}
-    </div>
-  </section>
-
   <section class="section shell" id="experience">
-    <SectionHeading eyebrow="02 / The day job" title="Building in the real world." href="/experience/" linkLabel="Full experience" />
+    <SectionHeading eyebrow="01 · Experience" title="Work with consequence." href="/experience/" linkLabel="Full experience" />
     <div class="experience-list">
       {experience.map(({ data }) => (
         <article class="experience-card" data-reveal>
@@ -71,40 +65,46 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}—${end?.
           </div>
         </article>
       ))}
+      {experience.length === 0 && <p class="empty-state">Experience entries are ready for your Markdown content.</p>}
+    </div>
+  </section>
+
+  <section class="section shell" id="selected-work" aria-label="Selected projects">
+    <SectionHeading eyebrow="02 · Projects" title="Built to be used." href="/projects/" />
+    <div class="grid">
+      {projects.map(({ id, data }, index) => <EntryCard href={`/projects/${id}/`} eyebrow={data.status?.replace('-', ' ') ?? 'Project'} title={data.title} summary={data.summary} tags={data.stack ?? data.tags} large={index === 0} project={id} />)}
+      {projects.length === 0 && <p class="empty-state">Projects will appear here as soon as their draft flag is removed.</p>}
     </div>
   </section>
 
   <section class="section shell" aria-label="Open source">
-    <SectionHeading eyebrow="03 / Out in the open" title="Better when shared." href="/open-source/" linkLabel="Open source" />
+    <SectionHeading eyebrow="03 · Open source" title="Progress is collaborative." href="/open-source/" />
     <GitHubActivity username={profile.githubUsername} profileUrl={profile.githubUrl} />
     <div class="grid contribution-grid">{openSource.map(({ id, data }) => <EntryCard href={`/open-source/${id}/`} eyebrow={data.organization ?? 'Open source'} title={data.title} summary={data.summary} tags={data.tags} />)}</div>
   </section>
 
   <section class="section shell" aria-label="Research">
-    <SectionHeading eyebrow="04 / Research notes" title="Questions worth asking." href="/publications/" linkLabel="All publications" />
-    <div class="grid">{publications.map(({ id, data }) => <EntryCard href={`/publications/${id}/`} eyebrow={data.venue ?? 'Publication'} title={data.title} summary={data.summary} tags={data.tags} />)}</div>
+    <SectionHeading eyebrow="04 · Research" title="Questions worth pursuing." href="/publications/" linkLabel="All publications" />
+    <div class="grid">{publications.map(({ id, data }) => <EntryCard href={`/publications/${id}/`} eyebrow={data.venue ?? 'Publication'} title={data.title} summary={data.summary} tags={data.tags} />)}{publications.length === 0 && <p class="empty-state">Published papers will appear here after their Markdown entries are completed.</p>}</div>
   </section>
 
   <section class="section shell" aria-label="Community and speaking">
-    <SectionHeading eyebrow="05 / Beyond the keyboard" title="Learning goes both ways." href="/community/" linkLabel="Community & talks" />
-    <div class="grid">{community.map(({ id, data }) => <EntryCard href={`/community/${id}/`} eyebrow={data.eventOrOrganization ?? 'Community'} title={data.title} summary={data.summary} tags={data.tags} />)}</div>
+    <SectionHeading eyebrow="05 · Community & speaking" title="Knowledge grows when shared." href="/community/" />
+    <div class="grid">{community.map(({ id, data }) => <EntryCard href={`/community/${id}/`} eyebrow={data.eventOrOrganization ?? 'Community'} title={data.title} summary={data.summary} tags={data.tags} />)}{community.length === 0 && <p class="empty-state">Community work and speaking sessions are ready for your Markdown entries.</p>}</div>
   </section>
 
   <section class="section shell" aria-label="Education">
-    <SectionHeading eyebrow="06 / The foundation" title="Where it started." href="/education/" linkLabel="Education" />
+    <SectionHeading eyebrow="06 · Education" title="A foundation for the work." href="/education/" linkLabel="Education details" />
     {education.map(({ data }) => <article class="education-row" data-reveal><div class="education-icon" aria-hidden="true">↗</div><div><p>{data.institution}</p><h3>{data.title}</h3></div><span>{yearRange(data.startDate, data.endDate)}{data.cgpa && <small>CGPA {data.cgpa}</small>}</span></article>)}
+    {education.length === 0 && <p class="empty-state">Education details are ready for your Markdown content.</p>}
   </section>
 </BaseLayout>
 
 <style>
   .hero { position: relative; display: grid; grid-template-columns: 0.95fr 1.05fr; align-items: center; gap: 2rem; padding-block: clamp(3.5rem, 6vw, 6rem) 5rem; }
   .hero-copy { position: relative; z-index: 1; min-width: 0; }
-  .hero-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1.8rem; color: var(--muted); font-size: 0.63rem; }
-  .hero-kicker > span:first-child { color: var(--accent); font-size: 1rem; }
-  .kicker-divider { opacity: 0.45; }
-  .name-period { color: var(--accent); }
-  .hero-tagline { margin: 1.5rem 0 0; font-size: clamp(1.15rem, 2vw, 1.45rem); line-height: 1.4; letter-spacing: -0.03em; }
-  .hero-tagline > span { color: var(--muted); }
+  .hero-portrait { width: min(90%, 22rem); aspect-ratio: 4 / 5; justify-self: center; overflow: hidden; margin: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  .hero-portrait :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; }
   .hero-prose { max-width: 24rem; margin-top: 1rem; color: var(--muted); font-size: 0.85rem; line-height: 1.8; }
   .hero-prose :global(p) { margin: 0; }
   .hero-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 1.75rem; }
@@ -137,11 +137,11 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}—${end?.
     .hero { grid-template-columns: 1fr; gap: 0; padding-top: 3rem; padding-bottom: 2rem; }
     .hero-copy { max-width: 35rem; }
     .hero-prose { max-width: 30rem; }
+    .hero-portrait { width: min(100%, 22rem); margin-top: 2rem; justify-self: start; }
     .hero-bottom { margin-top: 3rem; }
     .experience-card { grid-template-columns: 7rem 1fr; gap: 1rem; }
   }
   @media (max-width: 560px) {
-    .hero-kicker { font-size: 0.6rem; }
     .hero-bottom { font-size: 0.45rem; }
     .hero-bottom > span:last-child { max-width: 20ch; text-align: right; }
     .experience-card { grid-template-columns: 1fr; gap: 1.5rem; }

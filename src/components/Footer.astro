@@ -14,8 +14,8 @@ const year = new Date().getFullYear();
 <footer id="contact" class="footer">
   <div class="shell footer-grid">
     <div>
-      <p class="eyebrow">A good conversation is a good start.</p>
-      <h2>What are you<br/>working on<span>?</span></h2>
+      <p class="eyebrow">Start a conversation</p>
+      <h2>Have an idea worth exploring?</h2>
     </div>
     <div class="footer-actions">
       {email ? (
@@ -43,7 +43,6 @@ const year = new Date().getFullYear();
   .footer .eyebrow { color: var(--footer-accent); }
   .footer-grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 2rem; align-items: end; }
   h2 { max-width: 16ch; margin: 0; font-size: clamp(2.8rem, 6vw, 5rem); font-weight: 500; letter-spacing: -0.06em; line-height: 1.05; }
-  h2 span { color: var(--footer-accent); }
   .footer-actions { display: grid; justify-items: start; gap: 1.5rem; }
   .email-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }
   .footer-actions .button { color: var(--footer-button-text); background: var(--footer-button-bg); border-color: var(--footer-button-bg); }

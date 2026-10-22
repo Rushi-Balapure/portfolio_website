@@ -18,4 +18,4 @@ githubUsername: Rushi-Balapure
 cover: ../../../assests/profile_pic.webp
 ---
 
-I build security products at ProMobi and explore the space between AI, security, and useful software. I like figuring out how things work, then making something of my own.
+I like figuring out how things work, then building something with what I learn — right now that's four different half-finished projects. Based in Pune.
