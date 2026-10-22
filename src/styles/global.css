@@ -68,6 +68,13 @@ html {
   background: var(--paper);
 }
 
+/* Theme changes crossfade snapshots; route changes animate only main content. */
+@keyframes theme-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes theme-fade-out { from { opacity: 1; } to { opacity: 0; } }
+:root[data-theme-transition]::view-transition-group(*) { animation-duration: 220ms; }
+:root[data-theme-transition]::view-transition-old(*) { animation: theme-fade-out 220ms ease both; }
+:root[data-theme-transition]::view-transition-new(*) { animation: theme-fade-in 220ms ease both; }
+
 body {
   margin: 0;
   color: var(--ink);
@@ -100,6 +107,7 @@ a {
   color: inherit;
   text-decoration-color: var(--link-decoration);
   text-underline-offset: 0.2em;
+  transition: color 180ms ease, text-decoration-color 180ms ease;
 }
 
 img {
@@ -305,4 +313,5 @@ textarea {
     animation-iteration-count: 1 !important;
   }
   [data-reveal] { opacity: 1; transform: none; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }

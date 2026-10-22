@@ -31,7 +31,9 @@
     border: 0;
     border-radius: 6px;
     cursor: pointer;
+    transition: background-color 180ms ease, color 180ms ease, transform 180ms var(--ease);
   }
+  button:active { transform: scale(0.94); }
 
   svg {
     display: block;
@@ -51,9 +53,12 @@
 </style>
 
 <script is:inline>
-  document.addEventListener('DOMContentLoaded', () => {
+  (() => {
     const theme = window.__portfolioTheme;
-    if (!theme) return;
+    if (!theme || theme.controlsInitialized) return;
+    theme.controlsInitialized = true;
+    let activeTransition;
+    let changeId = 0;
 
     const syncControls = (preference) => {
       document.querySelectorAll('[data-theme-option]').forEach((button) => {
@@ -61,13 +66,36 @@
       });
     };
 
-    document.querySelectorAll('[data-theme-option]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const preference = button.dataset.themeOption;
-        if (!preference) return;
+    const selectTheme = (preference) => {
+      if (preference === document.documentElement.dataset.themePreference && !activeTransition) return;
+      const requestId = ++changeId;
+      activeTransition?.skipTransition();
+      if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        activeTransition = undefined;
+        delete document.documentElement.dataset.themeTransition;
         theme.apply(preference, true);
+        return;
+      }
+      document.documentElement.dataset.themeTransition = '';
+      const transition = document.startViewTransition(() => {
+        if (requestId === changeId) theme.apply(preference, true);
       });
-    });
+      activeTransition = transition;
+      transition.finished.then(() => {
+        if (activeTransition !== transition) return;
+        delete document.documentElement.dataset.themeTransition;
+        activeTransition = undefined;
+      });
+    };
+
+    const initControls = () => {
+      document.querySelectorAll('[data-theme-option]').forEach((button) => {
+        if (button.dataset.themeBound) return;
+        button.dataset.themeBound = 'true';
+        button.addEventListener('click', () => selectTheme(button.dataset.themeOption));
+      });
+      syncControls(document.documentElement.dataset.themePreference || theme.read());
+    };
 
     theme.media.addEventListener('change', () => {
       if (document.documentElement.dataset.themePreference === 'system') theme.apply('system');
@@ -78,6 +106,7 @@
     });
 
     window.addEventListener('themechange', (event) => syncControls(event.detail.preference));
-    syncControls(document.documentElement.dataset.themePreference || 'dark');
-  });
+    document.addEventListener('astro:page-load', initControls);
+    initControls();
+  })();
 </script>

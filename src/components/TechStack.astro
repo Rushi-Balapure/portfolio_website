@@ -12,32 +12,36 @@ const groups = [
       {groups.map(({ id, label }, index) => <button type="button" role="tab" id={`tab-${id}`} aria-controls={`panel-${id}`} aria-selected={index === 0 ? 'true' : 'false'} tabindex={index === 0 ? 0 : -1}>{label}</button>)}
     </div>
   </div>
-  {groups.map(({ id, label, items }) => (
+  <div class="tech-panels">{groups.map(({ id, label, items }) => (
     <div class="tech-panel" id={`panel-${id}`} data-tech-panel>
       <h3 class="fallback-heading">{label}</h3>
       <div class="tech-items">{items.map(([mark, name]) => <div class="tech-item"><span class="tech-mark" aria-hidden="true">{mark}</span><strong>{name}</strong></div>)}</div>
     </div>
-  ))}
+  ))}</div>
 </section>
 
 <script>
   function initStack(root: HTMLElement) {
+    if (root.dataset.initialized) return;
+    root.dataset.initialized = 'true';
     const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
     const panels = root.querySelectorAll<HTMLElement>('[data-tech-panel]');
     function selectTab(selected: number) {
+      root.style.setProperty('--tab-index', String(selected));
       tabs.forEach((tab, index) => {
         tab.setAttribute('aria-selected', String(index === selected));
         tab.tabIndex = index === selected ? 0 : -1;
-        panels[index].hidden = index !== selected;
+        panels[index].toggleAttribute('data-active', index === selected);
+        panels[index].setAttribute('aria-hidden', String(index !== selected));
+        panels[index].inert = index !== selected;
+        panels[index].tabIndex = index === selected ? 0 : -1;
       });
     }
     panels.forEach((panel, index) => {
       panel.setAttribute('role', 'tabpanel');
       panel.setAttribute('aria-labelledby', tabs[index].id);
-      panel.tabIndex = 0;
     });
     root.querySelector<HTMLElement>('[role="tablist"]')!.hidden = false;
-    root.classList.add('is-enhanced');
     tabs.forEach((tab, index) => {
       tab.addEventListener('click', () => selectTab(index));
       tab.addEventListener('keydown', (event) => {
@@ -49,21 +53,28 @@ const groups = [
       });
     });
     selectTab(0);
+    root.classList.add('is-enhanced');
   }
-  document.querySelectorAll<HTMLElement>('[data-tech-stack]').forEach(initStack);
+  const initStacks = () => document.querySelectorAll<HTMLElement>('[data-tech-stack]').forEach(initStack);
+  initStacks();
+  document.addEventListener('astro:page-load', initStacks);
 </script>
 
 <style>
   .tech-section { padding-block: 2.5rem 3.5rem; border-top: 1px solid var(--line); }
   .tech-header { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
   h2 { margin: 0; font-size: 1.2rem; font-weight: 500; letter-spacing: -0.025em; }
-  .tech-tabs { display: flex; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; }
-  .tech-tabs[hidden], .tech-panel[hidden] { display: none; }
-  .tech-tabs button { min-height: 40px; padding: 0.35rem 0.8rem; color: var(--muted); background: transparent; border: 0; border-radius: 6px; cursor: pointer; font-size: 0.75rem; white-space: nowrap; transition: background 160ms, color 160ms; }
-  .tech-tabs button[aria-selected='true'] { color: var(--ink); background: var(--raised); box-shadow: 0 1px 4px #0002; }
+  .tech-tabs { position: relative; isolation: isolate; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; }
+  .tech-tabs[hidden] { display: none; }
+  .tech-tabs::before { position: absolute; z-index: -1; inset: 4px auto 4px 4px; width: calc((100% - 8px) / 3); background: var(--raised); border-radius: 6px; box-shadow: 0 1px 4px #0002; transform: translateX(calc(var(--tab-index, 0) * 100%)); transition: transform 280ms var(--ease); content: ''; }
+  .tech-tabs button { min-height: 40px; padding: 0.35rem 0.8rem; color: var(--muted); background: transparent; border: 0; border-radius: 6px; cursor: pointer; font-size: 0.75rem; white-space: nowrap; transition: color 180ms ease; }
+  .tech-tabs button[aria-selected='true'] { color: var(--ink); }
   .tech-panel { padding-block: 0.3rem; }
   .tech-panel:focus-visible { outline-offset: 8px; }
   .is-enhanced .fallback-heading { display: none; }
+  .is-enhanced .tech-panels { display: grid; }
+  .is-enhanced .tech-panel { grid-area: 1 / 1; align-self: start; opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(6px); transition: opacity 140ms ease, transform 220ms var(--ease), visibility 0s linear 140ms; }
+  .is-enhanced .tech-panel[data-active] { opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition: opacity 220ms ease 80ms, transform 280ms var(--ease) 80ms, visibility 0s; }
   .tech-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1.2rem; }
   .tech-item { display: flex; align-items: center; gap: 0.8rem; min-width: 0; }
   .tech-mark { display: grid; flex-shrink: 0; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 10px; color: var(--accent); background: var(--surface); font: 600 0.85rem var(--font-mono); }
@@ -73,5 +84,9 @@ const groups = [
     .tech-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .tech-item { gap: 0.55rem; }
     .tech-mark { width: 36px; height: 36px; font-size: 0.7rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tech-tabs::before, .is-enhanced .tech-panel { transition: none; transform: none; }
+    .tech-tabs::before { transform: translateX(calc(var(--tab-index, 0) * 100%)); }
   }
 </style>

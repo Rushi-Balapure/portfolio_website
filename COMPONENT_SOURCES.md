@@ -11,3 +11,5 @@ The redesign uses native Astro, CSS, and small TypeScript enhancements. No React
 [Rare UI](https://www.rareui.com/) was also reviewed. No Rare UI source or components are included.
 
 All content and links render on the server. Without JavaScript, technology groups remain visible and links continue to work. Reduced-motion preferences disable animated entrances and pointer tracking. The homepage introduces Rushi through his name, biography, and portrait.
+
+Page navigation uses [Astro's ClientRouter](https://docs.astro.build/en/guides/view-transitions/) with a 240 ms content crossfade and an animation fallback for browsers without native view transitions. Controls reinitialize after navigation. Technology panels share a stable grid area and crossfade without shifting subsequent sections. Menu animations can reverse during opening or closing; theme changes crossfade where the browser supports the View Transition API. Reduced-motion preferences disable these animations.

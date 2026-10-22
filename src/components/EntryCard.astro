@@ -34,7 +34,7 @@ const dateLabel = date?.toLocaleDateString('en', { month: 'short', year: 'numeri
 </Wrapper>
 
 <style>
-  .entry-card {
+  .entry-card[data-reveal] {
     grid-column: span 6;
     display: flex;
     position: relative;
@@ -48,7 +48,7 @@ const dateLabel = date?.toLocaleDateString('en', { month: 'short', year: 'numeri
     border: 1px solid var(--line);
     border-radius: var(--radius);
     text-decoration: none;
-    transition: border-color 200ms, box-shadow 200ms, background 200ms;
+    transition: opacity 450ms var(--ease), transform 450ms var(--ease), border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
   }
   .entry-card::before { position: absolute; inset: 0; z-index: 1; border-radius: inherit; background: radial-gradient(380px circle at var(--spot-x, 50%) var(--spot-y, 50%), var(--accent-glow), transparent 75%); opacity: 0; content: ''; pointer-events: none; transition: opacity 250ms; }
   .entry-card:hover::before { opacity: 1; }
@@ -69,8 +69,11 @@ const dateLabel = date?.toLocaleDateString('en', { month: 'short', year: 'numeri
 </style>
 
 <script>
-  if (window.matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches) {
+  function initSpotlights() {
+    if (!window.matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches) return;
     document.querySelectorAll<HTMLElement>('[data-spotlight]').forEach((card) => {
+      if (card.dataset.spotlightBound) return;
+      card.dataset.spotlightBound = 'true';
       card.addEventListener('pointermove', (event) => {
         const rect = card.getBoundingClientRect();
         card.style.setProperty('--spot-x', `${event.clientX - rect.left}px`);
@@ -78,4 +81,6 @@ const dateLabel = date?.toLocaleDateString('en', { month: 'short', year: 'numeri
       });
     });
   }
+  initSpotlights();
+  document.addEventListener('astro:page-load', initSpotlights);
 </script>

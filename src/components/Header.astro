@@ -17,7 +17,7 @@ const links = [
 ];
 ---
 
-<header class="site-header">
+<header class="site-header" transition:name="site-header" transition:animate="none">
   <div class="header-inner shell">
     <a class="brand" href="/" aria-label={`${name} home`}>
       <span class="brand-mark" aria-hidden="true">rb<span>↗</span></span><span>{name}</span>
@@ -122,7 +122,9 @@ const links = [
       border-radius: 9px;
     }
     .mobile-nav summary::-webkit-details-marker { display: none; }
-    .mobile-nav summary span { width: 1rem; height: 1px; background: var(--ink); }
+    .mobile-nav summary span { width: 1rem; height: 1px; background: var(--ink); transition: transform 220ms var(--ease); }
+    .mobile-nav summary[aria-expanded='true'] span:first-child { transform: translateY(3.3px) rotate(45deg); }
+    .mobile-nav summary[aria-expanded='true'] span:last-child { transform: translateY(-3.3px) rotate(-45deg); }
     .mobile-nav nav {
       position: absolute;
       top: calc(100% + 0.5rem);
@@ -143,13 +145,59 @@ const links = [
 </style>
 
 <script>
-  const menu = document.querySelector<HTMLDetailsElement>('.mobile-nav');
-  menu?.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape') return;
-    menu.open = false;
-    menu.querySelector('summary')?.focus();
-  });
-  document.addEventListener('click', (event) => {
-    if (menu?.open && event.target instanceof Node && !menu.contains(event.target)) menu.open = false;
-  });
+  interface MenuState { open: boolean; animation?: Animation; }
+  function setMenuOpen(menu: HTMLDetailsElement, panel: HTMLElement, state: MenuState, open: boolean) {
+    if (state.open === open) return;
+    const wasOpen = menu.open;
+    const current = getComputedStyle(panel);
+    const from = { opacity: wasOpen ? current.opacity : '0', transform: wasOpen ? current.transform : 'translateY(-8px)' };
+    state.animation?.cancel();
+    state.open = open;
+    menu.querySelector('summary')?.setAttribute('aria-expanded', String(open));
+    panel.inert = !open;
+    if (open) menu.open = true;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      menu.open = open;
+      return;
+    }
+    const animation = panel.animate([from, { opacity: open ? '1' : '0', transform: open ? 'none' : 'translateY(-8px)' }], { duration: open ? 260 : 180, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' });
+    state.animation = animation;
+    animation.onfinish = () => {
+      if (state.animation !== animation) return;
+      menu.open = state.open;
+      state.animation = undefined;
+      animation.cancel();
+    };
+  }
+  let cleanupMenu: (() => void) | undefined;
+  function initMenu() {
+    cleanupMenu?.();
+    const menu = document.querySelector<HTMLDetailsElement>('.mobile-nav');
+    const panel = menu?.querySelector<HTMLElement>('nav');
+    const summary = menu?.querySelector('summary');
+    if (!menu || !panel || !summary) return;
+    const controller = new AbortController();
+    const options = { signal: controller.signal };
+    const state: MenuState = { open: menu.open };
+    const close = () => setMenuOpen(menu, panel, state, false);
+    summary.setAttribute('aria-expanded', String(state.open));
+    panel.inert = !state.open;
+    summary.addEventListener('click', (event) => {
+      event.preventDefault();
+      setMenuOpen(menu, panel, state, !state.open);
+    }, options);
+    menu.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      close();
+      summary.focus();
+    }, options);
+    document.addEventListener('click', (event) => {
+      if (state.open && event.target instanceof Node && !menu.contains(event.target)) close();
+    }, options);
+    window.matchMedia('(min-width: 981px)').addEventListener('change', (event) => { if (event.matches) close(); }, options);
+    cleanupMenu = () => { controller.abort(); state.animation?.cancel(); };
+  }
+  initMenu();
+  document.addEventListener('astro:page-load', initMenu);
+  document.addEventListener('astro:before-swap', () => cleanupMenu?.());
 </script>

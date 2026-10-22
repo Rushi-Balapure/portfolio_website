@@ -59,8 +59,8 @@ const year = new Date().getFullYear();
   }
 </style>
 
-<script is:inline>
-  document.addEventListener('DOMContentLoaded', () => {
+<script is:inline data-astro-rerun>
+  (() => {
     document.querySelectorAll('[data-copy-email]').forEach((button) => {
       button.addEventListener('click', async () => {
         const email = button.dataset.copyEmail;
@@ -82,5 +82,5 @@ const year = new Date().getFullYear();
         }
       });
     });
-  });
+  })();
 </script>
