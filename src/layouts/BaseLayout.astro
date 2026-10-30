@@ -9,6 +9,7 @@ interface Props {
   title?: string;
   description?: string;
   image?: string;
+  noindex?: boolean;
 }
 
 const home = await getEntry('pages', 'home');
@@ -46,6 +47,7 @@ const structuredData = {
     <meta name="generator" content={Astro.generator} />
     <ClientRouter />
     <meta name="description" content={description} />
+    {Astro.props.noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}
     <meta id="theme-color" name="theme-color" content="#0d0f12" />
     <script is:inline>
       (() => {
