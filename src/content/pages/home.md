@@ -18,4 +18,7 @@ githubUsername: Rushi-Balapure
 cover: ../../../assests/profile_pic.webp
 ---
 
-I like figuring out how things work, then building something with what I learn — right now that's four different half-finished projects. Based in Pune.
+I have shipped two AI security products this year: Cloud DSPM and Insidia Labs. As an Associate Product Engi-
+neer, I build enterprise security products across Cloud DSPM, Secure Web Gateway, and Data Loss Prevention, with
+hands-on experience in backend engineering, ML/LLM systems, security-focused architecture, research, testing, and
+deployment, spanning sensitive-data detection, NER, self-hosted LLMs, and large-scale domain intelligence systems.
