@@ -25,11 +25,11 @@ organizationUrl: https://promobitech.com/
 
 ## Cloud Data Security Posture Management — Veltar
 
-- Designed and implemented a three-layer sensitive-data detection architecture combining deterministic rules, named entity recognition models, and a self-hosted LLM. The system detects structured, semi-structured, and unstructured sensitive information with approximately 90% detection accuracy.
-- Built rule-based detectors with regular expressions and identifier-specific validators, including checksum validation for structured payment and identity information.
-- Integrated Stanford De-identifier and GLiNER biomedical NER models, alongside a self-hosted Qwen3.5 2B model served through vLLM for semantic detection of sensitive business information.
+- Designed and personally implemented a Multi-Agent Architecture for sensitive-data detection, combining deter-ministic rules and a self-hosted LLM to detect structured, semi-structured, and unstructured sensitive information with approximately 90% detection accuracy.
+- Built rule-based detectors using regex and identifier-specific validators, including checksum-based validation for structured sensitive data such as payment and identity information.
+- Developed a workflow based on MARCH (Multi-Agent Reinforced Self-Check for LLM Hallucination) to reduce false positives in detections.
 - Developed file-processing pipelines for Google Drive, Microsoft OneDrive, and Amazon S3. The pipelines support text, PDF, spreadsheet, presentation, document, and media formats through format-specific extraction and OCR.
-- Engineered the platform to support at least 5 TB of data per customer, with current processing throughput of approximately 5 GB per hour.
+- Engineered the platform to support at least 5 TB of data per customer, with current processing throughput of approximately 15 GB per hour.
 
 ## Secure Web Gateway — Veltar
 
