@@ -39,14 +39,14 @@ const year = new Date().getFullYear();
 </footer>
 
 <style>
-  .footer { padding: clamp(4rem, 8vw, 7rem) 0 2rem; color: var(--footer-text); background: radial-gradient(ellipse at 10% 100%, #d27f4410, transparent 60%), var(--footer-bg); border-top: 1px solid var(--line); }
+  .footer { padding: clamp(4rem, 8vw, 7rem) 0 2rem; color: var(--footer-text); background: radial-gradient(ellipse at 10% 100%, rgba(127,209,174,0.06), transparent 60%), var(--footer-bg); border-top: 1px solid var(--line); }
   .footer .eyebrow { color: var(--footer-accent); }
   .footer-grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 2rem; align-items: end; }
   h2 { max-width: 16ch; margin: 0; font-size: clamp(2.8rem, 6vw, 5rem); font-weight: 500; letter-spacing: -0.06em; line-height: 1.05; }
   .footer-actions { display: grid; justify-items: start; gap: 1.5rem; }
   .email-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }
   .footer-actions .button { color: var(--footer-button-text); background: var(--footer-button-bg); border-color: var(--footer-button-bg); }
-  .footer-actions .button:hover { color: #21150d; background: var(--footer-accent); border-color: var(--footer-accent); }
+  .footer-actions .button:hover { color: var(--on-accent); background: var(--footer-accent); border-color: var(--footer-accent); }
   .footer-actions .button--quiet { color: var(--footer-text); background: transparent; border-color: var(--footer-line); cursor: pointer; }
   .footer-actions p { max-width: 25rem; color: var(--footer-muted); }
   .socials { display: flex; flex-wrap: wrap; gap: 1.2rem; }

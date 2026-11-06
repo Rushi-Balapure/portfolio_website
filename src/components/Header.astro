@@ -1,6 +1,4 @@
 ---
-import ThemeToggle from './ThemeToggle.astro';
-
 interface Props {
   name: string;
 }
@@ -31,8 +29,6 @@ const links = [
       ))}
     </nav>
 
-    <ThemeToggle />
-
     <details class="mobile-nav">
       <summary aria-label="Toggle navigation"><span></span><span></span></summary>
       <nav aria-label="Mobile navigation">
@@ -48,7 +44,7 @@ const links = [
     top: 0;
     z-index: 20;
     height: var(--header-height);
-    background: color-mix(in srgb, var(--paper) 90%, transparent);
+    background: color-mix(in srgb, var(--paper) 82%, transparent);
     border-bottom: 1px solid var(--line);
     backdrop-filter: blur(18px) saturate(140%);
   }

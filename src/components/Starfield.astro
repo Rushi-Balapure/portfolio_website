@@ -1,0 +1,28 @@
+<div class="starfield" data-starfield aria-hidden="true" transition:persist>
+  <canvas></canvas>
+</div>
+
+<style is:global>
+  .starfield { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
+  .starfield canvas { display: block; width: 100%; height: 100%; }
+  /* Static fallback when WebGL is unavailable or the context is lost. */
+  .starfield.sf-fallback {
+    background:
+      radial-gradient(ellipse 60rem 40rem at 85% 5%, rgba(142, 162, 255, 0.05), transparent 70%),
+      radial-gradient(ellipse 50rem 40rem at 5% 50%, rgba(127, 209, 174, 0.05), transparent 70%);
+  }
+  .starfield.sf-fallback canvas { display: none; }
+  .starfield.sf-fallback::before {
+    position: absolute; top: 0; left: 0; width: 1px; height: 1px; border-radius: 50%; content: '';
+    background: transparent;
+    box-shadow:
+      7vw 12vh 0 0 rgba(232,237,242,.55), 19vw 71vh 0 0 rgba(232,237,242,.4), 28vw 34vh 0 0 rgba(180,200,255,.5),
+      41vw 88vh 0 0 rgba(232,237,242,.45), 53vw 18vh 0 0 rgba(232,237,242,.6), 64vw 52vh 0 0 rgba(180,200,255,.4),
+      77vw 79vh 0 0 rgba(232,237,242,.5), 88vw 27vh 0 0 rgba(232,237,242,.6), 94vw 63vh 0 0 rgba(180,200,255,.45),
+      12vw 46vh 0 0 rgba(232,237,242,.35), 36vw 6vh 0 0 rgba(232,237,242,.5), 71vw 94vh 0 0 rgba(232,237,242,.4);
+  }
+</style>
+
+<script>
+  import '../scripts/starfield';
+</script>

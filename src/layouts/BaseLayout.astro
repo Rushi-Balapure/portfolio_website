@@ -3,6 +3,7 @@ import { getEntry } from 'astro:content';
 import { ClientRouter, fade } from 'astro:transitions';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import Starfield from '../components/Starfield.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -48,50 +49,8 @@ const structuredData = {
     <ClientRouter />
     <meta name="description" content={description} />
     {Astro.props.noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}
-    <meta id="theme-color" name="theme-color" content="#0d0f12" />
-    <script is:inline>
-      (() => {
-        if (window.__portfolioTheme) {
-          window.__portfolioTheme.apply(window.__portfolioTheme.read());
-          return;
-        }
-        const key = 'theme-preference';
-        const allowed = ['dark', 'light', 'system'];
-        const media = window.matchMedia('(prefers-color-scheme: dark)');
-        const root = document.documentElement;
-        let currentPreference = 'dark';
-
-        const readPreference = () => {
-          try {
-            const saved = localStorage.getItem(key);
-            return allowed.includes(saved) ? saved : 'dark';
-          } catch {
-            return 'dark';
-          }
-        };
-
-        const applyTheme = (preference, persist = false) => {
-          currentPreference = preference;
-          const resolved = preference === 'system' ? (media.matches ? 'dark' : 'light') : preference;
-          root.dataset.themePreference = preference;
-          root.dataset.theme = resolved;
-          root.style.colorScheme = resolved;
-
-          const themeColor = document.querySelector('#theme-color');
-          if (themeColor) themeColor.setAttribute('content', resolved === 'dark' ? '#0d0f12' : '#f6f5f1');
-
-          if (persist) {
-            try { localStorage.setItem(key, preference); } catch {}
-          }
-
-          window.dispatchEvent(new CustomEvent('themechange', { detail: { preference, resolved } }));
-        };
-
-        window.__portfolioTheme = { apply: applyTheme, read: readPreference, media };
-        applyTheme(readPreference());
-        document.addEventListener('astro:after-swap', () => applyTheme(currentPreference));
-      })();
-    </script>
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#05070b" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonical} />
     <meta property="og:type" content="website" />
@@ -112,6 +71,7 @@ const structuredData = {
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
+    <Starfield />
     <Header name={name} />
     <main id="main-content" transition:name="page-content" transition:animate={fade({ duration: '0.24s' })}><slot /></main>
     <Footer name={name} email={profile?.email} githubUrl={profile?.githubUrl} linkedinUrl={profile?.linkedinUrl} xUrl={profile?.xUrl} />
