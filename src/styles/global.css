@@ -173,6 +173,7 @@ textarea {
 .pill {
   padding: 0.35rem 0.7rem;
   color: var(--muted);
+  background: var(--raised);
   border: 1px solid var(--line);
   border-radius: 5px;
   font-size: 0.65rem;
@@ -279,5 +280,15 @@ textarea {
     animation-iteration-count: 1 !important;
   }
   [data-reveal] { opacity: 1; transform: none; }
-  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+  /* Reduced motion: a plain 150ms crossfade, no scale. */
+  ::view-transition-old(page-content) { animation: vt-fade-out 150ms linear both !important; }
+  ::view-transition-new(page-content) { animation: vt-fade-in 150ms linear both !important; }
 }
+
+/* Page-depth transition (named animations referenced from BaseLayout). */
+::view-transition-old(page-content), ::view-transition-new(page-content) { transform-origin: 50% var(--vt-oy-old, 0px); }
+::view-transition-new(page-content) { transform-origin: 50% var(--vt-oy-new, 0px); }
+@keyframes vt-depth-out { to { opacity: 0; transform: scale(0.985); } }
+@keyframes vt-depth-in { from { opacity: 0; transform: scale(1.015); } }
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-fade-in { from { opacity: 0; } }

@@ -1,6 +1,6 @@
 ---
 import { getEntry } from 'astro:content';
-import { ClientRouter, fade } from 'astro:transitions';
+import { ClientRouter } from 'astro:transitions';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Starfield from '../components/Starfield.astro';
@@ -12,6 +12,13 @@ interface Props {
   image?: string;
   noindex?: boolean;
 }
+
+// Subtle depth transition: the old page recedes (scale .985 + fade), the new one settles in (1.015 -> 1).
+const pair = {
+  old: { name: 'vt-depth-out', duration: '0.32s', easing: 'cubic-bezier(0.4, 0, 0.6, 1)', fillMode: 'forwards' },
+  new: { name: 'vt-depth-in', duration: '0.4s', easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fillMode: 'backwards' },
+};
+const depth = { forwards: pair, backwards: pair };
 
 const home = await getEntry('pages', 'home');
 const profile = home?.data;
@@ -73,8 +80,23 @@ const structuredData = {
     <a class="skip-link" href="#main-content">Skip to content</a>
     <Starfield />
     <Header name={name} />
-    <main id="main-content" transition:name="page-content" transition:animate={fade({ duration: '0.24s' })}><slot /></main>
+    <main id="main-content" transition:name="page-content" transition:animate={depth}><slot /></main>
     <Footer name={name} email={profile?.email} githubUrl={profile?.githubUrl} linkedinUrl={profile?.linkedinUrl} xUrl={profile?.xUrl} />
+    <script>
+      // Scale origin for the page-depth transition: the viewport centre, in each snapshot's own coordinates.
+      const mainEl = () => document.getElementById('main-content');
+      const setOrigin = (name: string, scroll: number) => {
+        const m = mainEl();
+        if (!m) return;
+        const top = m.getBoundingClientRect().top + window.scrollY;
+        document.documentElement.style.setProperty(name, `${Math.round(window.innerHeight / 2 + scroll - top)}px`);
+      };
+      document.addEventListener('astro:before-preparation', () => setOrigin('--vt-oy-old', window.scrollY));
+      document.addEventListener('astro:after-swap', () => {
+        const back = (history.state as { scrollY?: number } | null)?.scrollY;
+        setOrigin('--vt-oy-new', typeof back === 'number' ? back : 0);
+      });
+    </script>
     <script>
       let observer: IntersectionObserver | undefined;
       const reveal = () => {
