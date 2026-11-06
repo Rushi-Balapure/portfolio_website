@@ -5,6 +5,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Starfield from '../components/Starfield.astro';
 import CompanionPlanet from '../components/CompanionPlanet.astro';
+import CompanionAstronaut from '../components/CompanionAstronaut.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -81,6 +82,7 @@ const structuredData = {
     <a class="skip-link" href="#main-content">Skip to content</a>
     <Starfield />
     <CompanionPlanet />
+    <CompanionAstronaut />
     <Header name={name} />
     <main id="main-content" transition:name="page-content" transition:animate={depth}><slot /></main>
     <Footer name={name} email={profile?.email} githubUrl={profile?.githubUrl} linkedinUrl={profile?.linkedinUrl} xUrl={profile?.xUrl} />
