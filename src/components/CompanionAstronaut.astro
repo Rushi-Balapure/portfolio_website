@@ -1,0 +1,14 @@
+<div class="astro" data-astronaut aria-hidden="true" transition:persist>
+  <canvas></canvas>
+</div>
+
+<style is:global>
+  /* Behind content (z -1, like the planet) so it can never cover text. No fallback art: hidden without WebGL. */
+  .astro { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  .astro canvas { position: absolute; top: 0; left: 0; display: block; width: 0; height: 0; opacity: 0; transform-origin: 50% 50%; will-change: transform, opacity; }
+  .astro.as-off, .astro.as-off canvas { display: none; }
+</style>
+
+<script>
+  import '../scripts/astronaut';
+</script>
