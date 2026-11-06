@@ -2,91 +2,155 @@
 const groups = [
   { id: 'languages', label: 'Languages', items: [['Py', 'Python'], ['Rb', 'Ruby'], ['SQL', 'SQL']] },
   { id: 'frameworks', label: 'Frameworks', items: [['F', 'FastAPI'], ['Pt', 'PyTorch'], ['Sk', 'Scikit-learn'], ['HF', 'Hugging Face Transformers'], ['LC', 'LangChain']] },
-  { id: 'data', label: 'Database', items: [['Pg', 'Postgres'], ['My', 'MySQL'], ['Pi', 'Pinecone'], ['Mv', 'Milvus']] },
+  { id: 'data', label: 'Databases', items: [['Pg', 'Postgres'], ['My', 'MySQL'], ['Pi', 'Pinecone'], ['Mv', 'Milvus']] },
 ];
+const items = groups.flatMap((group) => group.items.map(([mark, name]) => ({ mark, name, group: group.id, groupLabel: group.label })));
+const total = items.length;
 ---
 
-<section class="tech-section shell" aria-labelledby="skills-title" data-reveal data-tech-stack>
-  <div class="tech-header"><h2 id="skills-title">Tech I use</h2>
-    <div class="tech-tabs" role="tablist" aria-label="Technology categories" hidden>
-      {groups.map(({ id, label }, index) => <button type="button" role="tab" id={`tab-${id}`} aria-controls={`panel-${id}`} aria-selected={index === 0 ? 'true' : 'false'} tabindex={index === 0 ? 0 : -1}>{label}</button>)}
+<section class="tech-section" id="stack" aria-labelledby="skills-title" data-tech-stack>
+  <div class="shell tech-header" data-reveal>
+    <div>
+      <p class="eyebrow">Toolkit</p>
+      <h2 id="skills-title">Tech I use</h2>
+    </div>
+    <div class="tech-controls">
+      <div class="chip-row" role="group" aria-label="Highlight a category">
+        <button type="button" class="chip" aria-pressed="true" data-tech-filter="all">All <span class="chip-count">{total}</span></button>
+        {groups.map((group) => <button type="button" class="chip" aria-pressed="false" data-tech-filter={group.id}>{group.label} <span class="chip-count">{group.items.length}</span></button>)}
+      </div>
+      <button type="button" class="chip pause" aria-pressed="false" data-tech-pause>
+        <span data-pause-label>Pause</span>
+      </button>
     </div>
   </div>
-  <div class="tech-panels">{groups.map(({ id, label, items }) => (
-    <div class="tech-panel" id={`panel-${id}`} data-tech-panel>
-      <h3 class="fallback-heading">{label}</h3>
-      <div class="tech-items">{items.map(([mark, name]) => <div class="tech-item"><span class="tech-mark" aria-hidden="true">{mark}</span><strong>{name}</strong></div>)}</div>
-    </div>
-  ))}</div>
+
+  <!-- Accessible list; the moving track below is a decorative duplicate on wide screens. -->
+  <div class="marquee" data-reveal>
+    <ul class="track" data-track>
+      {items.map((item) => (
+        <li class="tech-item" data-group={item.group}>
+          <span class="tech-mark" aria-hidden="true">{item.mark}</span>
+          <span class="tech-text">
+            <strong>{item.name}</strong>
+            <small>{item.groupLabel}</small>
+          </span>
+        </li>
+      ))}
+    </ul>
+    <ul class="track track-clone" aria-hidden="true" data-track>
+      {items.map((item) => (
+        <li class="tech-item" data-group={item.group}>
+          <span class="tech-mark">{item.mark}</span>
+          <span class="tech-text">
+            <strong>{item.name}</strong>
+            <small>{item.groupLabel}</small>
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-tech-status></p>
 </section>
 
-<script>
-  function initStack(root: HTMLElement) {
-    if (root.dataset.initialized) return;
-    root.dataset.initialized = 'true';
-    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
-    const panels = root.querySelectorAll<HTMLElement>('[data-tech-panel]');
-    function selectTab(selected: number) {
-      root.style.setProperty('--tab-index', String(selected));
-      tabs.forEach((tab, index) => {
-        tab.setAttribute('aria-selected', String(index === selected));
-        tab.tabIndex = index === selected ? 0 : -1;
-        panels[index].toggleAttribute('data-active', index === selected);
-        panels[index].setAttribute('aria-hidden', String(index !== selected));
-        panels[index].inert = index !== selected;
-        panels[index].tabIndex = index === selected ? 0 : -1;
-      });
-    }
-    panels.forEach((panel, index) => {
-      panel.setAttribute('role', 'tabpanel');
-      panel.setAttribute('aria-labelledby', tabs[index].id);
-    });
-    root.querySelector<HTMLElement>('[role="tablist"]')!.hidden = false;
-    tabs.forEach((tab, index) => {
-      tab.addEventListener('click', () => selectTab(index));
-      tab.addEventListener('keydown', (event) => {
-        const next = { ArrowRight: (index + 1) % tabs.length, ArrowLeft: (index - 1 + tabs.length) % tabs.length, Home: 0, End: tabs.length - 1 }[event.key];
-        if (next === undefined) return;
-        event.preventDefault();
-        selectTab(next);
-        tabs[next].focus();
-      });
-    });
-    selectTab(0);
-    root.classList.add('is-enhanced');
-  }
-  const initStacks = () => document.querySelectorAll<HTMLElement>('[data-tech-stack]').forEach(initStack);
-  initStacks();
-  document.addEventListener('astro:page-load', initStacks);
-</script>
-
 <style>
-  .tech-section { padding-block: 2.5rem 3.5rem; border-top: 1px solid var(--line); }
-  .tech-header { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; margin-bottom: 2rem; }
-  h2 { margin: 0; font-size: 1.2rem; font-weight: 500; letter-spacing: -0.025em; }
-  .tech-tabs { position: relative; isolation: isolate; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; }
-  .tech-tabs[hidden] { display: none; }
-  .tech-tabs::before { position: absolute; z-index: -1; inset: 4px auto 4px 4px; width: calc((100% - 8px) / 3); background: var(--raised); border-radius: 6px; box-shadow: 0 1px 4px #0002; transform: translateX(calc(var(--tab-index, 0) * 100%)); transition: transform 280ms var(--ease); content: ''; }
-  .tech-tabs button { min-height: 40px; padding: 0.35rem 0.8rem; color: var(--muted); background: transparent; border: 0; border-radius: 6px; cursor: pointer; font-size: 0.75rem; white-space: nowrap; transition: color 180ms ease; }
-  .tech-tabs button[aria-selected='true'] { color: var(--ink); }
-  .tech-panel { padding-block: 0.3rem; }
-  .tech-panel:focus-visible { outline-offset: 8px; }
-  .is-enhanced .fallback-heading { display: none; }
-  .is-enhanced .tech-panels { display: grid; }
-  .is-enhanced .tech-panel { grid-area: 1 / 1; align-self: start; opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(6px); transition: opacity 140ms ease, transform 220ms var(--ease), visibility 0s linear 140ms; }
-  .is-enhanced .tech-panel[data-active] { opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition: opacity 220ms ease 80ms, transform 280ms var(--ease) 80ms, visibility 0s; }
-  .tech-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1.2rem; }
-  .tech-item { display: flex; align-items: center; gap: 0.8rem; min-width: 0; }
-  .tech-mark { display: grid; flex-shrink: 0; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 10px; color: var(--accent); background: var(--surface); font: 600 0.85rem var(--font-mono); }
-  .tech-item strong { display: block; font-size: 0.85rem; font-weight: 550; }
-  @media (max-width: 650px) {
-    .tech-header { align-items: start; flex-direction: column; }
-    .tech-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .tech-item { gap: 0.55rem; }
-    .tech-mark { width: 36px; height: 36px; font-size: 0.7rem; }
+  .tech-section { padding-block: clamp(3rem, 6vw, 5rem); border-top: 1px solid var(--line); overflow: clip; }
+  .tech-header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--space-5); margin-bottom: var(--space-6); }
+  h2 { margin: 0; font-size: var(--text-2xl); font-weight: 600; letter-spacing: -0.03em; }
+  .tech-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+  .pause { min-width: 5.5rem; justify-content: center; }
+
+  .marquee {
+    --gap: var(--space-3);
+    display: flex;
+    gap: var(--gap);
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
   }
-  @media (prefers-reduced-motion: reduce) {
-    .tech-tabs::before, .is-enhanced .tech-panel { transition: none; transform: none; }
-    .tech-tabs::before { transform: translateX(calc(var(--tab-index, 0) * 100%)); }
+  .track { display: flex; flex-shrink: 0; gap: var(--gap); margin: 0; padding: 0; list-style: none; }
+  .tech-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5) var(--space-3) var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    white-space: nowrap;
+    transition: opacity var(--dur) ease, border-color var(--dur) ease, transform var(--dur) var(--ease);
+  }
+  .tech-mark {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    color: var(--accent-ink);
+    background: var(--raised);
+    border-radius: var(--radius-sm);
+    font: 600 var(--text-sm) var(--font-mono);
+  }
+  .tech-text { display: block; }
+  .tech-text strong, .tech-text small { display: block; }
+  .tech-text strong { font-size: var(--text-md); font-weight: 500; line-height: 1.3; }
+  .tech-text small { color: var(--muted); font: var(--text-xs) var(--font-mono); }
+
+  [data-filter-active] .tech-item:not(.is-match) { opacity: 0.3; }
+  [data-filter-active] .tech-item.is-match { border-color: var(--accent-line); }
+  @media (hover: hover) { .tech-item:hover { border-color: var(--line-strong); transform: translateY(-2px); } }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .is-animated .track { animation: marquee 48s linear infinite; }
+    .is-animated .marquee:hover .track,
+    .is-animated .marquee:focus-within .track,
+    .is-animated[data-paused] .track,
+    .is-animated[data-filter-active] .track { animation-play-state: paused; }
+    @keyframes marquee { to { transform: translateX(calc(-100% - var(--gap))); } }
+  }
+
+  /* Without animation (no JS, reduced motion, or small screens), show a wrapped grid. */
+  .tech-section:not(.is-animated) .marquee { width: min(calc(100% - 3rem), var(--max-width)); margin-inline: auto; mask-image: none; }
+  .tech-section:not(.is-animated) .track { flex-wrap: wrap; flex-shrink: 1; }
+  .tech-section:not(.is-animated) .track-clone,
+  .tech-section:not(.is-animated) .pause { display: none; }
+  @media (max-width: 760px) {
+    .tech-section:not(.is-animated) .marquee { width: min(calc(100% - 2rem), var(--max-width)); }
+    .tech-item { padding-right: var(--space-4); }
   }
 </style>
+
+<script>
+  function initStack() {
+    document.querySelectorAll<HTMLElement>('[data-tech-stack]').forEach((root) => {
+      if (root.dataset.bound) return;
+      root.dataset.bound = 'true';
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!reduced) root.classList.add('is-animated');
+      const filters = [...root.querySelectorAll<HTMLButtonElement>('[data-tech-filter]')];
+      const items = root.querySelectorAll<HTMLElement>('.tech-item');
+      const status = root.querySelector<HTMLElement>('[data-tech-status]');
+      const pause = root.querySelector<HTMLButtonElement>('[data-tech-pause]');
+      const pauseLabel = pause?.querySelector<HTMLElement>('[data-pause-label]');
+
+      filters.forEach((button) => button.addEventListener('click', () => {
+        const filter = button.dataset.techFilter ?? 'all';
+        filters.forEach((other) => other.setAttribute('aria-pressed', String(other === button)));
+        root.toggleAttribute('data-filter-active', filter !== 'all');
+        let count = 0;
+        items.forEach((item) => {
+          const match = filter === 'all' || item.dataset.group === filter;
+          item.classList.toggle('is-match', match && filter !== 'all');
+          if (match && !item.closest('[aria-hidden="true"]')) count += 1;
+        });
+        if (status) status.textContent = filter === 'all' ? 'Showing all tools' : `Highlighting ${count} ${button.firstChild?.textContent?.trim().toLowerCase()}`;
+      }));
+
+      pause?.addEventListener('click', () => {
+        const paused = !root.hasAttribute('data-paused');
+        root.toggleAttribute('data-paused', paused);
+        pause.setAttribute('aria-pressed', String(paused));
+        if (pauseLabel) pauseLabel.textContent = paused ? 'Play' : 'Pause';
+      });
+    });
+  }
+  document.addEventListener('astro:page-load', initStack);
+</script>

@@ -1,0 +1,175 @@
+---
+export interface CommandItem {
+  id: string;
+  label: string;
+  group: 'Jump to' | 'Pages' | 'Projects' | 'Links' | 'Theme';
+  href?: string;
+  action?: string;
+  hint?: string;
+  keywords?: string;
+  external?: boolean;
+}
+
+interface Props { items: CommandItem[]; }
+
+const { items } = Astro.props;
+const groups = ['Jump to', 'Pages', 'Projects', 'Links', 'Theme'] as const;
+---
+
+<dialog class="cmd" id="command-menu" aria-label="Command menu" data-command-menu>
+  <div class="cmd-panel">
+    <div class="cmd-search">
+      <label for="command-input" class="visually-hidden">Search sections, projects and links</label>
+      <span class="cmd-prompt" aria-hidden="true">&gt;</span>
+      <input
+        id="command-input"
+        type="text"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Search sections, projects, links…"
+        role="combobox"
+        aria-expanded="true"
+        aria-controls="command-list"
+        aria-autocomplete="list"
+        data-command-input
+      />
+      <kbd>esc</kbd>
+    </div>
+    <div class="cmd-body">
+      <ul class="cmd-list" id="command-list" role="listbox" aria-label="Results" data-command-list>
+        {groups.map((group) => {
+          const groupItems = items.filter((item) => item.group === group);
+          if (groupItems.length === 0) return null;
+          return (
+            <li role="presentation" class="cmd-group" data-command-group>
+              <p class="cmd-group-label" aria-hidden="true">{group}</p>
+              <ul role="presentation">
+                {groupItems.map((item) => (
+                  <li role="presentation">
+                    {item.href ? (
+                      <a
+                        id={`cmd-${item.id}`}
+                        class="cmd-option"
+                        role="option"
+                        aria-selected="false"
+                        tabindex="-1"
+                        href={item.href}
+                        target={item.external ? '_blank' : undefined}
+                        rel={item.external ? 'noreferrer' : undefined}
+                        data-command-option
+                        data-search={`${item.label} ${item.hint ?? ''} ${item.keywords ?? ''} ${group}`.toLowerCase()}
+                      >
+                        <span class="cmd-label">{item.label}</span>
+                        {item.hint && <span class="cmd-hint">{item.hint}</span>}
+                        <span class="cmd-go" aria-hidden="true">{item.external ? '↗' : '↵'}</span>
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        id={`cmd-${item.id}`}
+                        class="cmd-option"
+                        role="option"
+                        aria-selected="false"
+                        tabindex="-1"
+                        data-command-option
+                        data-command-action={item.action}
+                        data-search={`${item.label} ${item.hint ?? ''} ${item.keywords ?? ''} ${group}`.toLowerCase()}
+                      >
+                        <span class="cmd-label">{item.label}</span>
+                        {item.hint && <span class="cmd-hint">{item.hint}</span>}
+                        <span class="cmd-go" aria-hidden="true">↵</span>
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </li>
+          );
+        })}
+      </ul>
+      <div class="cmd-empty" data-command-empty hidden>
+        <p>No match for “<span data-command-query></span>”.</p>
+        <p>Try a section name like <em>projects</em> or <em>research</em>, or a tool like <em>Python</em>.</p>
+      </div>
+    </div>
+    <footer class="cmd-foot" aria-hidden="true">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>↵</kbd> open</span>
+      <span class="cmd-count" data-command-count></span>
+    </footer>
+    <p class="visually-hidden" aria-live="polite" data-command-status></p>
+  </div>
+</dialog>
+
+<style>
+  .cmd {
+    width: min(40rem, calc(100% - 2rem));
+    max-height: min(32rem, calc(100dvh - 6rem));
+    margin: 12vh auto auto;
+    padding: 0;
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+    overflow: visible;
+  }
+  .cmd::backdrop { background: var(--scrim); }
+  .cmd-panel {
+    display: flex;
+    flex-direction: column;
+    max-height: min(32rem, calc(100dvh - 6rem));
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    box-shadow: 0 2rem 4rem var(--shadow);
+    overflow: hidden;
+  }
+  .cmd[open] .cmd-panel { animation: cmd-in var(--dur) var(--ease) both; }
+  .cmd[open]::backdrop { animation: scrim-in var(--dur) ease-out both; }
+  .cmd.is-closing .cmd-panel { animation: cmd-out var(--dur-fast) var(--ease-in) both; }
+  .cmd.is-closing::backdrop { animation: scrim-out var(--dur-fast) ease-in both; }
+  @keyframes cmd-in { from { opacity: 0; transform: translateY(-8px) scale(0.98); } }
+  @keyframes cmd-out { to { opacity: 0; transform: translateY(-6px) scale(0.98); } }
+  @keyframes scrim-in { from { opacity: 0; } }
+  @keyframes scrim-out { to { opacity: 0; } }
+
+  .cmd-search { display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-4); border-bottom: 1px solid var(--line); }
+  .cmd-prompt { color: var(--accent-ink); font: 500 var(--text-md) var(--font-mono); }
+  .cmd-search input { flex: 1; min-width: 0; min-height: 3.5rem; padding: 0; background: transparent; border: 0; font-size: var(--text-lg); outline: none; }
+  .cmd-search input::placeholder { color: var(--muted); }
+  .cmd-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-2); }
+  .cmd-list, .cmd-list ul { margin: 0; padding: 0; list-style: none; }
+  .cmd-group + .cmd-group { margin-top: var(--space-2); }
+  .cmd-group-label { margin: 0; padding: var(--space-2) var(--space-3) var(--space-1); color: var(--muted); font: 500 var(--text-xs) var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+  .cmd-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0 var(--space-3);
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-md);
+    text-align: left;
+    text-decoration: none;
+  }
+  .cmd-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cmd-hint { flex-shrink: 0; color: var(--muted); font: var(--text-xs) var(--font-mono); white-space: nowrap; }
+  .cmd-go { flex-shrink: 0; width: 1.25rem; color: var(--muted); font-family: var(--font-mono); text-align: center; opacity: 0; transition: opacity var(--dur-fast) ease; }
+  .cmd-option[aria-selected='true'] { background: var(--accent-soft); box-shadow: inset 2px 0 0 var(--accent); }
+  .cmd-option[aria-selected='true'] .cmd-go { opacity: 1; color: var(--accent-ink); }
+  .cmd-empty { padding: var(--space-6) var(--space-4); color: var(--muted); }
+  .cmd-empty p { margin: 0 0 var(--space-2); }
+  .cmd-empty p:first-child { color: var(--ink); }
+  .cmd-empty em { color: var(--ink); font-style: normal; }
+  .cmd-foot { display: flex; align-items: center; gap: var(--space-5); padding: var(--space-3) var(--space-4); color: var(--muted); border-top: 1px solid var(--line); font-size: var(--text-xs); }
+  .cmd-foot kbd + kbd { margin-left: 2px; }
+  .cmd-foot span:not(.cmd-count) kbd { margin-right: var(--space-1); }
+  .cmd-count { margin-left: auto; font-family: var(--font-mono); }
+  @media (max-width: 560px) {
+    .cmd { margin-top: var(--space-4); }
+    .cmd-foot span:not(.cmd-count) { display: none; }
+  }
+</style>

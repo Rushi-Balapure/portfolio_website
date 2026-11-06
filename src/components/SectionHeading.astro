@@ -4,31 +4,32 @@ interface Props {
   title: string;
   href?: string;
   linkLabel?: string;
+  index?: string;
 }
 
-const { eyebrow, title, href, linkLabel = 'View all' } = Astro.props;
+const { eyebrow, title, href, linkLabel = 'View all', index } = Astro.props;
 ---
 
 <header class="section-heading" data-reveal>
-  <div>
-    <p class="eyebrow">{eyebrow}</p>
-    <h2>{title}</h2>
-  </div>
-  {href && (
-    <div class="aside">
-      <a href={href}>{linkLabel} <span aria-hidden="true">↗</span></a>
+  <div class="heading-main">
+    {index && <span class="heading-index" aria-hidden="true">{index}</span>}
+    <div>
+      <p class="eyebrow">{eyebrow}</p>
+      <h2>{title}</h2>
     </div>
-  )}
+  </div>
+  {href && <a class="text-link aside" href={href}>{linkLabel} <span class="button-arrow" aria-hidden="true">↗</span></a>}
 </header>
 
 <style>
-  .section-heading { display: flex; justify-content: space-between; gap: 2rem; align-items: end; margin-bottom: clamp(2rem, 4vw, 3rem); }
-  .eyebrow { margin-bottom: 0.7rem; }
-  h2 { max-width: 24ch; margin: 0; font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 500; letter-spacing: -0.045em; line-height: 1.1; text-wrap: balance; }
+  .section-heading { display: flex; align-items: end; justify-content: space-between; gap: var(--space-6); margin-bottom: clamp(2rem, 4vw, 3.5rem); }
+  .heading-main { display: flex; align-items: start; gap: var(--space-5); min-width: 0; }
+  .heading-index { flex-shrink: 0; padding-top: 0.35rem; color: var(--muted); font: 500 var(--text-sm) var(--font-mono); }
+  .eyebrow { margin-bottom: var(--space-3); }
+  h2 { max-width: 22ch; margin: 0; font-size: var(--text-3xl); font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; }
   .aside { flex-shrink: 0; }
-  .aside a { display: inline-flex; align-items: center; gap: 1rem; min-height: 44px; color: var(--muted); font-size: 0.75rem; text-decoration: none; }
-  .aside a:hover { color: var(--accent); }
   @media (max-width: 700px) {
-    .section-heading { align-items: start; gap: 1rem; flex-direction: column; }
+    .section-heading { flex-direction: column; align-items: start; gap: var(--space-3); }
+    .heading-main { gap: var(--space-3); }
   }
 </style>

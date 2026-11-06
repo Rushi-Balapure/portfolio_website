@@ -10,77 +10,101 @@ interface Props {
   tags?: string[];
   large?: boolean;
   project?: string;
+  categories?: string[];
+  index?: number;
 }
 
-const { href, eyebrow, title, summary, date, tags = [], large = false, project } = Astro.props;
+const { href, eyebrow, title, summary, date, tags = [], large = false, project, categories = [], index } = Astro.props;
 const visualProject = project && ['insidia-labs', 'ai-vulnerability-detection', 'arise'].includes(project) ? project : undefined;
 const Wrapper = href ? 'a' : 'article';
 const dateLabel = date?.toLocaleDateString('en', { month: 'short', year: 'numeric' });
 ---
 
-<Wrapper class:list={['entry-card', { large, 'has-visual': !!visualProject }]} href={href} data-reveal data-spotlight>
-  {visualProject && <ProjectVisual project={visualProject} />}
+<Wrapper
+  class:list={['entry-card', { large, 'has-visual': !!visualProject, 'is-link': !!href }]}
+  href={href}
+  data-reveal
+  data-spotlight
+  data-categories={categories.length ? categories.join('|') : undefined}
+>
+  {visualProject && <ProjectVisual project={visualProject} name={`project-visual-${visualProject}`} />}
   <div class="card-content">
-  <div class="card-top">
-    <span>{eyebrow ?? dateLabel ?? 'Selected work'}</span>
-    {href && <span aria-hidden="true">↗</span>}
-  </div>
-  <div>
-    <h3>{title}</h3>
-    <p>{summary}</p>
-    {tags.length > 0 && <ul class="pill-list" aria-label="Tags">{tags.slice(0, 4).map((tag) => <li class="pill">{tag}</li>)}</ul>}
-  </div>
+    <div class="card-top">
+      <span>{index !== undefined && <b>{String(index + 1).padStart(2, '0')}</b>}{eyebrow ?? dateLabel ?? 'Selected work'}</span>
+      {href && <span class="card-arrow" aria-hidden="true">↗</span>}
+    </div>
+    <div>
+      {project ? <h3 transition:name={`project-title-${project}`}>{title}</h3> : <h3>{title}</h3>}
+      <p>{summary}</p>
+      {tags.length > 0 && <ul class="pill-list" aria-label="Tags">{tags.slice(0, 5).map((tag) => <li class="pill">{tag}</li>)}</ul>}
+    </div>
   </div>
 </Wrapper>
 
 <style>
-  .entry-card[data-reveal] {
-    grid-column: span 6;
-    display: flex;
+  .entry-card {
     position: relative;
-    overflow: hidden;
-    min-width: 0;
-    min-height: 19rem;
+    display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    grid-column: span 6;
+    min-width: 0;
+    min-height: 18rem;
     color: var(--ink);
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius);
+    overflow: hidden;
     text-decoration: none;
-    transition: opacity 450ms var(--ease), transform 450ms var(--ease), border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+    transition: transform var(--dur) var(--ease), border-color var(--dur-fast) ease, box-shadow var(--dur) var(--ease);
   }
-  .entry-card::before { position: absolute; inset: 0; z-index: 1; border-radius: inherit; background: radial-gradient(380px circle at var(--spot-x, 50%) var(--spot-y, 50%), var(--accent-glow), transparent 75%); opacity: 0; content: ''; pointer-events: none; transition: opacity 250ms; }
-  .entry-card:hover::before { opacity: 1; }
-  .card-content { position: relative; display: flex; flex: 1; flex-direction: column; justify-content: space-between; gap: 2rem; padding: clamp(1.3rem, 3vw, 2rem); }
+  .entry-card::before {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(420px circle at var(--spot-x, 50%) var(--spot-y, 50%), var(--accent-soft), transparent 70%);
+    opacity: 0;
+    content: '';
+    pointer-events: none;
+    transition: opacity var(--dur) ease;
+  }
+  .card-content { position: relative; z-index: 2; display: flex; flex: 1; flex-direction: column; justify-content: space-between; gap: var(--space-6); padding: clamp(1.5rem, 3vw, 2.25rem); }
   .entry-card.large { grid-column: 1 / -1; }
-  .entry-card.large.has-visual { display: grid; grid-template-columns: 1.1fr 1fr; }
-  .large.has-visual :global(.project-visual) { border-bottom: 0; border-right: 1px solid var(--line); min-height: 21rem; }
-  a.entry-card:hover { background: var(--card-hover); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); box-shadow: 0 1rem 2rem var(--shadow); }
-  .card-top { display: flex; align-items: start; justify-content: space-between; gap: 1rem; color: var(--muted); font: 0.6rem var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; }
-  .card-top > span:last-child { flex-shrink: 0; }
-  h3 { max-width: 26ch; margin: 0; font-size: clamp(1.3rem, 2vw, 1.8rem); font-weight: 550; letter-spacing: -0.035em; line-height: 1.15; text-wrap: balance; }
-  p { max-width: 37rem; margin: 0.85rem 0 0; color: var(--muted); font-size: 0.85rem; line-height: 1.7; text-wrap: pretty; }
-  @media (max-width: 760px) {
-    .entry-card, .entry-card.large { grid-column: 1 / -1; min-height: 17rem; }
+  .entry-card.large.has-visual { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .large.has-visual :global(.project-visual) { min-height: 22rem; border-right: 1px solid var(--line); border-bottom: 0; }
+
+  .card-top { display: flex; align-items: start; justify-content: space-between; gap: var(--space-4); color: var(--muted); font: var(--text-xs) var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+  .card-top b { margin-right: var(--space-3); color: var(--accent-ink); font-weight: 500; }
+  .card-arrow {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    font-size: var(--text-md);
+    transition: transform var(--dur) var(--ease), background-color var(--dur-fast) ease, color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+  }
+  h3 { max-width: 24ch; margin: 0; font-size: var(--text-2xl); font-weight: 600; letter-spacing: -0.03em; line-height: 1.12; }
+  .large h3 { font-size: clamp(1.75rem, 3.2vw, 2.5rem); }
+  p { max-width: 38rem; margin: var(--space-3) 0 0; color: var(--muted); font-size: var(--text-md); line-height: 1.6; }
+
+  @media (hover: hover) {
+    .entry-card.is-link:hover { transform: translateY(-4px); border-color: var(--accent-line); box-shadow: 0 1.5rem 3rem -1rem var(--shadow); }
+    .entry-card.is-link:hover::before { opacity: 1; }
+    .entry-card.is-link:hover .card-arrow { color: var(--on-accent); background: var(--accent); border-color: var(--accent); transform: rotate(45deg); }
+    .entry-card.is-link:hover :global(.project-visual > div) { transform: scale(1.03); }
+  }
+  .entry-card.is-link:focus-visible { outline-offset: 4px; border-color: var(--accent-line); }
+  .entry-card.is-link:active { transform: translateY(-1px) scale(0.995); }
+
+  @media (max-width: 860px) {
+    .entry-card, .entry-card.large { grid-column: 1 / -1; min-height: 16rem; }
     .entry-card.large.has-visual { display: flex; }
     .large.has-visual :global(.project-visual) { min-height: 16rem; border-right: 0; border-bottom: 1px solid var(--line); }
   }
-</style>
-
-<script>
-  function initSpotlights() {
-    if (!window.matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches) return;
-    document.querySelectorAll<HTMLElement>('[data-spotlight]').forEach((card) => {
-      if (card.dataset.spotlightBound) return;
-      card.dataset.spotlightBound = 'true';
-      card.addEventListener('pointermove', (event) => {
-        const rect = card.getBoundingClientRect();
-        card.style.setProperty('--spot-x', `${event.clientX - rect.left}px`);
-        card.style.setProperty('--spot-y', `${event.clientY - rect.top}px`);
-      });
-    });
+  @media (min-width: 861px) and (max-width: 1060px) {
+    .entry-card.large.has-visual { grid-template-columns: 1fr 1fr; }
   }
-  initSpotlights();
-  document.addEventListener('astro:page-load', initSpotlights);
-</script>
+</style>

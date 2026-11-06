@@ -12,58 +12,143 @@ interface ContributionWeek {
 
 const { username = activity.username ?? undefined, profileUrl } = Astro.props;
 const weeks: ContributionWeek[] = activity.weeks;
+const days = weeks.flatMap((week) => week.days);
+const activeDays = days.filter((day) => day.count > 0).length;
+const best = days.reduce<{ date: string; count: number } | undefined>((top, day) => (!top || day.count > top.count ? day : top), undefined);
 const updated = activity.updatedAt
   ? new Date(activity.updatedAt).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })
   : undefined;
+const formatDay = (date: string) => new Date(`${date}T00:00:00Z`).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 ---
 
-<div class="activity" data-reveal>
+<div class="activity" data-reveal data-activity>
   <div class="activity-top">
     <div>
       <p class="eyebrow">GitHub pulse</p>
-      <h3>{activity.weeks.length ? `${activity.totalContributions.toLocaleString()} contributions` : 'Contribution activity'}</h3>
+      <h3>{weeks.length ? `${activity.totalContributions.toLocaleString()} contributions` : 'Contribution activity'}</h3>
     </div>
-    {profileUrl && <a href={profileUrl} target="_blank" rel="noreferrer">@{username ?? 'GitHub'} ↗</a>}
+    {profileUrl && <a class="text-link" href={profileUrl} target="_blank" rel="noreferrer">@{username ?? 'GitHub'} <span class="button-arrow" aria-hidden="true">↗</span></a>}
   </div>
 
-  {weeks.length > 0 && <div class="calendar-scroll" tabindex="0" aria-label="GitHub contribution calendar">
-    <div class="calendar" aria-hidden="true">
-      {weeks.flatMap((week) => week.days).map((day) => (
-        <span class={`level-${day.level}`} title={day.date ? `${day.count} contributions on ${day.date}` : 'No activity data'}></span>
-      ))}
+  {weeks.length > 0 ? (
+    <>
+      <dl class="activity-stats">
+        <div><dt>Active days</dt><dd>{activeDays}</dd></div>
+        {best && best.count > 0 && <div><dt>Busiest day</dt><dd>{best.count} <small>on {formatDay(best.date)}</small></dd></div>}
+      </dl>
+      <div class="calendar-scroll" tabindex="0" role="region" aria-label="GitHub contribution calendar, scrollable">
+        <div class="calendar" aria-hidden="true" data-calendar>
+          {weeks.map((week, weekIndex) => week.days.map((day) => (
+            <span class={`cell level-${day.level}`} style={`--w:${weekIndex}`} data-date={day.date} data-count={day.count}></span>
+          )))}
+        </div>
+      </div>
+      <div class="tip" role="tooltip" data-tip hidden></div>
+      <div class="activity-bottom">
+        <p>Public activity over the last year{updated && ` · refreshed ${updated}`}. Hover a day for details.</p>
+        <div class="legend" aria-label="Contribution intensity from less to more">
+          <span>Less</span><i class="level-0"></i><i class="level-1"></i><i class="level-2"></i><i class="level-3"></i><i class="level-4"></i><span>More</span>
+        </div>
+      </div>
+    </>
+  ) : (
+    <div class="activity-empty">
+      <div class="ghost-grid" aria-hidden="true">{Array.from({ length: 7 * 26 }, () => <span></span>)}</div>
+      <p>The contribution calendar loads from public GitHub data when the site is built. Until then, the full history is on {profileUrl ? <a href={profileUrl} target="_blank" rel="noreferrer">GitHub</a> : 'GitHub'}.</p>
     </div>
-  </div>}
-
-  <div class="activity-bottom">
-    <p>
-      {activity.weeks.length
-        ? `Public activity over the last year${updated ? ` · refreshed ${updated}` : ''}.`
-        : 'Add githubUsername and githubUrl to home.md, then set the GITHUB_USERNAME repository variable to load public activity.'}
-    </p>
-    {weeks.length > 0 && <div class="legend" aria-label="Contribution intensity from less to more">
-      <span>Less</span><i class="level-0"></i><i class="level-1"></i><i class="level-2"></i><i class="level-3"></i><i class="level-4"></i><span>More</span>
-    </div>}
-  </div>
+  )}
 </div>
 
 <style>
-  .activity { padding: clamp(1.5rem, 4vw, 2.5rem); color: var(--ink); background: radial-gradient(ellipse at 100% 0, var(--accent-glow), transparent 60%), var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-  .activity .eyebrow { color: var(--accent); }
-  .activity-top, .activity-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; }
-  h3 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); font-weight: 500; letter-spacing: -0.045em; line-height: 1.2; }
-  a { color: var(--accent); font-size: 0.75rem; font-weight: 500; }
-  .calendar-scroll { margin-block: 3rem; padding-bottom: 0.5rem; overflow-x: auto; }
-  .calendar { display: grid; grid-template-rows: repeat(7, 0.72rem); grid-auto-flow: column; grid-auto-columns: 0.72rem; gap: 0.24rem; width: max-content; min-width: 100%; justify-content: space-between; }
-  .calendar span, .legend i { display: block; width: 0.72rem; height: 0.72rem; background: var(--raised); border: 1px solid var(--line); border-radius: 0.18rem; }
-  .calendar .level-1, .legend .level-1 { background: #294c3c; }
-  .calendar .level-2, .legend .level-2 { background: #407559; }
-  .calendar .level-3, .legend .level-3 { background: #6ba786; }
-  .calendar .level-4, .legend .level-4 { background: #a5dfbe; }
-  .activity-bottom { align-items: center; margin-top: 1.5rem; color: var(--muted); font-size: 0.75rem; }
+  .activity { position: relative; padding: clamp(1.5rem, 4vw, 2.5rem); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  .activity-top, .activity-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-5); }
+  h3 { margin: 0; font-size: var(--text-3xl); font-weight: 600; letter-spacing: -0.035em; line-height: 1.1; }
+  .activity-stats { display: flex; flex-wrap: wrap; gap: var(--space-6); margin: var(--space-5) 0 0; }
+  .activity-stats div { display: block; }
+  .activity-stats dt { color: var(--muted); font: var(--text-xs) var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+  .activity-stats dd { margin: var(--space-1) 0 0; font: 600 var(--text-xl) var(--font-display); white-space: nowrap; }
+  .activity-stats small { color: var(--muted); font: var(--text-sm) var(--font-body); }
+
+  .calendar-scroll { position: relative; margin-block: var(--space-6); padding-bottom: var(--space-2); overflow-x: auto; }
+  .calendar { --cell: 0.8rem; display: grid; grid-template-rows: repeat(7, var(--cell)); grid-auto-flow: column; grid-auto-columns: var(--cell); gap: 3px; width: max-content; min-width: 100%; justify-content: space-between; }
+  .cell, .legend i { display: block; width: var(--cell, 0.8rem); height: var(--cell, 0.8rem); background: var(--heat-0); border-radius: 2px; }
+  .cell { transition: transform var(--dur-fast) var(--ease); }
+  .cell.is-hot { outline: 1.5px solid var(--ink); outline-offset: 1px; transform: scale(1.15); }
+  .level-1 { background: var(--heat-1); }
+  .level-2 { background: var(--heat-2); }
+  .level-3 { background: var(--heat-3); }
+  .level-4 { background: var(--heat-4); }
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal-ready [data-activity] .cell { opacity: 0; transform: scale(0.4); }
+    .reveal-ready [data-activity].is-visible .cell { animation: cell-in 360ms var(--ease) both; animation-delay: calc(var(--w) * 10ms); }
+    @keyframes cell-in { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }
+    .reveal-ready [data-activity].is-visible .cell.is-hot { animation: none; opacity: 1; transform: scale(1.15); }
+  }
+
+  .tip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    padding: var(--space-2) var(--space-3);
+    color: var(--paper);
+    background: var(--ink);
+    border-radius: var(--radius-sm);
+    font: var(--text-xs) var(--font-mono);
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 0.5rem 1rem var(--shadow);
+  }
+
+  .activity-bottom { align-items: center; color: var(--muted); font-size: var(--text-sm); }
   .activity-bottom p { margin: 0; }
-  .legend { display: flex; align-items: center; gap: 0.25rem; white-space: nowrap; }
+  .legend { display: flex; align-items: center; gap: 3px; font-size: var(--text-xs); white-space: nowrap; }
+  .legend span { margin-inline: var(--space-1); }
+
+  .activity-empty { display: grid; gap: var(--space-5); margin-top: var(--space-6); }
+  .activity-empty p { max-width: 40rem; margin: 0; color: var(--muted); }
+  .activity-empty a { color: var(--accent-ink); }
+  .ghost-grid { display: grid; grid-template-rows: repeat(7, 0.7rem); grid-auto-flow: column; grid-auto-columns: 0.7rem; gap: 3px; width: 100%; overflow: hidden; }
+  .ghost-grid span { background: var(--heat-0); border-radius: 2px; }
+
   @media (max-width: 640px) {
-    .activity-top, .activity-bottom { align-items: flex-start; flex-direction: column; }
+    .activity-top, .activity-bottom { flex-direction: column; align-items: flex-start; }
     .calendar { justify-content: start; }
   }
 </style>
+
+<script>
+  function initActivity() {
+    document.querySelectorAll<HTMLElement>('[data-activity]').forEach((root) => {
+      if (root.dataset.bound) return;
+      root.dataset.bound = 'true';
+      const calendar = root.querySelector<HTMLElement>('[data-calendar]');
+      const tip = root.querySelector<HTMLElement>('[data-tip]');
+      const scroller = root.querySelector<HTMLElement>('.calendar-scroll');
+      if (!calendar || !tip || !scroller) return;
+      let hot: HTMLElement | null = null;
+      const fmt = new Intl.DateTimeFormat('en', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+      const clear = () => { hot?.classList.remove('is-hot'); hot = null; tip.hidden = true; };
+      calendar.addEventListener('pointerover', (event) => {
+        const cell = (event.target as HTMLElement).closest<HTMLElement>('.cell');
+        if (!cell || cell === hot || !cell.dataset.date) return;
+        hot?.classList.remove('is-hot');
+        hot = cell;
+        cell.classList.add('is-hot');
+        const count = Number(cell.dataset.count ?? 0);
+        tip.textContent = `${count === 0 ? 'No' : count} contribution${count === 1 ? '' : 's'} · ${fmt.format(new Date(`${cell.dataset.date}T00:00:00Z`))}`;
+        tip.hidden = false;
+        const cellRect = cell.getBoundingClientRect();
+        const boxRect = root.getBoundingClientRect();
+        const x = cellRect.left - boxRect.left + cellRect.width / 2;
+        const y = cellRect.top - boxRect.top;
+        const half = tip.offsetWidth / 2;
+        const clampedX = Math.min(Math.max(x, half + 8), root.clientWidth - half - 8);
+        tip.style.transform = `translate(${clampedX - half}px, ${y - tip.offsetHeight - 8}px)`;
+      });
+      calendar.addEventListener('pointerleave', clear);
+      scroller.addEventListener('scroll', clear, { passive: true });
+    });
+  }
+  document.addEventListener('astro:page-load', initActivity);
+</script>

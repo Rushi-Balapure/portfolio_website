@@ -1,0 +1,113 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import EntryCard from './EntryCard.astro';
+
+interface Props {
+  projects: CollectionEntry<'projects'>[];
+  showDate?: boolean;
+}
+
+const { projects, showDate = false } = Astro.props;
+
+// Filter categories are derived from each project's own tags, stack, and title.
+const categoryRules = [
+  { id: 'security', label: 'Security', pattern: /secur|vulnerab|data loss|\bdlp\b|sarif/i },
+  { id: 'ai', label: 'AI & ML', pattern: /\bai\b|machine learning|\bllm|ollama|\bner\b|pytorch|transformer/i },
+  { id: 'devtools', label: 'Developer tools', pattern: /developer|\bcli\b|terminal|bash|zsh/i },
+];
+const formatDate = (date: Date) => date.toLocaleDateString('en', { month: 'short', year: 'numeric' });
+const cards = projects.map((entry) => {
+  const haystack = [entry.data.title, ...entry.data.tags, ...(entry.data.stack ?? [])].join(' ');
+  const categories = categoryRules.filter((rule) => rule.pattern.test(haystack)).map((rule) => rule.id);
+  return { entry, categories };
+});
+const filters = categoryRules
+  .map((rule) => ({ ...rule, count: cards.filter((card) => card.categories.includes(rule.id)).length }))
+  .filter((rule) => rule.count > 0);
+const status = (entry: CollectionEntry<'projects'>) => entry.data.status?.replace('-', ' ');
+---
+
+<div class="project-grid" data-project-filter>
+  {filters.length > 1 && (
+    <div class="filter-bar" data-reveal>
+      <div class="chip-row" role="group" aria-label="Filter projects">
+        <button type="button" class="chip" aria-pressed="true" data-filter="all">All <span class="chip-count">{cards.length}</span></button>
+        {filters.map((filter) => (
+          <button type="button" class="chip" aria-pressed="false" data-filter={filter.id}>{filter.label} <span class="chip-count">{filter.count}</span></button>
+        ))}
+      </div>
+      <p class="filter-status" aria-live="polite" data-filter-status>Showing all {cards.length} projects</p>
+    </div>
+  )}
+  <div class="grid" data-filter-grid>
+    {cards.map(({ entry, categories }, index) => (
+      <EntryCard
+        href={`/projects/${entry.id}/`}
+        eyebrow={[status(entry) ?? 'Project', showDate ? formatDate(entry.data.date) : entry.data.role].filter(Boolean).join(' · ')}
+        title={entry.data.title}
+        summary={entry.data.summary}
+        tags={entry.data.stack ?? entry.data.tags}
+        large={index === 0}
+        project={entry.id}
+        categories={categories}
+        index={index}
+      />
+    ))}
+    {cards.length === 0 && <p class="empty-state">No projects are published yet. Entries marked as drafts stay hidden until they’re ready.</p>}
+  </div>
+  <p class="empty-state" data-filter-empty hidden>No projects match this filter. <button type="button" class="reset" data-filter-reset>Show all projects</button></p>
+</div>
+
+<style>
+  .filter-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-5); margin-bottom: var(--space-5); }
+  .filter-status { margin: 0; color: var(--muted); font: var(--text-xs) var(--font-mono); }
+  .project-grid :global(.entry-card.is-filtered-in) { animation: card-in 320ms var(--ease) both; }
+  @keyframes card-in { from { opacity: 0; transform: translateY(10px) scale(0.99); } }
+  .reset { padding: 0; color: var(--accent-ink); background: none; border: 0; text-decoration: underline; text-underline-offset: 0.2em; }
+</style>
+
+<script>
+  function initFilters() {
+    document.querySelectorAll<HTMLElement>('[data-project-filter]').forEach((root) => {
+      if (root.dataset.bound) return;
+      root.dataset.bound = 'true';
+      const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+      const cards = [...root.querySelectorAll<HTMLElement>('[data-filter-grid] > .entry-card')];
+      const status = root.querySelector<HTMLElement>('[data-filter-status]');
+      const empty = root.querySelector<HTMLElement>('[data-filter-empty]');
+      if (buttons.length === 0) return;
+
+      const apply = (filter: string) => {
+        let shown = 0;
+        buttons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.filter === filter)));
+        cards.forEach((card) => {
+          const match = filter === 'all' || (card.dataset.categories ?? '').split('|').includes(filter);
+          const wasHidden = card.hidden;
+          card.hidden = !match;
+          // The first visible card keeps the wide feature layout.
+          card.classList.toggle('large', match && shown === 0);
+          if (match) {
+            if (wasHidden || filter !== 'all') {
+              card.classList.remove('is-filtered-in');
+              void card.offsetWidth;
+              card.style.animationDelay = `${shown * 40}ms`;
+              card.classList.add('is-filtered-in');
+            }
+            card.classList.add('is-visible');
+            shown += 1;
+          }
+        });
+        const label = buttons.find((button) => button.dataset.filter === filter)?.firstChild?.textContent?.trim() ?? '';
+        if (status) status.textContent = filter === 'all' ? `Showing all ${cards.length} projects` : `Showing ${shown} of ${cards.length} · ${label}`;
+        if (empty) empty.hidden = shown > 0;
+      };
+
+      buttons.forEach((button) => button.addEventListener('click', () => apply(button.dataset.filter ?? 'all')));
+      root.querySelector('[data-filter-reset]')?.addEventListener('click', () => {
+        apply('all');
+        buttons[0]?.focus();
+      });
+    });
+  }
+  document.addEventListener('astro:page-load', initFilters);
+</script>

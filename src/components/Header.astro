@@ -8,39 +8,66 @@ interface Props {
 const { name } = Astro.props;
 const path = Astro.url.pathname;
 const links = [
-  { href: '/experience/', label: 'Experience' },
-  { href: '/projects/', label: 'Projects' },
-  { href: '/open-source/', label: 'Open Source' },
-  { href: '/community/', label: 'Community' },
-  { href: '/publications/', label: 'Publications' },
-  { href: '/resume.pdf', label: 'Resume', external: true },
+  { href: '/experience/', label: 'Experience', spy: 'experience' },
+  { href: '/projects/', label: 'Projects', spy: 'selected-work' },
+  { href: '/open-source/', label: 'Open Source', spy: 'open-source' },
+  { href: '/publications/', label: 'Research', spy: 'research' },
+  { href: '/community/', label: 'Community', spy: 'community' },
 ];
+const initials = name.split(' ').map((part) => part[0]?.toLowerCase()).join('').slice(0, 2);
 ---
 
-<header class="site-header" transition:name="site-header" transition:animate="none">
+<header class="site-header" data-site-header transition:name="site-header" transition:animate="none">
+  <div class="scroll-progress" aria-hidden="true"><span data-scroll-progress></span></div>
   <div class="header-inner shell">
-    <a class="brand" href="/" aria-label={`${name} home`}>
-      <span class="brand-mark" aria-hidden="true">rb<span>↗</span></span><span>{name}</span>
+    <a class="brand" href="/" aria-label={`${name}, home`}>
+      <span class="brand-mark" aria-hidden="true">{initials}<i></i></span>
+      <span class="brand-name">{name}</span>
     </a>
 
-    <nav class="desktop-nav" aria-label="Primary navigation">
+    <nav class="desktop-nav" aria-label="Primary">
       {links.map((link) => (
-        <a href={link.href} target={link.external ? '_blank' : undefined} rel={link.external ? 'noreferrer' : undefined} aria-current={!link.external && path.startsWith(link.href) ? 'page' : undefined}>
-          {link.label}
-        </a>
+        <a href={link.href} data-spy={link.spy} aria-current={path.startsWith(link.href) ? 'page' : undefined}>{link.label}</a>
       ))}
+      <a href="/resume.pdf" target="_blank" rel="noreferrer">Resume <span aria-hidden="true">↗</span></a>
     </nav>
+
+    <button type="button" class="search-trigger" data-command-open aria-haspopup="dialog" aria-controls="command-menu" aria-keyshortcuts="Control+K Meta+K">
+      <span class="search-label">Search</span>
+      <kbd class="search-kbd" data-command-kbd>Ctrl K</kbd>
+    </button>
 
     <ThemeToggle />
 
-    <details class="mobile-nav">
-      <summary aria-label="Toggle navigation"><span></span><span></span></summary>
-      <nav aria-label="Mobile navigation">
-        {links.map((link) => <a href={link.href} target={link.external ? '_blank' : undefined} rel={link.external ? 'noreferrer' : undefined}>{link.label}</a>)}
-      </nav>
-    </details>
+    <button type="button" class="menu-trigger" data-drawer-open aria-haspopup="dialog" aria-controls="mobile-drawer" aria-label="Open navigation">
+      <span></span><span></span>
+    </button>
   </div>
 </header>
+
+<dialog class="drawer" id="mobile-drawer" aria-label="Navigation" data-drawer>
+  <div class="drawer-panel">
+    <div class="drawer-top">
+      <p class="eyebrow">Navigate</p>
+      <button type="button" class="drawer-close" data-drawer-close aria-label="Close navigation">
+        <svg class="od-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      </button>
+    </div>
+    <nav aria-label="Mobile">
+      <a href="/" aria-current={path === '/' ? 'page' : undefined}><span class="drawer-index">00</span>Home</a>
+      {links.map((link, index) => (
+        <a href={link.href} aria-current={path.startsWith(link.href) ? 'page' : undefined} style={`--i:${index + 1}`}>
+          <span class="drawer-index">{String(index + 1).padStart(2, '0')}</span>{link.label}
+        </a>
+      ))}
+      <a href="/education/" aria-current={path.startsWith('/education/') ? 'page' : undefined} style={`--i:${links.length + 1}`}><span class="drawer-index">{String(links.length + 1).padStart(2, '0')}</span>Education</a>
+    </nav>
+    <div class="drawer-foot">
+      <a class="button" href="/resume.pdf" target="_blank" rel="noreferrer">Resume <span class="button-arrow" aria-hidden="true">↗</span></a>
+      <button type="button" class="button button--quiet" data-command-open data-drawer-close>Search</button>
+    </div>
+  </div>
+</dialog>
 
 <style>
   .site-header {
@@ -48,156 +75,163 @@ const links = [
     top: 0;
     z-index: 20;
     height: var(--header-height);
-    background: color-mix(in srgb, var(--paper) 90%, transparent);
-    border-bottom: 1px solid var(--line);
-    backdrop-filter: blur(18px) saturate(140%);
+    background: var(--paper);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur) ease, background-color var(--dur) ease;
   }
+  .site-header.is-scrolled { border-bottom-color: var(--line); background: var(--surface); }
 
-  .header-inner {
-    display: flex;
-    align-items: center;
-    height: 100%;
-    gap: 1.25rem;
+  .scroll-progress { position: absolute; inset: auto 0 -1px 0; height: 2px; pointer-events: none; }
+  .scroll-progress span { display: block; height: 100%; background: var(--accent); transform: scaleX(0); transform-origin: 0 50%; }
+
+  .header-inner { display: flex; align-items: center; height: 100%; gap: var(--space-4); }
+
+  .brand { display: inline-flex; align-items: center; gap: var(--space-3); margin-right: auto; min-height: 44px; text-decoration: none; }
+  .brand-mark {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    color: var(--on-accent);
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    font: 700 0.95rem var(--font-mono);
+    letter-spacing: -0.04em;
+    transition: transform var(--dur) var(--ease);
   }
+  .brand-mark i { position: absolute; right: -3px; bottom: -3px; width: 8px; height: 8px; background: var(--ink); border: 2px solid var(--paper); border-radius: 50%; }
+  .is-scrolled .brand-mark { transform: scale(0.9); }
+  .brand-name { font-family: var(--font-display); font-size: var(--text-md); font-weight: 600; letter-spacing: -0.02em; white-space: nowrap; }
+  @media (hover: hover) { .brand:hover .brand-mark { transform: rotate(-6deg); } }
 
-  .brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.7rem;
-    margin-right: auto;
-    font-size: 0.85rem;
-    font-weight: 550;
-    letter-spacing: -0.025em;
-    text-decoration: none;
-  }
-
-  .brand-mark { display: flex; align-items: center; justify-content: center; gap: 1px; width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); font-size: 1.05rem; font-weight: 600; }
-  .brand-mark span { align-self: start; margin-top: 5px; color: var(--accent); font-size: 0.6rem; }
-
-  .desktop-nav {
-    display: flex;
-    align-items: center;
-    gap: clamp(0.6rem, 1.5vw, 1.3rem);
-  }
-
+  .desktop-nav { display: flex; align-items: center; gap: var(--space-1); }
   .desktop-nav a {
     position: relative;
-    color: var(--muted);
     display: flex;
     align-items: center;
     min-height: 44px;
-    font-size: 0.7rem;
+    padding: 0 var(--space-3);
+    color: var(--muted);
+    font-size: var(--text-sm);
     font-weight: 500;
     text-decoration: none;
-    transition: color 200ms ease;
+    transition: color var(--dur-fast) ease;
   }
-
-  .desktop-nav a:hover,
-  .desktop-nav a[aria-current='page'] { color: var(--ink); }
-
-  .desktop-nav a[aria-current='page']::after {
+  .desktop-nav a span { margin-left: 3px; font-size: var(--text-xs); }
+  .desktop-nav a::after {
     position: absolute;
-    right: 0;
-    bottom: 0.2rem;
-    left: 0;
+    right: var(--space-3);
+    bottom: 8px;
+    left: var(--space-3);
     height: 2px;
     background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform var(--dur) var(--ease);
     content: '';
   }
+  @media (hover: hover) { .desktop-nav a:hover { color: var(--ink); } }
+  .desktop-nav a[aria-current='page'],
+  .desktop-nav a.is-active { color: var(--ink); }
+  .desktop-nav a[aria-current='page']::after,
+  .desktop-nav a.is-active::after { transform: scaleX(1); }
 
-  .mobile-nav { display: none; }
+  .search-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 2.75rem;
+    padding: 0 var(--space-2) 0 var(--space-3);
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    transition: border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+  }
+  @media (hover: hover) { .search-trigger:hover { color: var(--ink); border-color: var(--line-strong); } }
+  .search-kbd { white-space: nowrap; }
 
-  @media (max-width: 980px) {
+  .menu-trigger {
+    display: none;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    place-content: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+  }
+  .menu-trigger span { display: block; width: 1.1rem; height: 1.5px; background: var(--ink); }
+  .menu-trigger span:last-child { width: 0.7rem; justify-self: end; }
+
+  /* Drawer */
+  .drawer {
+    width: min(22rem, 88vw);
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0 0 0 auto;
+    padding: 0;
+    color: var(--ink);
+    background: transparent;
+    border: 0;
+  }
+  .drawer::backdrop { background: var(--scrim); }
+  .drawer-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: var(--space-5);
+    background: var(--surface);
+    border-left: 1px solid var(--line-strong);
+    overflow-y: auto;
+  }
+  .drawer[open] .drawer-panel { animation: drawer-in 320ms var(--ease) both; }
+  .drawer[open]::backdrop { animation: fade-in 240ms ease-out both; }
+  .drawer.is-closing .drawer-panel { animation: drawer-out 200ms var(--ease-in) both; }
+  .drawer.is-closing::backdrop { animation: fade-out 200ms ease-in both; }
+  .drawer[open] nav a { animation: item-in 320ms var(--ease) both; animation-delay: calc(80ms + var(--i, 0) * 40ms); }
+  @keyframes drawer-in { from { transform: translateX(100%); } }
+  @keyframes drawer-out { to { transform: translateX(100%); } }
+  @keyframes item-in { from { opacity: 0; transform: translateX(16px); } }
+  @keyframes fade-in { from { opacity: 0; } }
+  @keyframes fade-out { to { opacity: 0; } }
+
+  .drawer-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); }
+  .drawer-top .eyebrow { margin: 0; }
+  .drawer-close { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0; background: transparent; border: 1px solid var(--line); border-radius: var(--radius-sm); --od-icon-size: 1.1rem; }
+  .drawer nav { display: grid; }
+  .drawer nav a {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+  }
+  .drawer nav a[aria-current='page'] { color: var(--accent-ink); }
+  .drawer-index { color: var(--muted); font: var(--text-xs) var(--font-mono); }
+  .drawer-foot { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: auto; padding-top: var(--space-6); }
+
+  .od-icon { display: block; width: var(--od-icon-size, 1em); height: var(--od-icon-size, 1em); flex-shrink: 0; }
+
+  @media (max-width: 1060px) {
     .desktop-nav { display: none; }
-    .mobile-nav { display: block; }
-    .mobile-nav summary {
-      display: grid;
-      width: 2.75rem;
-      height: 2.75rem;
-      place-content: center;
-      gap: 0.35rem;
-      cursor: pointer;
-      list-style: none;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-    }
-    .mobile-nav summary::-webkit-details-marker { display: none; }
-    .mobile-nav summary span { width: 1rem; height: 1px; background: var(--ink); transition: transform 220ms var(--ease); }
-    .mobile-nav summary[aria-expanded='true'] span:first-child { transform: translateY(3.3px) rotate(45deg); }
-    .mobile-nav summary[aria-expanded='true'] span:last-child { transform: translateY(-3.3px) rotate(-45deg); }
-    .mobile-nav nav {
-      position: absolute;
-      top: calc(100% + 0.5rem);
-      right: 0.75rem;
-      left: 0.75rem;
-      display: grid;
-      padding: 1rem;
-      background: var(--menu-bg);
-      border: 1px solid var(--line);
-      border-radius: 1.25rem;
-      box-shadow: 0 1.5rem 5rem var(--shadow);
-    }
-    .mobile-nav nav a { padding: 0.7rem; font-weight: 700; text-decoration: none; }
+    .menu-trigger { display: grid; }
   }
-  @media (max-width: 400px) { .brand > span:last-child { max-width: 5rem; font-size: 0.75rem; line-height: 1.2; } .header-inner { gap: 0.65rem; } }
-  @media (max-width: 360px) { .brand > span:last-child { display: none; } }
-  @media (prefers-reduced-transparency: reduce) { .site-header { background: var(--paper); backdrop-filter: none; } }
+  @media (max-width: 640px) {
+    .search-label { display: none; }
+    .search-trigger { padding: 0 var(--space-2); }
+    .header-inner { gap: var(--space-2); }
+  }
+  @media (max-width: 420px) {
+    .brand-name { display: none; }
+  }
 </style>
-
-<script>
-  interface MenuState { open: boolean; animation?: Animation; }
-  function setMenuOpen(menu: HTMLDetailsElement, panel: HTMLElement, state: MenuState, open: boolean) {
-    if (state.open === open) return;
-    const wasOpen = menu.open;
-    const current = getComputedStyle(panel);
-    const from = { opacity: wasOpen ? current.opacity : '0', transform: wasOpen ? current.transform : 'translateY(-8px)' };
-    state.animation?.cancel();
-    state.open = open;
-    menu.querySelector('summary')?.setAttribute('aria-expanded', String(open));
-    panel.inert = !open;
-    if (open) menu.open = true;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      menu.open = open;
-      return;
-    }
-    const animation = panel.animate([from, { opacity: open ? '1' : '0', transform: open ? 'none' : 'translateY(-8px)' }], { duration: open ? 260 : 180, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' });
-    state.animation = animation;
-    animation.onfinish = () => {
-      if (state.animation !== animation) return;
-      menu.open = state.open;
-      state.animation = undefined;
-      animation.cancel();
-    };
-  }
-  let cleanupMenu: (() => void) | undefined;
-  function initMenu() {
-    cleanupMenu?.();
-    const menu = document.querySelector<HTMLDetailsElement>('.mobile-nav');
-    const panel = menu?.querySelector<HTMLElement>('nav');
-    const summary = menu?.querySelector('summary');
-    if (!menu || !panel || !summary) return;
-    const controller = new AbortController();
-    const options = { signal: controller.signal };
-    const state: MenuState = { open: menu.open };
-    const close = () => setMenuOpen(menu, panel, state, false);
-    summary.setAttribute('aria-expanded', String(state.open));
-    panel.inert = !state.open;
-    summary.addEventListener('click', (event) => {
-      event.preventDefault();
-      setMenuOpen(menu, panel, state, !state.open);
-    }, options);
-    menu.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape') return;
-      close();
-      summary.focus();
-    }, options);
-    document.addEventListener('click', (event) => {
-      if (state.open && event.target instanceof Node && !menu.contains(event.target)) close();
-    }, options);
-    window.matchMedia('(min-width: 981px)').addEventListener('change', (event) => { if (event.matches) close(); }, options);
-    cleanupMenu = () => { controller.abort(); state.animation?.cancel(); };
-  }
-  initMenu();
-  document.addEventListener('astro:page-load', initMenu);
-  document.addEventListener('astro:before-swap', () => cleanupMenu?.());
-</script>

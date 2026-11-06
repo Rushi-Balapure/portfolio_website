@@ -9,78 +9,81 @@ interface Props {
 
 const { name, email, githubUrl, linkedinUrl, xUrl } = Astro.props;
 const year = new Date().getFullYear();
+const socials = [
+  githubUrl && { label: 'GitHub', href: githubUrl },
+  linkedinUrl && { label: 'LinkedIn', href: linkedinUrl },
+  xUrl && { label: 'X', href: xUrl },
+  { label: 'Resume', href: '/resume.pdf' },
+].filter(Boolean) as { label: string; href: string }[];
 ---
 
 <footer id="contact" class="footer">
   <div class="shell footer-grid">
-    <div>
-      <p class="eyebrow">Start a conversation</p>
-      <h2>Have an idea worth exploring?</h2>
-    </div>
-    <div class="footer-actions">
+    <div class="footer-cta" data-reveal>
+      <p class="eyebrow"><span class="pulse" aria-hidden="true"></span>Start a conversation</p>
+      <h2>Have an idea worth <span class="accent">exploring?</span></h2>
       {email ? (
-        <div class="email-actions">
-          <a class="button" href={`mailto:${email}`}>Send an email ↗</a>
-          <button class="button button--quiet" type="button" data-copy-email={email}>Copy email</button>
+        <div class="email-row">
+          <a class="email-link" href={`mailto:${email}`}>{email}</a>
+          <div class="email-actions">
+            <a class="button" href={`mailto:${email}`} data-magnetic>Send an email <span class="button-arrow" aria-hidden="true">↗</span></a>
+            <button class="button button--quiet" type="button" data-copy-email={email} data-magnetic>Copy address</button>
+          </div>
         </div>
-      ) : <p>Add an email to <code>home.md</code> to enable direct contact.</p>}
-      <div class="socials">
-        {githubUrl && <a href={githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a>}
-        {linkedinUrl && <a href={linkedinUrl} target="_blank" rel="noreferrer">LinkedIn ↗</a>}
-        {xUrl && <a href={xUrl} target="_blank" rel="noreferrer">X ↗</a>}
-        <a href="/resume.pdf" target="_blank" rel="noreferrer">Resume ↗</a>
-      </div>
+      ) : <p class="muted">Add an email to <code>home.md</code> to enable direct contact.</p>}
     </div>
+    <nav class="footer-links" aria-label="Elsewhere" data-reveal>
+      <p class="eyebrow">Elsewhere</p>
+      <ul>
+        {socials.map((social) => (
+          <li><a href={social.href} target="_blank" rel="noreferrer"><span>{social.label}</span><span class="arrow" aria-hidden="true">↗</span></a></li>
+        ))}
+      </ul>
+    </nav>
   </div>
   <div class="shell legal">
     <span>© {year} {name}</span>
-    <span>Built with Astro and Markdown.</span>
+    <span>Built with Astro and Markdown · Press <kbd>/</kbd> to search</span>
+    <a href="#main-content" class="to-top">Back to top <span aria-hidden="true">↑</span></a>
   </div>
 </footer>
 
 <style>
-  .footer { padding: clamp(4rem, 8vw, 7rem) 0 2rem; color: var(--footer-text); background: radial-gradient(ellipse at 10% 100%, #d27f4410, transparent 60%), var(--footer-bg); border-top: 1px solid var(--line); }
-  .footer .eyebrow { color: var(--footer-accent); }
-  .footer-grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 2rem; align-items: end; }
-  h2 { max-width: 16ch; margin: 0; font-size: clamp(2.8rem, 6vw, 5rem); font-weight: 500; letter-spacing: -0.06em; line-height: 1.05; }
-  .footer-actions { display: grid; justify-items: start; gap: 1.5rem; }
-  .email-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }
-  .footer-actions .button { color: var(--footer-button-text); background: var(--footer-button-bg); border-color: var(--footer-button-bg); }
-  .footer-actions .button:hover { color: #21150d; background: var(--footer-accent); border-color: var(--footer-accent); }
-  .footer-actions .button--quiet { color: var(--footer-text); background: transparent; border-color: var(--footer-line); cursor: pointer; }
-  .footer-actions p { max-width: 25rem; color: var(--footer-muted); }
-  .socials { display: flex; flex-wrap: wrap; gap: 1.2rem; }
-  .socials a { color: var(--footer-link); font-size: 0.9rem; }
-  .legal { display: flex; justify-content: space-between; gap: 1rem; padding-top: 2rem; margin-top: 4rem; color: var(--footer-muted); border-top: 1px solid var(--footer-line); font: 0.62rem var(--font-mono); }
-  @media (max-width: 760px) {
-    .footer-grid { grid-template-columns: 1fr; }
-    .footer-actions { margin-top: 2rem; }
-    .legal { align-items: flex-start; flex-direction: column; margin-top: 3rem; padding-top: 2rem; }
+  .footer { padding: clamp(5rem, 9vw, 8rem) 0 var(--space-6); background: var(--sunken); border-top: 1px solid var(--line); }
+  .footer-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(14rem, 0.6fr); gap: var(--space-8); align-items: end; }
+  .pulse { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+  @media (prefers-reduced-motion: no-preference) {
+    .pulse { animation: pulse 2.4s var(--ease) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  }
+  h2 { max-width: 14ch; margin: 0; font-size: clamp(2.75rem, 7vw, 5.5rem); font-weight: 600; letter-spacing: -0.045em; line-height: 0.98; }
+  .accent { color: var(--accent-ink); }
+  .email-row { margin-top: var(--space-7); }
+  .email-link {
+    display: inline-block;
+    max-width: 100%;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: clamp(1rem, 2.4vw, 1.5rem);
+    overflow-wrap: anywhere;
+    text-decoration-thickness: 1px;
+  }
+  @media (hover: hover) { .email-link:hover { color: var(--accent-ink); } }
+  .email-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
+  .muted { color: var(--muted); }
+  .footer-links ul { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+  .footer-links li { border-bottom: 1px solid var(--line); }
+  .footer-links a { display: flex; align-items: center; justify-content: space-between; min-height: 3.25rem; color: var(--ink); font-family: var(--font-display); font-size: var(--text-xl); text-decoration: none; }
+  .footer-links .arrow { color: var(--muted); font-size: var(--text-md); transition: transform var(--dur) var(--ease), color var(--dur-fast) ease; }
+  @media (hover: hover) {
+    .footer-links a:hover { color: var(--accent-ink); }
+    .footer-links a:hover .arrow { color: var(--accent-ink); transform: translate(3px, -3px); }
+  }
+  .legal { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); margin-top: var(--space-8); padding-top: var(--space-5); color: var(--muted); border-top: 1px solid var(--line); font: var(--text-xs) var(--font-mono); }
+  .to-top { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; color: var(--muted); text-decoration: none; }
+  @media (hover: hover) { .to-top:hover { color: var(--accent-ink); } }
+  @media (max-width: 860px) {
+    .footer-grid { grid-template-columns: 1fr; gap: var(--space-7); }
+    .legal { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
   }
 </style>
-
-<script is:inline data-astro-rerun>
-  (() => {
-    document.querySelectorAll('[data-copy-email]').forEach((button) => {
-      button.addEventListener('click', async () => {
-        const email = button.dataset.copyEmail;
-        if (!email) return;
-
-        try {
-          if (!navigator.clipboard || !window.isSecureContext) throw new Error('Clipboard unavailable');
-          await navigator.clipboard.writeText(email);
-
-          const originalLabel = button.textContent;
-          button.textContent = 'Copied';
-          button.setAttribute('aria-live', 'polite');
-          window.setTimeout(() => {
-            button.textContent = originalLabel;
-            button.removeAttribute('aria-live');
-          }, 2000);
-        } catch {
-          button.textContent = email;
-        }
-      });
-    });
-  })();
-</script>

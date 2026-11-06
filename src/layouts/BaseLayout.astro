@@ -1,6 +1,7 @@
 ---
-import { getEntry } from 'astro:content';
-import { ClientRouter, fade } from 'astro:transitions';
+import { getCollection, getEntry } from 'astro:content';
+import { ClientRouter } from 'astro:transitions';
+import CommandMenu, { type CommandItem } from '../components/CommandMenu.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import '../styles/global.css';
@@ -19,6 +20,50 @@ const siteTitle = Astro.props.title ? `${Astro.props.title} | ${name}` : (profil
 const description = Astro.props.description ?? profile?.summary ?? 'Developer portfolio';
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const socialImage = new URL(Astro.props.image ?? '/og-image.png', Astro.site);
+const projects = (await getCollection('projects')).filter(({ data }) => !data.draft)
+  .sort((a, b) => b.data.priority - a.data.priority);
+const commandItems: CommandItem[] = [
+  { id: 'jump-top', group: 'Jump to', label: 'Introduction', hint: 'home', href: '/#intro', keywords: 'hero about top start' },
+  { id: 'jump-stack', group: 'Jump to', label: 'Tech stack', hint: 'home', href: '/#stack', keywords: 'skills tools languages python' },
+  { id: 'jump-experience', group: 'Jump to', label: 'Experience', hint: 'home', href: '/#experience', keywords: 'work career job promobi' },
+  { id: 'jump-work', group: 'Jump to', label: 'Selected projects', hint: 'home', href: '/#selected-work', keywords: 'projects work' },
+  { id: 'jump-oss', group: 'Jump to', label: 'Open source', hint: 'home', href: '/#open-source', keywords: 'github oss' },
+  { id: 'jump-research', group: 'Jump to', label: 'Research', hint: 'home', href: '/#research', keywords: 'papers publications' },
+  { id: 'jump-contact', group: 'Jump to', label: 'Contact', hint: 'footer', href: '#contact', keywords: 'email hire talk' },
+  { id: 'page-experience', group: 'Pages', label: 'Experience', href: '/experience/', keywords: 'career' },
+  { id: 'page-projects', group: 'Pages', label: 'Projects', href: '/projects/', keywords: 'work archive' },
+  { id: 'page-oss', group: 'Pages', label: 'Open source', href: '/open-source/', keywords: 'github' },
+  { id: 'page-publications', group: 'Pages', label: 'Publications', href: '/publications/', keywords: 'research papers' },
+  { id: 'page-community', group: 'Pages', label: 'Community & speaking', href: '/community/', keywords: 'talks workshops' },
+  { id: 'page-education', group: 'Pages', label: 'Education', href: '/education/', keywords: 'college university pict' },
+  { id: 'page-blogs', group: 'Pages', label: 'Writing', href: '/blogs/', keywords: 'blog posts articles' },
+  ...projects.map(({ id, data }) => ({
+    id: `project-${id}`,
+    group: 'Projects' as const,
+    label: data.title,
+    hint: data.role,
+    href: `/projects/${id}/`,
+    keywords: [...data.tags, ...(data.stack ?? [])].join(' '),
+  })),
+  { id: 'link-resume', group: 'Links', label: 'Resume (PDF)', href: '/resume.pdf', external: true, keywords: 'cv' },
+  ...(profile?.githubUrl ? [{ id: 'link-github', group: 'Links' as const, label: 'GitHub', hint: profile.githubUsername, href: profile.githubUrl, external: true, keywords: 'code repositories' }] : []),
+  ...(profile?.linkedinUrl ? [{ id: 'link-linkedin', group: 'Links' as const, label: 'LinkedIn', href: profile.linkedinUrl, external: true }] : []),
+  ...(profile?.xUrl ? [{ id: 'link-x', group: 'Links' as const, label: 'X / Twitter', href: profile.xUrl, external: true }] : []),
+  ...(profile?.email ? [{ id: 'link-email', group: 'Links' as const, label: 'Send an email', hint: profile.email, href: `mailto:${profile.email}`, keywords: 'contact mail' }] : []),
+  { id: 'theme-dark', group: 'Theme', label: 'Dark theme', action: 'theme:dark', keywords: 'mode night appearance' },
+  { id: 'theme-light', group: 'Theme', label: 'Light theme', action: 'theme:light', keywords: 'mode day appearance' },
+  { id: 'theme-system', group: 'Theme', label: 'Match system theme', action: 'theme:system', keywords: 'mode auto appearance' },
+];
+const pageTransition = {
+  forwards: {
+    old: { name: 'page-out-forward', duration: '160ms', easing: 'cubic-bezier(0.4, 0, 1, 1)', fillMode: 'both' },
+    new: { name: 'page-in-forward', duration: '300ms', delay: '60ms', easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fillMode: 'both' },
+  },
+  backwards: {
+    old: { name: 'page-out-back', duration: '160ms', easing: 'cubic-bezier(0.4, 0, 1, 1)', fillMode: 'both' },
+    new: { name: 'page-in-back', duration: '300ms', delay: '60ms', easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fillMode: 'both' },
+  },
+};
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'Person',
@@ -48,7 +93,7 @@ const structuredData = {
     <ClientRouter />
     <meta name="description" content={description} />
     {Astro.props.noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}
-    <meta id="theme-color" name="theme-color" content="#0d0f12" />
+    <meta id="theme-color" name="theme-color" content="#090b0e" />
     <script is:inline>
       (() => {
         if (window.__portfolioTheme) {
@@ -78,7 +123,7 @@ const structuredData = {
           root.style.colorScheme = resolved;
 
           const themeColor = document.querySelector('#theme-color');
-          if (themeColor) themeColor.setAttribute('content', resolved === 'dark' ? '#0d0f12' : '#f6f5f1');
+          if (themeColor) themeColor.setAttribute('content', resolved === 'dark' ? '#090b0e' : '#f3f5f7');
 
           if (persist) {
             try { localStorage.setItem(key, preference); } catch {}
@@ -92,6 +137,8 @@ const structuredData = {
         document.addEventListener('astro:after-swap', () => applyTheme(currentPreference));
       })();
     </script>
+    <link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/ibm-plex-sans.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonical} />
     <meta property="og:type" content="website" />
@@ -113,38 +160,12 @@ const structuredData = {
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
     <Header name={name} />
-    <main id="main-content" transition:name="page-content" transition:animate={fade({ duration: '0.24s' })}><slot /></main>
+    <main id="main-content" transition:name="page-content" transition:animate={pageTransition}><slot /></main>
     <Footer name={name} email={profile?.email} githubUrl={profile?.githubUrl} linkedinUrl={profile?.linkedinUrl} xUrl={profile?.xUrl} />
+    <CommandMenu items={commandItems} />
+    <div class="toast" role="status" aria-live="polite" data-toast></div>
     <script>
-      let observer: IntersectionObserver | undefined;
-      const reveal = () => {
-        observer?.disconnect();
-        const items = document.querySelectorAll('[data-reveal]:not(.is-visible)');
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          items.forEach((item) => item.classList.add('is-visible'));
-          return;
-        }
-        observer = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('is-visible');
-              observer?.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.08, rootMargin: '0px 0px -5% 0px' });
-        items.forEach((item) => {
-          const rect = item.getBoundingClientRect();
-          if (rect.top < window.innerHeight && rect.bottom > 0) item.classList.add('is-visible');
-          else observer?.observe(item);
-        });
-        document.documentElement.classList.add('reveal-ready');
-      };
-      reveal();
-      document.addEventListener('astro:after-swap', () => {
-        document.documentElement.classList.remove('reveal-ready');
-      });
-      document.addEventListener('astro:page-load', reveal);
-      document.addEventListener('astro:before-swap', () => observer?.disconnect());
+      import '../scripts/site.ts';
     </script>
   </body>
 </html>
@@ -162,4 +183,22 @@ const structuredData = {
     transform: translateY(-150%);
   }
   .skip-link:focus { transform: none; }
+  .toast {
+    position: fixed;
+    bottom: var(--space-5);
+    left: 50%;
+    z-index: 60;
+    padding: var(--space-3) var(--space-5);
+    color: var(--paper);
+    background: var(--ink);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    box-shadow: 0 1rem 2rem var(--shadow);
+    opacity: 0;
+    transform: translate(-50%, 12px);
+    pointer-events: none;
+    transition: opacity var(--dur-fast) var(--ease-in), transform var(--dur-fast) var(--ease-in);
+  }
+  .toast.is-visible { opacity: 1; transform: translate(-50%, 0); transition-duration: var(--dur); transition-timing-function: var(--ease); }
 </style>
