@@ -25,7 +25,7 @@ organizationUrl: https://promobitech.com/
 
 ## Cloud Data Security Posture Management — Veltar
 
-- Designed and personally implemented a Multi-Agent Architecture for sensitive-data detection, combining deter-ministic rules and a self-hosted LLM to detect structured, semi-structured, and unstructured sensitive information with approximately 90% detection accuracy.
+- Designed and personally implemented a Multi-Agent Architecture for sensitive-data detection, combining deterministic rules and a self-hosted LLM to detect structured, semi-structured, and unstructured sensitive information with approximately 90% detection accuracy.
 - Built rule-based detectors using regex and identifier-specific validators, including checksum-based validation for structured sensitive data such as payment and identity information.
 - Developed a workflow based on MARCH (Multi-Agent Reinforced Self-Check for LLM Hallucination) to reduce false positives in detections.
 - Developed file-processing pipelines for Google Drive, Microsoft OneDrive, and Amazon S3. The pipelines support text, PDF, spreadsheet, presentation, document, and media formats through format-specific extraction and OCR.
