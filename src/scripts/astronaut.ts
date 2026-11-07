@@ -141,24 +141,24 @@ vec3 shade(vec3 pw, vec3 n, float id) {
   // rim: reads against black, strongest on the sun side edge and below
   float rimF = pow(1.0 - ndv, 2.6);
   vec3 rimD = normalize(vec3(0.55, 0.15, -0.6));
-  col += vec3(0.45, 0.80, 0.72) * rimF * (0.20 + 0.55 * max(dot(n, rimD) * 0.5 + 0.5, 0.0)) * ao * 0.9;
+  col += vec3(1.0, 0.62, 0.56) * rimF * (0.20 + 0.55 * max(dot(n, rimD) * 0.5 + 0.5, 0.0)) * ao * 0.9;
 
   if (visor > 0.0) {
     vec3 rw = reflect(vec3(0.0, 0.0, -1.0), n);
-    vec3 vc = vec3(0.012, 0.022, 0.040);
+    vec3 vc = vec3(0.030, 0.012, 0.022);
     float sky = smoothstep(-0.3, 0.9, rw.y);
-    vc += vec3(0.05, 0.09, 0.14) * sky * 0.8;
+    vc += vec3(0.10, 0.05, 0.07) * sky * 0.8;
     float blob = smoothstep(0.50, 0.92, dot(rw, normalize(vec3(-0.45, 0.62, 0.64))));
-    vc += vec3(0.30, 0.62, 0.54) * blob * 0.85;
+    vc += vec3(0.70, 0.22, 0.28) * blob * 0.85;
     vec2 sc = rw.xy * 26.0 + 3.0; vec2 ci = floor(sc), cf = fract(sc);
     float hh = h21(ci);
     vc += vec3(0.8, 0.9, 1.0) * step(0.90, hh) * smoothstep(0.20, 0.0, length(cf - 0.3 - 0.4 * vec2(h21(ci + 4.1), h21(ci + 9.7)))) * 0.75;
-    vc += vec3(0.9, 1.0, 0.97) * pow(max(dot(rw, L), 0.0), 70.0) * 1.1;
-    vc += vec3(0.25, 0.45, 0.45) * pow(1.0 - ndv, 3.0) * 0.5;
+    vc += vec3(1.0, 0.94, 0.92) * pow(max(dot(rw, L), 0.0), 70.0) * 1.1;
+    vc += vec3(0.55, 0.22, 0.26) * pow(1.0 - ndv, 3.0) * 0.5;
     col = mix(col, vc, visor);
   }
   col = mix(col, vec3(0.22, 0.26, 0.33) * (0.5 + 0.5 * key), trim * 0.65);
-  col += vec3(0.50, 0.95, 0.76) * glow * (0.85 + 0.25 * uPulse);
+  col += vec3(1.0, 0.36, 0.40) * glow * (0.85 + 0.25 * uPulse);
   return col;
 }
 
