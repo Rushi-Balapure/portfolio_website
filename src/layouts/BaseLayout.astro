@@ -29,6 +29,7 @@ const siteTitle = Astro.props.title ? `${Astro.props.title} | ${name}` : (profil
 const description = Astro.props.description ?? profile?.summary ?? 'Developer portfolio';
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const socialImage = new URL(Astro.props.image ?? '/og-image.png', Astro.site);
+const addressLocality = profile?.location?.split(',')[0]?.trim();
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'Person',
@@ -37,7 +38,12 @@ const structuredData = {
   email: profile?.email,
   sameAs: [profile?.githubUrl, profile?.linkedinUrl, profile?.xUrl].filter(Boolean),
   jobTitle: profile?.role,
-  homeLocation: profile?.location,
+  homeLocation: addressLocality
+    ? {
+        '@type': 'Place',
+        address: { '@type': 'PostalAddress', addressLocality, addressCountry: 'IN' },
+      }
+    : undefined,
   worksFor: {
     '@type': 'Organization',
     name: 'ProMobi Technologies',
