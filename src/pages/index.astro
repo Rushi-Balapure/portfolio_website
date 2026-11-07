@@ -105,24 +105,24 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   .hero-copy { position: relative; z-index: 1; min-width: 0; }
   .hero-portrait { width: min(90%, 22rem); aspect-ratio: 4 / 5; justify-self: center; overflow: hidden; margin: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
   .hero-portrait :global(img) { width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; }
-  .hero-prose { max-width: 24rem; margin-top: 1rem; color: var(--muted); font-size: 0.85rem; line-height: 1.8; }
+  .hero-prose { max-width: 35rem; margin-top: 1rem; color: var(--muted); font-size: 1rem; line-height: 1.7; }
   .hero-prose :global(p) { margin: 0; }
   .hero-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 1.75rem; }
   .hero-socials { display: flex; gap: 1.3rem; margin-top: 1.2rem; }
-  .hero-socials a { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 36px; color: var(--muted); font-size: 0.68rem; text-decoration: none; }
+  .hero-socials a { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 36px; color: var(--muted); font-size: 0.875rem; text-decoration: none; }
   .hero-socials a:hover { color: var(--accent); }
-  .hero-socials a span { font-size: 0.65rem; }
+  .hero-socials a span { font-size: 0.75rem; }
   .availability { font-size: 0.75rem; color: var(--green); }
-  .hero-bottom { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; color: var(--muted); font: 0.53rem var(--font-mono); letter-spacing: 0.09em; }
+  .hero-bottom { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; color: var(--muted); font: 0.75rem var(--font-mono); letter-spacing: 0.09em; }
   #selected-work { scroll-margin-top: calc(var(--header-height) + 1rem); }
   .experience-card { display: grid; grid-template-columns: 10rem 1fr; gap: 2rem; padding-block: 1rem; }
-  .experience-timeline { display: flex; align-items: start; gap: 0.7rem; padding-top: 0.2rem; color: var(--muted); font: 0.65rem var(--font-mono); }
+  .experience-timeline { display: flex; align-items: start; gap: 0.7rem; padding-top: 0.2rem; color: var(--muted); font: 0.75rem var(--font-mono); }
   .timeline-dot { width: 7px; height: 7px; flex-shrink: 0; margin-top: 3px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 0 5px var(--accent-glow); }
   .experience-body { border-left: 1px solid var(--line); padding-left: 2rem; }
   .experience-body header { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
   .experience-body .eyebrow { margin-bottom: 0.55rem; }
   .experience-body h3 { margin: 0; font-size: clamp(1.3rem, 2.5vw, 1.8rem); font-weight: 500; letter-spacing: -0.035em; }
-  .location { color: var(--muted); font-size: 0.65rem; }
+  .location { color: var(--muted); font-size: 0.75rem; }
   .experience-summary { max-width: 40rem; color: var(--muted); font-size: 0.85rem; margin-block: 1.3rem; }
   .experience-highlights { display: grid; gap: 0.7rem; padding-left: 1rem; color: var(--prose); font-size: 0.8rem; }
   .experience-highlights li::marker { color: var(--accent); }
@@ -131,18 +131,18 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   .education-icon { display: grid; place-items: center; flex-shrink: 0; width: 54px; height: 54px; border: 1px solid var(--line); border-radius: 12px; color: var(--accent); background: var(--surface); font-size: 1.3rem; }
   .education-row p { margin: 0 0 0.4rem; color: var(--muted); font-size: 0.75rem; }
   .education-row h3 { margin: 0; font-size: 1.05rem; font-weight: 500; letter-spacing: -0.02em; }
-  .education-row > span { margin-left: auto; flex-shrink: 0; text-align: right; font: 0.65rem/1.8 var(--font-mono); color: var(--muted); }
+  .education-row > span { margin-left: auto; flex-shrink: 0; text-align: right; font: 0.75rem/1.8 var(--font-mono); color: var(--muted); }
   .education-row small { display: block; font: inherit; }
   @media (max-width: 900px) {
     .hero { grid-template-columns: 1fr; gap: 0; padding-top: 3rem; padding-bottom: 2rem; }
     .hero-copy { max-width: 35rem; }
-    .hero-prose { max-width: 30rem; }
+    .hero-prose { max-width: 34rem; }
     .hero-portrait { width: min(100%, 22rem); margin-top: 2rem; justify-self: start; }
     .hero-bottom { margin-top: 3rem; }
     .experience-card { grid-template-columns: 7rem 1fr; gap: 1rem; }
   }
   @media (max-width: 560px) {
-    .hero-bottom { font-size: 0.45rem; }
+    .hero-bottom { font-size: 0.75rem; }
     .hero-bottom > span:last-child { max-width: 20ch; text-align: right; }
     .experience-card { grid-template-columns: 1fr; gap: 1.5rem; }
     .experience-body { padding-left: 1.2rem; }

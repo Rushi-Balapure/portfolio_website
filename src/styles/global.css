@@ -118,7 +118,7 @@ textarea {
   margin: 0 0 1rem;
   color: var(--accent);
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -183,7 +183,7 @@ textarea {
   background: var(--raised);
   border: 1px solid var(--line);
   border-radius: 5px;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
 }
 
 .button {
