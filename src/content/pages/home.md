@@ -13,7 +13,7 @@ location: Pune, India
 email: rushibalapure2003@gmail.com
 githubUrl: https://github.com/Rushi-Balapure
 linkedinUrl: https://in.linkedin.com/in/rushi-balapure-75148022a
-xUrl: https://x.com/RushiB3390
+xUrl: https://x.com/Rush1Balapure
 githubUsername: Rushi-Balapure
 cover: ../../../assests/profile_pic.webp
 ---
