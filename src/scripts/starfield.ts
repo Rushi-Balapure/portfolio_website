@@ -26,7 +26,7 @@ void main() {
     tw = 1.0 + 0.25 * sin(uTime * 6.2831853 / period + aData.w * 60.0);
   }
   vA = (layer < 0.5 ? 0.5 : (layer < 1.5 ? 0.7 : 0.9)) * tw * uDim;
-  vCol = mix(vec3(0.70, 0.80, 1.0), vec3(1.0, 0.95, 0.88), aData.z);
+  vCol = mix(vec3(0.86, 0.86, 1.0), vec3(1.0, 0.93, 0.85), aData.z);
   vSize = sz;
 }`;
 
@@ -83,7 +83,7 @@ void main() {
   float edge = 1.0 - smoothstep(vHalfW - 0.4, vHalfW + 0.8, abs(vAcross));
   float along = 1.0 - vAlong;                       // 1 at head, 0 at tail
   float a = edge * (0.04 + 0.96 * along * along) * vB * uAlpha;
-  vec3 col = mix(vec3(0.72, 0.88, 0.92), vec3(0.95, 0.99, 1.0), along);
+  vec3 col = mix(vec3(1.0, 0.80, 0.78), vec3(1.0, 0.97, 0.95), along);
   gl_FragColor = vec4(col * a, a);
 }`;
 
@@ -97,14 +97,14 @@ void main() {
   float r = length(q);
   float vig = smoothstep(0.3, 0.95, r) * uVig;
   float g = exp(-r * r * 22.0) * uGlow;
-  gl_FragColor = vec4(vec3(0.82, 0.96, 0.92) * g, min(1.0, vig + g));
+  gl_FragColor = vec4(vec3(1.0, 0.90, 0.88) * g, min(1.0, vig + g));
 }`;
 
 const VS_TRI = `
 attribute vec2 aPos;
 void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
 
-// Low-resolution nebula: a few very faint fbm clouds (mint + cool violet-blue).
+// Low-resolution nebula: a few very faint fbm clouds (crimson + burgundy).
 const NEBULA_FS = `
 precision mediump float;
 uniform vec2 uRes;
@@ -126,9 +126,9 @@ void main() {
   float t = uTime * 0.004;
   float s = uScroll * 0.00004;
   vec2 q = vec2(uv.x, uv.y + s);
-  float mint = cloud(q + vec2(t, 0.0), vec2(0.08 * asp, 0.55), 0.75, 3.0) + 0.6 * cloud(q - vec2(t, 0.0), vec2(0.95 * asp, 0.12 + s * 0.5), 0.55, 11.0);
+  float crim = cloud(q + vec2(t, 0.0), vec2(0.08 * asp, 0.55), 0.75, 3.0) + 0.6 * cloud(q - vec2(t, 0.0), vec2(0.95 * asp, 0.12 + s * 0.5), 0.55, 11.0);
   float vio = cloud(q + vec2(0.0, t), vec2(0.85 * asp, 0.92), 0.8, 21.0) + 0.7 * cloud(q - vec2(t, 0.0), vec2(0.35 * asp, 0.15), 0.6, 33.0);
-  vec3 c = vec3(0.50, 0.82, 0.68) * mint * 0.045 + vec3(0.56, 0.64, 1.0) * vio * 0.05;
+  vec3 c = vec3(1.0, 0.30, 0.36) * crim * 0.045 + vec3(0.70, 0.12, 0.34) * vio * 0.05;
   gl_FragColor = vec4(c, 1.0);
 }`;
 

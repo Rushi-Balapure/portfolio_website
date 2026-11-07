@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import EntryCard from "../../components/EntryCard.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { statusLabel } from "../../lib/status";
 
 const projects = (await getCollection("projects"))
   .filter(({ data }) => !data.draft)
@@ -22,7 +23,7 @@ const formatDate = (date: Date) =>
       {projects.map(({ id, data }) => (
         <EntryCard
           href={`/projects/${id}/`}
-          eyebrow={`${data.status ? `${data.status.replace("-", " ")} · ` : ""}${formatDate(data.date)}`}
+          eyebrow={`${data.status ? `${statusLabel(data.status)} · ` : ""}${formatDate(data.date)}`}
           title={data.title}
           summary={data.summary}
           tags={data.stack ?? data.tags}
