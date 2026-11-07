@@ -1,33 +1,36 @@
 :root {
   color-scheme: dark;
-  --ink: #e8edf2;
-  --muted: #8f9bab;
-  --paper: #05070b;
-  --surface: #0b1017;
-  --raised: #0f1520;
-  --visual-bg: #080c12;
-  --line: rgba(232, 237, 242, 0.1);
-  --accent: #7fd1ae;
-  --accent-soft: #12261f;
-  --on-accent: #04100b;
-  --green: #7fd1ae;
-  --prose: #c3ccd6;
-  --accent-glow: rgba(127, 209, 174, 0.07);
-  --link-decoration: rgba(232, 237, 242, 0.35);
-  --card-hover: #111926;
-  --shadow: rgba(0, 0, 0, 0.45);
-  --button-text: #05070b;
-  --menu-bg: #0d131c;
-  --profile-border: rgba(232, 237, 242, 0.25);
-  --selection-text: #04100b;
-  --footer-bg: #04060a;
-  --footer-text: #e8edf2;
-  --footer-accent: #7fd1ae;
-  --footer-muted: #8f9bab;
-  --footer-link: #b6c0cc;
-  --footer-line: rgba(232, 237, 242, 0.14);
-  --footer-button-bg: #e8edf2;
-  --footer-button-text: #05070b;
+  /* Palette (#18): primary crimson #ff4d5a, secondary burgundy #8f1838, background #0d0b0e, text #f5f1f2, accent coral #ffb3a7 */
+  --ink: #f5f1f2;
+  --muted: #c8b9be;
+  --paper: #0d0b0e;
+  --surface: #1b1317;
+  --raised: #1b1317;
+  --visual-bg: #0d0b0e;
+  --line: #3d252d;
+  --accent: #ff4d5a;
+  --accent-soft: #1b1317;
+  --on-accent: #0d0b0e;
+  --green: #ff4d5a;
+  --coral: #ffb3a7;
+  --burgundy: #8f1838;
+  --prose: #f5f1f2;
+  --accent-glow: rgba(255, 77, 90, 0.08);
+  --link-decoration: rgba(255, 179, 167, 0.7);
+  --card-hover: #1b1317;
+  --shadow: rgba(0, 0, 0, 0.5);
+  --button-text: #0d0b0e;
+  --menu-bg: #1b1317;
+  --profile-border: #3d252d;
+  --selection-text: #0d0b0e;
+  --footer-bg: #0d0b0e;
+  --footer-text: #f5f1f2;
+  --footer-accent: #ff4d5a;
+  --footer-muted: #c8b9be;
+  --footer-link: #ffb3a7;
+  --footer-line: #3d252d;
+  --footer-button-bg: #ff4d5a;
+  --footer-button-text: #0d0b0e;
   --max-width: 1160px;
   --header-height: 5rem;
   --radius: 1rem;
@@ -88,8 +91,13 @@ textarea {
 }
 
 :focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--coral);
   outline-offset: 4px;
+}
+
+/* Filled controls keep a dark separator so the coral ring never touches crimson/burgundy. */
+.button:focus-visible {
+  box-shadow: 0 0 0 4px var(--paper);
 }
 
 .shell {
@@ -194,8 +202,8 @@ textarea {
   min-height: 3rem;
   padding: 0.7rem 1rem;
   color: var(--button-text);
-  background: var(--ink);
-  border: 1px solid var(--ink);
+  background: var(--accent);
+  border: 1px solid var(--accent);
   border-radius: 8px;
   font-size: 0.88rem;
   font-weight: 550;
@@ -205,8 +213,8 @@ textarea {
 
 .button:hover {
   color: var(--on-accent);
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--coral);
+  border-color: var(--coral);
   transform: translateY(-2px);
 }
 
@@ -214,12 +222,14 @@ textarea {
 
 .button--quiet {
   color: var(--ink);
-  background: transparent;
-  border-color: var(--line);
+  background: var(--burgundy);
+  border-color: var(--coral);
 }
 
 .button--quiet:hover {
   color: var(--on-accent);
+  background: var(--accent);
+  border-color: var(--coral);
 }
 
 .empty-state {
@@ -248,7 +258,9 @@ textarea {
 .prose h2 { font-size: clamp(1.8rem, 4vw, 3rem); }
 .prose p,
 .prose li { color: var(--prose); }
-.prose a { color: var(--accent); }
+.prose a { color: var(--coral); text-decoration: underline; text-decoration-color: currentColor; text-decoration-thickness: 1px; }
+.prose a:hover,
+.prose a:active { color: var(--accent); }
 .prose pre { overflow-x: auto; padding: 1.25rem; border-radius: 1rem; }
 .prose blockquote { margin-inline: 0; padding-left: 1.25rem; border-left: 3px solid var(--accent); }
 
