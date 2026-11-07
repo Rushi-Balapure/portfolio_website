@@ -3,9 +3,15 @@ interface Props { project: string; }
 const { project } = Astro.props;
 ---
 
-<div class:list={['project-visual', `visual-${project}`]} aria-hidden="true">
+<div class:list={['project-visual', `visual-${project}`]} aria-hidden={project === 'insidia-labs' ? undefined : 'true'}>
   {project === 'insidia-labs' ? (
-    <div class="scan-visual"><div class="scan-top"><span class="scan-mark">i.</span><span>ARGUS · INSIDIA LABS</span><span class="local">LOCAL FIRST</span></div><div class="scan-flow"><span>AI app<br/><small>your target</small></span><i>→</i><span class="scan-engine">insidia<br/><small>scan + review</small></span><i>→</i><span>Evidence<br/><small>your next move</small></span></div><div class="scan-bottom"><span>prompt injection</span><span>data leakage</span><span>API security</span></div></div>
+    <figure class="argus-visual">
+      <picture>
+        <source srcset="/projects/argus-live-target.webp" type="image/webp" />
+        <img src="/projects/argus-live-target.png" width="1280" height="720" loading="lazy" decoding="async" alt="Concept diagram: a running app or API flows into Argus, the free open-source dynamic scanner that drives nuclei, katana and httpx, and out into one report, with AI-app checks mapped to the OWASP LLM Top 10." />
+      </picture>
+      <figcaption>Illustrative concept — not a product screenshot</figcaption>
+    </figure>
   ) : project === 'arise' ? (
     <div class="arise-visual"><div class="mini-bar"><i></i><i></i><i></i><span>~/experiments</span></div><div class="arise-code"><span class="code-muted">$</span> arise --style matrix<br/><span class="matrix">01 10 01 11 00 10 01<br/>10 01 <b>A R I S E</b> 10<br/>00 11 10 01 11 00 10</span><br/><span class="code-muted">(.venv)</span> <span class="code-green">ready to build</span> <span class="code-cursor">▌</span></div></div>
   ) : (
@@ -15,17 +21,11 @@ const { project } = Astro.props;
 
 <style>
   .project-visual { display: grid; place-items: center; min-height: 16rem; padding: clamp(1rem, 3vw, 2.5rem); overflow: hidden; background: var(--visual-bg); border-bottom: 1px solid var(--line); }
-  .visual-insidia-labs { background: radial-gradient(ellipse at 50% 120%, #7fd1ae18, transparent 70%), var(--visual-bg); }
-  .scan-visual { width: 100%; max-width: 40rem; }
-  .scan-top { display: flex; align-items: center; gap: 0.6rem; font: 0.6rem var(--font-mono); color: var(--muted); }
-  .scan-mark { display: grid; place-items: center; width: 28px; height: 28px; color: #151515; background: #7fd1ae; border-radius: 6px; font: 650 1.3rem system-ui; }
-  .local { margin-left: auto; color: var(--green); font-size: 0.5rem; }
-  .scan-flow { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding-block: 2.2rem; }
-  .scan-flow > span { padding: 0.8rem; min-width: 22%; text-align: center; background: var(--raised); border: 1px solid var(--line); border-radius: 8px; font-size: 0.8rem; }
-  .scan-flow .scan-engine { border-color: var(--accent); }
-  .scan-flow small { color: var(--muted); font-size: 0.55rem; }
-  .scan-flow i { color: var(--muted); font-style: normal; }
-  .scan-bottom { display: flex; justify-content: center; gap: 1.3rem; color: var(--muted); font: 0.5rem var(--font-mono); }
+  .visual-insidia-labs { padding: 0; }
+  .argus-visual { display: flex; flex-direction: column; width: 100%; height: 100%; margin: 0; }
+  .argus-visual picture { display: flex; flex: 1 1 auto; min-height: 0; }
+  .argus-visual img { width: 100%; height: auto; aspect-ratio: 16 / 9; max-height: 100%; object-fit: contain; }
+  .argus-visual figcaption { padding: 0.35rem 0.75rem 0.55rem; color: var(--muted); font: 0.7rem/1.3 var(--font-mono); letter-spacing: 0.04em; text-align: center; }
   .arise-visual { width: 100%; max-width: 25rem; overflow: hidden; background: #101614; color: #d6e5df; border: 1px solid #ffffff20; border-radius: 10px; box-shadow: 0 15px 30px #0002; }
   .mini-bar { display: flex; align-items: center; gap: 4px; padding: 0.6rem 0.8rem; border-bottom: 1px solid #ffffff10; }
   .mini-bar i { width: 5px; height: 5px; border-radius: 50%; background: #727c76; }
@@ -47,8 +47,5 @@ const { project } = Astro.props;
   .analysis-output { color: var(--green); font: 0.6rem var(--font-mono); }
   @media (max-width: 480px) {
     .project-visual { min-height: 15rem; }
-    .scan-flow { gap: 0.35rem; }
-    .scan-flow > span { padding: 0.6rem 0.4rem; font-size: 0.7rem; }
-    .scan-bottom { gap: 0.6rem; font-size: 0.45rem; }
   }
 </style>
