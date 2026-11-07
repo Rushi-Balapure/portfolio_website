@@ -6,6 +6,7 @@ import EntryCard from '../components/EntryCard.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import GitHubActivity from '../components/GitHubActivity.astro';
 import TechStack from '../components/TechStack.astro';
+import { statusLabel } from '../lib/status';
 
 const home = await getEntry('pages', 'home');
 if (!home) throw new Error('Missing src/content/pages/home.md');
@@ -72,7 +73,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   <section class="section shell" id="selected-work" aria-label="Selected projects">
     <SectionHeading eyebrow="02 · Projects" title="Built to be used." href="/projects/" />
     <div class="grid">
-      {projects.map(({ id, data }, index) => <EntryCard href={`/projects/${id}/`} eyebrow={data.status?.replace('-', ' ') ?? 'Project'} title={data.title} summary={data.summary} tags={data.stack ?? data.tags} large={index === 0} project={id} />)}
+      {projects.map(({ id, data }, index) => <EntryCard href={`/projects/${id}/`} eyebrow={statusLabel(data.status) ?? 'Project'} title={data.title} summary={data.summary} tags={data.stack ?? data.tags} large={index === 0} project={id} />)}
       {projects.length === 0 && <p class="empty-state">Projects will appear here as soon as their draft flag is removed.</p>}
     </div>
   </section>
@@ -80,7 +81,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
   <section class="section shell" aria-label="Open source">
     <SectionHeading eyebrow="03 · Open source" title="Progress is collaborative." href="/open-source/" />
     <GitHubActivity username={profile.githubUsername} profileUrl={profile.githubUrl} />
-    <div class="grid contribution-grid">{openSource.map(({ id, data }) => <EntryCard href={`/open-source/${id}/`} eyebrow={data.organization ?? 'Open source'} title={data.title} summary={data.summary} tags={data.tags} />)}</div>
+    <div class="grid contribution-grid">{openSource.map(({ id, data }) => <EntryCard href={`/open-source/${id}/`} eyebrow={[statusLabel(data.status), data.organization ?? 'Open source'].filter(Boolean).join(' · ')} title={data.title} summary={data.summary} tags={data.tags} />)}</div>
   </section>
 
   <section class="section shell" aria-label="Research">

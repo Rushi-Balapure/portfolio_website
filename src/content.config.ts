@@ -45,7 +45,7 @@ const projects = defineCollection({
         role: z.string().min(1).optional(),
         priority: z.number().int().default(0),
         status: z
-          .enum(["planned", "in-progress", "completed", "maintained", "archived"])
+          .enum(["planned", "in-progress", "completed", "maintained", "archived", "live"])
           .optional(),
       })
       .strict(),
@@ -59,6 +59,9 @@ const openSource = defineCollection({
         ...sharedFields,
         cover: image().optional(),
         organization: z.string().min(1).optional(),
+        status: z
+          .enum(["planned", "in-progress", "completed", "maintained", "archived", "live"])
+          .optional(),
         repositoryUrl: z.url().optional(),
         contributionUrl: z.url().optional(),
         packageUrl: z.url().optional(),

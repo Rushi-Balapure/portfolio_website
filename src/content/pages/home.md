@@ -18,4 +18,4 @@ githubUsername: Rushi-Balapure
 cover: ../../../assests/profile_pic.webp
 ---
 
-I have shipped two AI security products this year: Cloud DSPM and Insidia Labs. As an Associate Product Engineer, I build enterprise security products across Cloud DSPM, Secure Web Gateway, and Data Loss Prevention, with hands-on experience in backend engineering, ML/LLM systems, security-focused architecture, research, testing, and deployment, spanning sensitive-data detection, NER, self-hosted LLMs, and large-scale domain intelligence systems.
+This year I shipped two AI security products: Cloud DSPM at ProMobi, and Argus, the open-source dynamic scanner from my company Insidia Labs. As an Associate Product Engineer, I build enterprise security products across Cloud DSPM, Secure Web Gateway, and Data Loss Prevention, with hands-on experience in backend engineering, ML/LLM systems, security-focused architecture, research, testing, and deployment, spanning sensitive-data detection, NER, self-hosted LLMs, and large-scale domain intelligence systems.

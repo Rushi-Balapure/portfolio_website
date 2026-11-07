@@ -5,7 +5,7 @@ const { project } = Astro.props;
 
 <div class:list={['project-visual', `visual-${project}`]} aria-hidden="true">
   {project === 'insidia-labs' ? (
-    <div class="scan-visual"><div class="scan-top"><span class="scan-mark">i.</span><span>INSIDIA LABS</span><span class="local">LOCAL FIRST</span></div><div class="scan-flow"><span>AI app<br/><small>your target</small></span><i>→</i><span class="scan-engine">insidia<br/><small>scan + review</small></span><i>→</i><span>Evidence<br/><small>your next move</small></span></div><div class="scan-bottom"><span>prompt injection</span><span>data leakage</span><span>API security</span></div></div>
+    <div class="scan-visual"><div class="scan-top"><span class="scan-mark">i.</span><span>ARGUS · INSIDIA LABS</span><span class="local">LOCAL FIRST</span></div><div class="scan-flow"><span>AI app<br/><small>your target</small></span><i>→</i><span class="scan-engine">insidia<br/><small>scan + review</small></span><i>→</i><span>Evidence<br/><small>your next move</small></span></div><div class="scan-bottom"><span>prompt injection</span><span>data leakage</span><span>API security</span></div></div>
   ) : project === 'arise' ? (
     <div class="arise-visual"><div class="mini-bar"><i></i><i></i><i></i><span>~/experiments</span></div><div class="arise-code"><span class="code-muted">$</span> arise --style matrix<br/><span class="matrix">01 10 01 11 00 10 01<br/>10 01 <b>A R I S E</b> 10<br/>00 11 10 01 11 00 10</span><br/><span class="code-muted">(.venv)</span> <span class="code-green">ready to build</span> <span class="code-cursor">▌</span></div></div>
   ) : (

@@ -1,6 +1,7 @@
 ---
 import { getCollection, render, type CollectionEntry } from "astro:content";
 import DetailLayout from "../../layouts/DetailLayout.astro";
+import { statusLabel } from "../../lib/status";
 
 export async function getStaticPaths() {
   const projects = await getCollection("projects");
@@ -18,7 +19,7 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 const { data } = entry;
 const tags = [...new Set([...(data.stack ?? []), ...data.tags])];
-const eyebrow = [data.status?.replace("-", " "), data.role].filter(Boolean).join(" · ") || "Project";
+const eyebrow = [statusLabel(data.status), data.role].filter(Boolean).join(" · ") || "Project";
 ---
 
 <DetailLayout title={data.title} summary={data.summary} eyebrow={eyebrow} date={data.date} tags={tags}>
