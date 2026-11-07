@@ -23,6 +23,7 @@ const posts = (await getCollection("blogs"))
           summary={data.description ?? data.summary}
           date={data.date}
           tags={data.tags}
+          cover={data.cover}
         />
       ))}
       {posts.length === 0 && <p class="empty-state">No articles are published yet.</p>}

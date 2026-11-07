@@ -1,5 +1,6 @@
 ---
 import { getCollection, render, type CollectionEntry } from "astro:content";
+import { Image } from "astro:assets";
 import DetailLayout from "../../layouts/DetailLayout.astro";
 
 export async function getStaticPaths() {
@@ -20,6 +21,13 @@ const { data } = entry;
 ---
 
 <DetailLayout title={data.title} summary={data.description ?? data.summary} eyebrow="Article" date={data.date} tags={data.tags}>
-  {data.canonicalUrl && <a slot="links" class="button button--quiet" href={data.canonicalUrl} target="_blank" rel="noreferrer">Read original <span aria-hidden="true">↗</span></a>}
+  {data.canonicalUrl && <a slot="links" class="button button--quiet" href={data.canonicalUrl} target="_blank" rel="noopener noreferrer">Originally published on X <span aria-hidden="true">↗</span></a>}
+  {data.canonicalUrl && <p slot="links" class="credit">By Rushi Balapure · <a href={data.canonicalUrl} target="_blank" rel="noopener noreferrer">Read the original post on X</a></p>}
+  {data.cover && <Image class="post-cover" src={data.cover} alt="" widths={[640, 960, 1200]} sizes="(max-width: 800px) 100vw, 48rem" loading="eager" />}
   <Content />
 </DetailLayout>
+
+<style>
+  .credit { margin: 0; align-self: center; color: var(--muted); font-size: 0.9rem; }
+  .content :global(.post-cover) { width: 100%; height: auto; margin: 0 0 2.5rem; border: 1px solid var(--line); border-radius: var(--radius); }
+</style>

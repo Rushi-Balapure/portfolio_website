@@ -256,12 +256,18 @@ textarea {
 
 .prose h1 { font-size: clamp(2.5rem, 6vw, 5rem); }
 .prose h2 { font-size: clamp(1.8rem, 4vw, 3rem); }
+.prose h3 { font-size: clamp(1.3rem, 2.6vw, 1.7rem); }
 .prose p,
 .prose li { color: var(--prose); }
 .prose a { color: var(--coral); text-decoration: underline; text-decoration-color: currentColor; text-decoration-thickness: 1px; }
 .prose a:hover,
 .prose a:active { color: var(--accent); }
 .prose pre { overflow-x: auto; padding: 1.25rem; border-radius: 1rem; }
+.prose { overflow-wrap: anywhere; }
+.prose ul,
+.prose ol { padding-left: 1.4rem; }
+.prose li { margin-block: 0.4em; }
+.prose img { width: 100%; height: auto; margin-block: 2rem; border: 1px solid var(--line); border-radius: var(--radius); }
 .prose blockquote { margin-inline: 0; padding-left: 1.25rem; border-left: 3px solid var(--accent); }
 
 [data-reveal] {
