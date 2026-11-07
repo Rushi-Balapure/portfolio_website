@@ -142,6 +142,13 @@ textarea {
   line-height: 0.96;
 }
 
+.page-title[data-length='long'] {
+  max-width: 24ch;
+  font-size: clamp(2rem, 4.2vw, 3.75rem);
+  letter-spacing: -0.05em;
+  line-height: 1.04;
+}
+
 .lede {
   max-width: 42rem;
   margin: 1.75rem 0 0;

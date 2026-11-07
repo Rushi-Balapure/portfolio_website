@@ -10,13 +10,15 @@ interface Props {
 }
 
 const { title, summary, eyebrow, date, tags = [] } = Astro.props;
+// Long titles get a smaller, tighter size so title + summary fit the first viewport.
+const titleLength = title.length > 48 ? 'long' : 'short';
 ---
 
 <BaseLayout title={title} description={summary}>
   <article class="shell detail">
     <header data-reveal>
       <p class="eyebrow">{eyebrow}{date && ` · ${date.toLocaleDateString('en', { month: 'long', year: 'numeric' })}`}</p>
-      <h1 class="page-title">{title}</h1>
+      <h1 class="page-title" data-length={titleLength}>{title}</h1>
       <p class="lede">{summary}</p>
       {tags.length > 0 && <ul class="pill-list">{tags.map((tag) => <li class="pill">{tag}</li>)}</ul>}
       <div class="links"><slot name="links" /></div>
