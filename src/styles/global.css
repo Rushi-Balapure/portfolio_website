@@ -1,36 +1,7 @@
 :root {
   color-scheme: dark;
-  /* Palette (#18): primary crimson #ff4d5a, secondary burgundy #8f1838, background #0d0b0e, text #f5f1f2, accent coral #ffb3a7 */
-  --ink: #f5f1f2;
-  --muted: #c8b9be;
-  --paper: #0d0b0e;
-  --surface: #1b1317;
-  --raised: #1b1317;
-  --visual-bg: #0d0b0e;
-  --line: #3d252d;
-  --accent: #ff4d5a;
-  --accent-soft: #1b1317;
-  --on-accent: #0d0b0e;
-  --green: #ff4d5a;
-  --coral: #ffb3a7;
-  --burgundy: #8f1838;
-  --prose: #f5f1f2;
-  --accent-glow: rgba(255, 77, 90, 0.08);
-  --link-decoration: rgba(255, 179, 167, 0.7);
-  --card-hover: #1b1317;
+  /* Colour tokens are generated per planet theme in ThemeStyles.astro (src/data/themes.ts). */
   --shadow: rgba(0, 0, 0, 0.5);
-  --button-text: #0d0b0e;
-  --menu-bg: #1b1317;
-  --profile-border: #3d252d;
-  --selection-text: #0d0b0e;
-  --footer-bg: #0d0b0e;
-  --footer-text: #f5f1f2;
-  --footer-accent: #ff4d5a;
-  --footer-muted: #c8b9be;
-  --footer-link: #ffb3a7;
-  --footer-line: #3d252d;
-  --footer-button-bg: #ff4d5a;
-  --footer-button-text: #0d0b0e;
   --max-width: 1160px;
   --header-height: 5rem;
   --radius: 1rem;
@@ -91,11 +62,11 @@ textarea {
 }
 
 :focus-visible {
-  outline: 3px solid var(--coral);
+  outline: 3px solid var(--link);
   outline-offset: 4px;
 }
 
-/* Filled controls keep a dark separator so the coral ring never touches crimson/burgundy. */
+/* Filled controls keep a dark separator so the focus ring never touches the primary/secondary fill. */
 .button:focus-visible {
   box-shadow: 0 0 0 4px var(--paper);
 }
@@ -213,8 +184,8 @@ textarea {
 
 .button:hover {
   color: var(--on-accent);
-  background: var(--coral);
-  border-color: var(--coral);
+  background: var(--link);
+  border-color: var(--link);
   transform: translateY(-2px);
 }
 
@@ -222,14 +193,14 @@ textarea {
 
 .button--quiet {
   color: var(--ink);
-  background: var(--burgundy);
-  border-color: var(--coral);
+  background: var(--secondary);
+  border-color: var(--link);
 }
 
 .button--quiet:hover {
   color: var(--on-accent);
   background: var(--accent);
-  border-color: var(--coral);
+  border-color: var(--link);
 }
 
 .empty-state {
@@ -259,7 +230,7 @@ textarea {
 .prose h3 { font-size: clamp(1.3rem, 2.6vw, 1.7rem); }
 .prose p,
 .prose li { color: var(--prose); }
-.prose a { color: var(--coral); text-decoration: underline; text-decoration-color: currentColor; text-decoration-thickness: 1px; }
+.prose a { color: var(--link); text-decoration: underline; text-decoration-color: currentColor; text-decoration-thickness: 1px; }
 .prose a:hover,
 .prose a:active { color: var(--accent); }
 .prose pre { overflow-x: auto; padding: 1.25rem; border-radius: 1rem; }
@@ -317,3 +288,11 @@ textarea {
 @keyframes vt-depth-in { from { opacity: 0; transform: scale(1.015); } }
 @keyframes vt-fade-out { to { opacity: 0; } }
 @keyframes vt-fade-in { from { opacity: 0; } }
+
+/* Theme switch: a brief colour crossfade, only while the class is present (never on first paint). */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: background-color 450ms ease, color 450ms ease, border-color 450ms ease, fill 450ms ease, stroke 450ms ease, box-shadow 450ms ease !important;
+}
