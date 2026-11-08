@@ -41,6 +41,7 @@ const yearRange = (start: Date, end?: Date) => `${start.getFullYear()}–${end?.
       <div class="hero-socials" aria-label="Find me online">
         {profile.githubUrl && <a href={profile.githubUrl} target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>}
         {profile.linkedinUrl && <a href={profile.linkedinUrl} target="_blank" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>}
+        {profile.xUrl && <a href={profile.xUrl} target="_blank" rel="noreferrer">X <span aria-hidden="true">↗</span></a>}
         {profile.email && <a href={`mailto:${profile.email}`}>Send an email <span aria-hidden="true">↗</span></a>}
       </div>
       {profile.availability && <p class="availability">{profile.availability}</p>}
