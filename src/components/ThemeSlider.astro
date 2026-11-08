@@ -1,0 +1,244 @@
+---
+import { THEMES, type RGB } from '../data/themes';
+
+// CSS-rendered mini planets: layered gradients from each world's WebGL palette.
+const rgb = ([r, g, b]: RGB, k = 1) =>
+  `rgb(${[r, g, b].map((v) => Math.round(Math.min(1, v * k) * 255)).join(' ')})`;
+const orbs = THEMES.map((t) => {
+  const { surfaceA: a, surfaceB: b, highlight: h, emissive: e, atmosphere: atm } = t.gl;
+  const vars: Record<string, string> = {
+    '--a': rgb(a, 2.2), '--b': rgb(b, 1.5), '--h': rgb(h), '--e': rgb(e), '--atm': rgb(atm),
+  };
+  return { theme: t, style: Object.entries(vars).map(([k, v]) => `${k}:${v}`).join(';') };
+});
+
+// Selection visuals are driven by <html data-theme>, so the first paint is already correct (no JS needed).
+const selection = THEMES.map((t, i) => {
+  const s = `:root[data-theme="${t.id}"]`;
+  return `${s} .ts{--i:${i}}
+${s} .ts-orb[data-id="${t.id}"]{transform:scale(1.4);box-shadow:0 0 0 2px var(--paper),0 0 14px 2px color-mix(in srgb,var(--link) 55%,transparent)}
+${s} .ts-sw[data-id="${t.id}"]{opacity:1;visibility:visible;transition-delay:120ms,0s}`;
+}).join('\n');
+---
+
+<div class="ts-wrap" transition:persist="theme-slider">
+  <div class="ts shell" data-theme-slider>
+    <div class="ts-track" role="radiogroup" aria-label="Planet theme">
+      <span class="ts-ind" aria-hidden="true"></span>
+      {orbs.map(({ theme, style }, i) => (
+        <button type="button" class="ts-btn" role="radio" aria-checked={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-id={theme.id} aria-label={`${theme.name}, ${theme.kind}`}>
+          <span class="ts-orb" data-world={theme.gl.world} data-id={theme.id} style={style}></span>
+        </button>
+      ))}
+    </div>
+
+    <div class="ts-name" aria-hidden="true">
+      {THEMES.map((t) => <span class="ts-sw" data-id={t.id}><strong>{t.name}</strong><span class="ts-kind"> · {t.kind}</span></span>)}
+    </div>
+
+    <div class="ts-fact">
+      {THEMES.map((t) => (
+        <span class="ts-sw" data-id={t.id}>
+          <span class="ts-fact-text">{t.fact}</span>
+          {t.source ? <a href={t.source.url} target="_blank" rel="noreferrer">{t.source.label} ↗</a> : t.fictional ? <span class="ts-tag">Fictional</span> : null}
+        </span>
+      ))}
+    </div>
+
+    <button type="button" class="ts-info-btn" aria-expanded="false" aria-controls="ts-panel" aria-label="About this planet">i</button>
+
+    <div class="ts-panel" id="ts-panel" hidden>
+      {THEMES.map((t) => (
+        <p class="ts-sw" data-id={t.id}>
+          <strong>{t.name}</strong> <span class="ts-kind">{t.kind}</span><br />
+          {t.fact}
+          {t.source ? <> <a href={t.source.url} target="_blank" rel="noreferrer">{t.source.label} ↗</a></> : null}
+        </p>
+      ))}
+    </div>
+
+    <div class="visually-hidden" role="status" aria-live="polite" data-ts-live></div>
+  </div>
+</div>
+
+<style is:inline set:html={selection}></style>
+
+<style is:global>
+  .ts-wrap { --cell: 2.25rem; border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent); }
+  .ts { position: relative; display: flex; align-items: center; gap: 0.9rem; height: var(--slider-height); }
+  .ts-track { position: relative; display: flex; flex: none; width: calc(var(--cell) * 4); height: 100%; touch-action: pan-y; user-select: none; }
+  .ts-btn { position: relative; z-index: 1; flex: none; display: grid; place-items: center; width: var(--cell); height: 100%; padding: 0; background: none; border: 0; border-radius: 999px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .ts-btn:focus-visible { outline-offset: -3px; }
+
+  .ts-orb { position: relative; display: block; width: 1.25rem; height: 1.25rem; border-radius: 50%; transition: transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 350ms ease; background: var(--a); }
+  .ts-btn:hover .ts-orb { filter: brightness(1.15); }
+  /* terminator shadow + rim light */
+  .ts-orb::after { position: absolute; inset: 0; border-radius: 50%; content: ''; background: radial-gradient(circle at 30% 28%, transparent 38%, rgb(0 0 0 / 0.55) 78%, rgb(0 0 0 / 0.8) 100%); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--atm) 45%, transparent); }
+  .ts-orb[data-world='biolum-ocean'] { background:
+    radial-gradient(circle at 74% 72%, var(--e) 0 8%, transparent 22%),
+    radial-gradient(ellipse 38% 28% at 36% 52%, var(--b) 0 60%, transparent 100%),
+    radial-gradient(ellipse 26% 20% at 66% 32%, var(--b) 0 60%, transparent 100%),
+    radial-gradient(circle at 34% 30%, color-mix(in srgb, var(--a) 70%, white), var(--a) 70%); }
+  .ts-orb[data-world='cobalt-giant'] { background: linear-gradient(172deg, var(--b) 0 18%, var(--a) 18% 32%, var(--h) 32% 42%, var(--b) 42% 60%, var(--a) 60% 76%, var(--b) 76%); }
+  .ts-orb[data-world='lava-world'] { background:
+    linear-gradient(28deg, transparent 44%, var(--e) 46% 52%, transparent 54%),
+    linear-gradient(-52deg, transparent 56%, var(--e) 58% 63%, transparent 65%),
+    linear-gradient(80deg, transparent 20%, var(--h) 22% 26%, transparent 28%),
+    #0a0605; }
+  .ts-orb[data-world='magenta-giant'] { background: linear-gradient(165deg, var(--b) 0 22%, var(--h) 22% 32%, var(--a) 32% 55%, var(--b) 55% 70%, var(--a) 70%); }
+  .ts-orb[data-world='magenta-giant']::before { position: absolute; top: 50%; left: 50%; z-index: 1; width: 190%; height: 42%; border: 1px solid color-mix(in srgb, var(--atm) 85%, transparent); border-radius: 50%; content: ''; transform: translate(-50%, -50%) rotate(-18deg); }
+
+  .ts-ind { position: absolute; top: 50%; left: 0; width: var(--cell); height: var(--cell); margin-top: calc(var(--cell) / -2); transform: translateX(calc(var(--i, 0) * var(--cell))); transition: transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; }
+  .ts-ind::before { position: absolute; inset: 1px; border: 1.5px solid transparent; border-top-color: var(--link); border-right-color: color-mix(in srgb, var(--link) 45%, transparent); border-radius: 50%; content: ''; animation: ts-orbit 7s linear infinite; }
+  @keyframes ts-orbit { to { transform: rotate(360deg); } }
+  .ts.is-dragging .ts-ind { transition-duration: 120ms; }
+
+  .ts-name, .ts-fact { display: grid; min-width: 0; }
+  .ts-name { flex: none; }
+  .ts-sw { grid-area: 1 / 1; opacity: 0; visibility: hidden; transition: opacity 240ms ease, visibility 0s linear 240ms; }
+  .ts-name .ts-sw { align-self: center; white-space: nowrap; font-size: 0.8rem; line-height: 1.2; }
+  .ts-name strong { color: var(--ink); font-weight: 600; letter-spacing: -0.01em; }
+  .ts-kind { display: none; color: var(--muted); font: 0.7rem var(--font-mono); }
+  .ts-fact { display: none; flex: 1; color: var(--muted); font-size: 0.7rem; line-height: 1.3; }
+  .ts-fact .ts-sw { align-self: center; }
+  .ts-fact-text { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ts-fact a, .ts-panel a { color: var(--link); font-weight: 500; }
+  .ts-tag { display: inline-block; margin-top: 2px; padding: 0 0.4rem; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; font: 0.62rem var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase; }
+
+  .ts-info-btn { display: grid; flex: none; place-items: center; width: 1.5rem; height: 1.5rem; margin-left: auto; padding: 0; color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 50%; font: italic 600 0.75rem Georgia, serif; cursor: pointer; }
+  .ts-info-btn[aria-expanded='true'] { color: var(--paper); background: var(--link); border-color: var(--link); }
+  .ts-panel { position: absolute; top: 100%; right: 0; left: 0; z-index: 6; display: grid; padding: 0.8rem 1rem; color: var(--muted); background: var(--menu-bg); border: 1px solid var(--line); border-radius: 0.9rem; box-shadow: 0 1rem 3rem var(--shadow); font-size: 0.8rem; line-height: 1.45; }
+  .ts-panel[hidden] { display: none; }
+  .ts-panel .ts-sw { margin: 0; }
+  .ts-panel .ts-kind { display: inline; }
+  .ts-panel strong { color: var(--ink); }
+
+  @media (min-width: 900px) {
+    .ts-name .ts-sw { font-size: 0.82rem; }
+    .ts-kind { display: inline; }
+    .ts-fact { display: grid; }
+    .ts-info-btn, .ts-panel { display: none; }
+  }
+  @media (max-width: 760px) {
+    .ts-wrap { --cell: 2.1rem; }
+    .ts { gap: 0.6rem; }
+  }
+</style>
+
+<script>
+  import { THEMES } from '../data/themes';
+  import { getTheme, setTheme, onThemeChange } from '../scripts/theme';
+
+  let offTheme: (() => void) | undefined;
+
+  function init() {
+    const root = document.querySelector<HTMLElement>('[data-theme-slider]');
+    if (!root || root.dataset.ready === '1') return;
+    root.dataset.ready = '1';
+    const track = root.querySelector<HTMLElement>('.ts-track')!;
+    const btns = [...root.querySelectorAll<HTMLButtonElement>('.ts-btn')];
+    const live = root.querySelector<HTMLElement>('[data-ts-live]')!;
+    const infoBtn = root.querySelector<HTMLButtonElement>('.ts-info-btn')!;
+    const panel = root.querySelector<HTMLElement>('.ts-panel')!;
+    const ids = THEMES.map((t) => t.id as string);
+    const cell = () => track.getBoundingClientRect().width / btns.length;
+
+    const reflect = (announce: boolean) => {
+      const theme = getTheme();
+      btns.forEach((b) => {
+        const on = b.dataset.id === theme.id;
+        b.setAttribute('aria-checked', String(on));
+        b.tabIndex = on ? 0 : -1;
+      });
+      if (announce) live.textContent = `Theme: ${theme.name}`;
+    };
+    reflect(false);
+
+    offTheme?.();
+    offTheme = onThemeChange(() => reflect(true));
+
+    btns.forEach((b) => b.addEventListener('click', () => {
+      if (suppressClick) return;
+      setTheme(b.dataset.id!);
+    }));
+
+    root.addEventListener('keydown', (e) => {
+      if (!(e.target instanceof HTMLElement) || !e.target.classList.contains('ts-btn')) return;
+      const cur = ids.indexOf(getTheme().id);
+      let next = cur;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (cur + 1) % ids.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (cur - 1 + ids.length) % ids.length;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = ids.length - 1;
+      else return;
+      e.preventDefault();
+      setTheme(ids[next]);
+      btns[next].focus();
+    });
+
+    // Drag / swipe along the track: the indicator follows the pointer, release snaps to the nearest planet.
+    let startX = 0;
+    let dragging = false;
+    let suppressClick = false;
+    let pointerId = -1;
+    const nearest = (clientX: number) => {
+      const x = clientX - track.getBoundingClientRect().left;
+      return Math.max(0, Math.min(ids.length - 1, Math.floor(x / cell())));
+    };
+    track.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      startX = e.clientX;
+      pointerId = e.pointerId;
+      dragging = false;
+    });
+    track.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== pointerId) return;
+      if (!dragging && Math.abs(e.clientX - startX) > 6) {
+        dragging = true;
+        track.setPointerCapture(e.pointerId);
+        root.classList.add('is-dragging');
+      }
+      if (dragging) {
+        const x = (e.clientX - track.getBoundingClientRect().left) / cell() - 0.5;
+        root.style.setProperty('--i', String(Math.max(0, Math.min(ids.length - 1, x))));
+      }
+    });
+    const end = (e: PointerEvent) => {
+      if (e.pointerId !== pointerId) return;
+      pointerId = -1;
+      if (!dragging) return;
+      dragging = false;
+      suppressClick = true;
+      setTimeout(() => (suppressClick = false), 0);
+      root.classList.remove('is-dragging');
+      root.style.removeProperty('--i');
+      setTheme(ids[nearest(e.clientX)]);
+      btns[nearest(e.clientX)].focus({ preventScroll: true });
+    };
+    track.addEventListener('pointerup', end);
+    track.addEventListener('pointercancel', (e) => {
+      if (e.pointerId !== pointerId) return;
+      pointerId = -1; dragging = false;
+      root.classList.remove('is-dragging');
+      root.style.removeProperty('--i');
+    });
+
+    // Mobile (i) panel.
+    const setPanel = (open: boolean) => {
+      panel.hidden = !open;
+      infoBtn.setAttribute('aria-expanded', String(open));
+    };
+    infoBtn.addEventListener('click', () => setPanel(panel.hidden));
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !panel.hidden) { setPanel(false); infoBtn.focus(); }
+    });
+    document.addEventListener('click', (e) => {
+      if (!panel.hidden && e.target instanceof Node && !root.contains(e.target)) setPanel(false);
+    });
+    document.addEventListener('astro:before-preparation', () => setPanel(false));
+  }
+
+  init();
+  // The wrapper is transition:persist'ed; if it is ever replaced, init binds the new instance once.
+  document.addEventListener('astro:page-load', init);
+</script>

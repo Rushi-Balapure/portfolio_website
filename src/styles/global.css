@@ -3,7 +3,9 @@
   /* Colour tokens are generated per planet theme in ThemeStyles.astro (src/data/themes.ts). */
   --shadow: rgba(0, 0, 0, 0.5);
   --max-width: 1160px;
-  --header-height: 5rem;
+  --header-bar: 5rem;
+  --slider-height: 2.75rem;
+  --header-height: calc(var(--header-bar) + var(--slider-height));
   --radius: 1rem;
   --font-mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -257,7 +259,7 @@ textarea {
 }
 
 @media (max-width: 760px) {
-  :root { --header-height: 4.25rem; }
+  :root { --header-bar: 4.25rem; --slider-height: 2.5rem; }
   .shell { width: min(calc(100% - 1.5rem), var(--max-width)); }
   .section { padding-block: 4.5rem; }
   .display { font-size: clamp(3.1rem, 16vw, 5.5rem); }

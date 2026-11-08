@@ -1,4 +1,6 @@
 ---
+import ThemeSlider from './ThemeSlider.astro';
+
 interface Props {
   name: string;
 }
@@ -37,6 +39,7 @@ const links = [
       </nav>
     </details>
   </div>
+  <ThemeSlider />
 </header>
 
 <style>
@@ -44,16 +47,17 @@ const links = [
     position: sticky;
     top: 0;
     z-index: 20;
-    height: var(--header-height);
     background: color-mix(in srgb, var(--paper) 92%, transparent);
     border-bottom: 1px solid var(--line);
     backdrop-filter: blur(18px) saturate(140%);
   }
 
   .header-inner {
+    position: relative;
+    z-index: 8;
     display: flex;
     align-items: center;
-    height: 100%;
+    height: var(--header-bar);
     gap: 1.25rem;
   }
 
