@@ -251,7 +251,7 @@ function start(root: HTMLElement): Instance {
   const themeVecs = THEMES.map((t) => themeVec(t));
 
   // ----- state -----
-  let W = 1, H = 1, dpr = 1;
+  let W = 1, H = 1;
   let mode: 'galaxy' | 'focus' = 'galaxy';
   let focusIdx = -1;
   let gAng = 0.4, rotMix = 1;
@@ -883,7 +883,7 @@ function start(root: HTMLElement): Instance {
 
   // ----- loop -----
   loop = createRenderer(canvas, {
-    resize: (w, h, d) => { W = w; H = h; dpr = d; },
+    resize: (w, h) => { W = w; H = h; },
     draw,
     animated: () => {
       if (flight || dragging) return true;

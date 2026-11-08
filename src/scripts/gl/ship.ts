@@ -99,7 +99,7 @@ class Mesh {
   /** Smooth-shaded grid: rings[r][s] with closed segments. */
   grid(rings: V3[][], closeStart = true, closeEnd = true) {
     const b = this.v.length / 8, R = rings.length, S = rings[0].length;
-    const nrm = rings.map((ring, r) => ring.map((p, s) => {
+    const nrm = rings.map((ring, r) => ring.map((_p, s) => {
       const a = rings[Math.min(r + 1, R - 1)][s], c = rings[Math.max(r - 1, 0)][s];
       const t1 = v3.sub(a, c), t2 = v3.sub(ring[(s + 1) % S], ring[(s + S - 1) % S]);
       return v3.norm(v3.cross(t2, t1));
