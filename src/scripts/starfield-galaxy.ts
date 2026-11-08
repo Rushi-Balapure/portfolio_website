@@ -81,6 +81,9 @@ const PANEL_W = 384;           // desktop panel footprint incl. margins
 const DEF_YAW = 0.35, DEF_PITCH = 0.62, DEF_DIST = 22;
 const DIST_MIN = 9, DIST_MAX = 34;
 const ZOOM_MIN = 0.7, ZOOM_MAX = 2.2;
+// Entry zoom-out: start just above the bright core, looking almost straight down, then pull back and tilt out to the
+// default view while the galaxy unwinds a little faster than its idle spin.
+const INTRO_DUR = 3.2, INTRO_DIST = 1.4, INTRO_PITCH = 1.42, INTRO_YAW = -1.1, INTRO_SPIN = 0.9;
 const CORE: V3 = [0, 0, 0];
 
 interface PlanetDef { orbit: number; a0: number; y: number; r: number; pole: V3; spin: number; }
@@ -261,6 +264,8 @@ function start(root: HTMLElement): Instance {
   let userQ: Quat = quat.identity(), spin = [0, 0], resetAnim: { t0: number; from: Quat } | null = null;
   const planetQ: Quat[] = THEMES.map(() => quat.identity());
   let flight: Flight | null = null;
+  let intro: { t0: number; yaw: number } | null = null;
+  const endIntro = () => { if (!intro) return; intro = null; gPitch = clamp(gPitch, -0.15, 1.3); delete root.dataset.intro; };
   let hover = -1, kbFocus = -1;
   let ptr = [0, 0];
   let lastT = 0, time = 0, firstFrame = false;
@@ -426,6 +431,7 @@ function start(root: HTMLElement): Instance {
   };
 
   const focusPlanet = (j: number, opts: { fromHash?: boolean; instant?: boolean } = {}) => {
+    endIntro();
     if (j === focusIdx && mode === 'focus') return;
     const wasFocus = mode === 'focus';
     mode = 'focus'; focusIdx = j;
@@ -485,6 +491,7 @@ function start(root: HTMLElement): Instance {
   };
   const local = (e: PointerEvent) => { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
   canvas.addEventListener('pointerdown', (e) => {
+    endIntro();
     canvas.setPointerCapture(e.pointerId);
     const p = local(e);
     pts.set(e.pointerId, p);
@@ -542,6 +549,7 @@ function start(root: HTMLElement): Instance {
   canvas.addEventListener('pointercancel', up, sig);
   canvas.addEventListener('pointerleave', () => { if (!dragging) setHover(-1); }, sig);
   canvas.addEventListener('wheel', (e) => {
+    endIntro();
     e.preventDefault();
     const k = Math.exp(clamp(e.deltaY, -120, 120) * 0.0011);
     if (mode === 'galaxy') gDistT = clamp(gDistT * k, DIST_MIN, distMax()); else zoomT = clamp(zoomT / k, ZOOM_MIN, zoomMax());
@@ -616,7 +624,16 @@ function start(root: HTMLElement): Instance {
     // ----- update -----
     rotMix += ((mode === 'galaxy' && !flight && !reduced ? 1 : 0) - rotMix) * (1 - Math.exp(-dt * 2.5));
     if (!reduced) gAng += dt * ROT_SPEED * rotMix;
-    if (mode === 'galaxy') {
+    if (intro && mode === 'galaxy' && !flight) {
+      if (intro.t0 < 0) intro.t0 = time;
+      const k = clamp((time - intro.t0) / INTRO_DUR), e = 1 - Math.pow(1 - k, 3);   // ease-out cubic
+      gDist = Math.exp(lerp(Math.log(INTRO_DIST), Math.log(gDistT), e));
+      gPitch = lerp(INTRO_PITCH, DEF_PITCH, easeInOutSine(k));
+      gYaw = intro.yaw + angDiff(intro.yaw, DEF_YAW) * e;
+      gAng += dt * INTRO_SPIN * (1 - e) * (1 - e);
+      if (k > 0.55) delete root.dataset.intro;   // UI fades in for the last part of the pull-back
+      if (k >= 1) endIntro();
+    } else if (mode === 'galaxy') {
       if (!reduced) { gYaw += yawV * dt; gPitch = clamp(gPitch + pitchV * dt, -0.15, 1.3); const dk = Math.exp(-dt * 3.2); if (!dragging) { yawV *= dk; pitchV *= dk; } }
       gDist = lerp(gDist, gDistT, reduced ? 1 : 1 - Math.exp(-dt * 8));
     } else {
@@ -886,7 +903,7 @@ function start(root: HTMLElement): Instance {
     resize: (w, h) => { W = w; H = h; },
     draw,
     animated: () => {
-      if (flight || dragging) return true;
+      if (flight || dragging || intro) return true;
       if (reduced) return false;
       return true;   // galaxy rotation, twinkle, ship bob
     },
@@ -903,6 +920,12 @@ function start(root: HTMLElement): Instance {
   applyCam(galaxyCam());
   if (hashJ >= 0) focusPlanet(hashJ, { fromHash: true, instant: true });
   else setShipIdle();
+  if (hashJ < 0 && !reduced) {
+    intro = { t0: -1, yaw: DEF_YAW + INTRO_YAW };
+    root.dataset.intro = '';
+    gDist = INTRO_DIST; gPitch = INTRO_PITCH; gYaw = intro.yaw;
+    applyCam(galaxyCam());
+  }
   loop.invalidate();
   if (debug) (window as any).__sfCtl = { focus: (j: number) => focusPlanet(j), galaxy: () => toGalaxy(), loop, set: (o: any) => { Object.assign(o, {}); }, setTime: (x: number) => { time = x; } };
 

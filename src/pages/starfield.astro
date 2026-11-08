@@ -87,6 +87,11 @@ const glow = (t: (typeof THEMES)[number]) => `0 0 2.2rem ${css(t.gl.atmosphere, 
   .sf-intro .eyebrow { margin: 0 0 0.35rem; }
   .sf-line { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.45; text-shadow: 0 1px 8px var(--paper); }
   .sf[data-mode='focus'] .sf-intro { opacity: 0; }
+  /* entry zoom-out: copy and labels wait until the pull-back is mostly done */
+  .sf[data-intro] .sf-intro, .sf[data-intro] .sf-label { opacity: 0; transition-duration: 0s; }
+  .sf:not([data-intro]) .sf-intro { transition-duration: 0.9s; }
+  .sf[data-intro] .sf-canvas { animation: sf-intro-in 0.9s ease-out both; }
+  @keyframes sf-intro-in { from { opacity: 0; } }
 
   .sf-overlay { position: absolute; inset: 0; pointer-events: none; }
   .sf-planet {
