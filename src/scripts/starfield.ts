@@ -284,8 +284,9 @@ function init() {
   };
   if (debug) (window as any).__warpDebug = { set: (s: number, t: number) => { frozen = true; speed = s; travel = t; (window as any).__warp = s; loop.invalidate(); } };
 
+  const pageHidden = () => document.documentElement.dataset.page === 'starfield';
   const draw = (t: number) => {
-    if (!gl || lost) return;
+    if (!gl || lost || pageHidden()) return;
     const t0 = profile() ? performance.now() : 0;
     const time = reduced ? 0 : t, sc = reduced ? 0 : scroll;
     blending = blend.step();
@@ -368,7 +369,7 @@ function init() {
   const loop = createRenderer(canvas, {
     resize: (w, h, d) => { cssW = w; cssH = h; dpr = d; sizeResources(); },
     draw,
-    animated: () => (!reduced && !!gl && !lost) || speed > 0.001 || warpPhase !== 0,
+    animated: () => !pageHidden() && ((!reduced && !!gl && !lost) || speed > 0.001 || warpPhase !== 0),
     fps: 30,
     idleFps: 15,
   });
@@ -389,7 +390,7 @@ function init() {
       if (wait > 0) await new Promise((r) => setTimeout(r, wait));
     };
   }, { signal: loop.signal });
-  document.addEventListener('astro:page-load', endWarp, { signal: loop.signal });
+  document.addEventListener('astro:page-load', () => { endWarp(); loop.measure(); }, { signal: loop.signal });
 
   const opt = { signal: loop.signal, passive: true } as const;
   addEventListener('pointerdown', (e) => { lastX = e.clientX; lastY = e.clientY; }, opt);

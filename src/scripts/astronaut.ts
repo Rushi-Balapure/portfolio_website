@@ -271,11 +271,12 @@ function init() {
 
   const docMax = () => Math.max(1, document.documentElement.scrollHeight - vh);
   const progress = () => clamp(scrollY / docMax());
+  const pageHidden = () => document.documentElement.dataset.page === 'starfield';
   const heroT = () => (home && !reduced ? smooth(vh * 0.04, vh * 0.7, scrollY) : 1);
 
   const sm = [0, 0, 0];   // scratch
   const draw = (t: number) => {
-    if (!gl || lost || off) return;
+    if (!gl || lost || off || pageHidden()) return;
     const dt = lastT ? clamp(t - lastT, 0.001, 1 / 30) : 0.016;
     lastT = t;
 
@@ -373,7 +374,7 @@ function init() {
   const loop = createRenderer(canvas, {
     resize: () => {},
     draw,
-    animated: () => !reduced && !!gl && !lost && !off && (performance.now() - lastActive < IDLE_MS),
+    animated: () => !reduced && !!gl && !lost && !off && !pageHidden() && (.now() - lastActive < IDLE_MS),
     fps: 60,
     idleFps: 30,
     get maxDpr() { return opts.maxDpr; },
@@ -402,7 +403,7 @@ function init() {
   }, opt);
   addEventListener('resize', () => { layout(); resync(); }, sig);
   addEventListener('load', () => { layout(); resync(); }, { signal: loop.signal, once: true });
-  document.addEventListener('astro:page-load', () => { layout(); resync(); }, sig);
+  document.addEventListener('astro:page-load', () => { bufCss = 0; layout(); resync(); }, sig);
   document.addEventListener('astro:before-preparation', () => { navigating = true; vel = 0; omega = 0; }, sig);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) resync(); }, sig);
   document.addEventListener('astro:after-swap', () => { lastScroll = scrollY; vel = 0; omega = 0; rollOff = 0; if (!root.isConnected) loop.dispose(), delete W.__astronaut; }, sig);

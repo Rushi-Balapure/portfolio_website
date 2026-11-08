@@ -298,3 +298,8 @@ textarea {
 .theme-switching *::after {
   transition: background-color 450ms ease, color 450ms ease, border-color 450ms ease, fill 450ms ease, stroke 450ms ease, box-shadow 450ms ease !important;
 }
+
+/* The /starfield page owns the whole viewport: the global background layers and companions are hidden (their scripts also stop drawing). */
+html[data-page='starfield'] .starfield,
+html[data-page='starfield'] .planet,
+html[data-page='starfield'] .astro { display: none; }

@@ -15,6 +15,8 @@ interface Props {
   description?: string;
   image?: string;
   noindex?: boolean;
+  /** Page flag exposed as <html data-page>; the starfield page uses it to hide the companions. */
+  page?: string;
 }
 
 // Subtle depth transition: the old page recedes (scale .985 + fade), the new one settles in (1.015 -> 1).
@@ -61,7 +63,7 @@ const structuredData = {
 ---
 
 <!doctype html>
-<html lang="en" data-theme={DEFAULT_THEME} transition:animate="none">
+<html lang="en" data-theme={DEFAULT_THEME} data-page={Astro.props.page} transition:animate="none">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />

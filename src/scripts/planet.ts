@@ -61,6 +61,7 @@ function init() {
   const ringTilt = -0.36, ringElev = 0.32;
   const axis = [Math.sin(ringTilt) * Math.cos(ringElev), Math.cos(ringTilt) * Math.cos(ringElev), Math.sin(ringElev)];
 
+  const pageHidden = () => document.documentElement.dataset.page === 'starfield';
   const fallback = (on: boolean) => root.classList.toggle('pl-fallback', on);
 
   const setup = () => {
@@ -139,7 +140,7 @@ function init() {
 
   let moving = true;
   const draw = (t: number) => {
-    if (!gl || lost) return;
+    if (!gl || lost || pageHidden()) return;
     const dt = lastT ? clamp(t - lastT, 0.001, 1 / 30) : 0.016;
     lastT = t;
     const now = performance.now();
@@ -233,7 +234,7 @@ function init() {
   const loop = createRenderer(canvas, {
     resize: () => {},
     draw,
-    animated: () => !reduced && !!gl && !lost && (performance.now() - lastActive < 10000),
+    animated: () => !reduced && !!gl && !lost && !pageHidden() && (performance.now() - lastActive < 10000),
     fps: 60,
     idleFps: 12,
     get maxDpr() { return opts.maxDpr; },
@@ -277,7 +278,7 @@ function init() {
   }, opt);
   addEventListener('resize', () => { layout(); resync(); }, opt);
   addEventListener('load', () => { layout(); resync(); }, { signal: loop.signal, once: true });
-  document.addEventListener('astro:page-load', () => { layout(); resync(); }, { signal: loop.signal });
+  document.addEventListener('astro:page-load', () => { bufCss = 0; layout(); resync(); }, { signal: loop.signal });
   document.addEventListener('astro:before-preparation', () => { navigating = true; vel = 0; }, { signal: loop.signal });
   document.addEventListener('astro:after-swap', () => { lastScroll = scrollY; vel = 0; }, { signal: loop.signal });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) resync(); }, { signal: loop.signal });
