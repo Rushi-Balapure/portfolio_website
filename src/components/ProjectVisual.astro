@@ -26,17 +26,17 @@ const { project } = Astro.props;
   .argus-visual picture { display: flex; flex: 1 1 auto; min-height: 0; }
   .argus-visual img { width: 100%; height: auto; aspect-ratio: 16 / 9; max-height: 100%; object-fit: contain; }
   .argus-visual figcaption { padding: 0.35rem 0.75rem 0.55rem; color: var(--muted); font: 0.7rem/1.3 var(--font-mono); letter-spacing: 0.04em; text-align: center; }
-  .arise-visual { width: 100%; max-width: 25rem; overflow: hidden; background: #1b1317; color: #f0e4e6; border: 1px solid #ffffff20; border-radius: 10px; box-shadow: 0 15px 30px #0002; }
-  .mini-bar { display: flex; align-items: center; gap: 4px; padding: 0.6rem 0.8rem; border-bottom: 1px solid #ffffff10; }
-  .mini-bar i { width: 5px; height: 5px; border-radius: 50%; background: #8f7a81; }
-  .mini-bar span { margin-left: auto; color: #c0a8ae; font: 0.5rem var(--font-mono); }
+  .arise-visual { width: 100%; max-width: 25rem; overflow: hidden; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 15px 30px #0002; }
+  .mini-bar { display: flex; align-items: center; gap: 4px; padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--line); }
+  .mini-bar i { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); }
+  .mini-bar span { margin-left: auto; color: var(--muted); font: 0.5rem var(--font-mono); }
   .arise-code { padding: 1.2rem 1.5rem; font: 0.65rem/1.8 var(--font-mono); }
-  .code-muted { color: #c0a8ae; }
-  .matrix { display: block; padding-top: 0.8rem; color: #c4707f; letter-spacing: 0.15em; text-align: center; }
-  .matrix b, .code-green, .code-cursor { color: #ffb3a7; }
+  .code-muted { color: var(--muted); }
+  .matrix { display: block; padding-top: 0.8rem; color: color-mix(in srgb, var(--accent) 70%, var(--ink)); letter-spacing: 0.15em; text-align: center; }
+  .matrix b, .code-green, .code-cursor { color: var(--link); }
   .analysis-visual { display: grid; justify-items: center; width: 100%; max-width: 28rem; }
   .analysis-label { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); font: 0.5rem var(--font-mono); letter-spacing: 0.04em; }
-  .analysis-label > span { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+  .analysis-label > span { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
   .analysis-sources { display: flex; align-items: center; gap: 2rem; margin-top: 1.5rem; text-align: center; }
   .analysis-sources strong, .analysis-sources small { display: block; }
   .source-icon { display: grid; place-items: center; width: 44px; height: 44px; margin: 0 auto 0.6rem; border: 1px solid var(--line); background: var(--raised); border-radius: 10px; color: var(--accent); font: 1.1rem var(--font-mono); }
@@ -44,7 +44,7 @@ const { project } = Astro.props;
   .analysis-sources small { color: var(--muted); font-size: 0.6rem; }
   .source-plus { color: var(--muted); }
   .signal-line { width: 1px; height: 1.2rem; margin: 0.5rem 0; background: var(--line); }
-  .analysis-output { color: var(--green); font: 0.6rem var(--font-mono); }
+  .analysis-output { color: var(--accent); font: 0.6rem var(--font-mono); }
   @media (max-width: 480px) {
     .project-visual { min-height: 15rem; }
   }

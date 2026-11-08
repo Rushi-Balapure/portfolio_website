@@ -1,114 +1,20 @@
+import { createBlend, currentTheme, watchTheme } from './gl/themeGl';
+import { themeById } from '../data/themes';
+import { FS, VS, themeVec } from './gl/planetShader';
 import { attrib, createFullscreenTriangle, createProgram, createRenderer, getGL, prefersReducedMotion, type GL, type Program } from './gl/gl';
 
-const VS = `
-attribute vec2 aPos;
-void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
-
-// Analytic planet: ray-sphere on a quad, fbm surface, terminator, fresnel rim, faint tilted ring with planet shadow.
-const FS = `
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp float;
-#else
-precision mediump float;
-#endif
-uniform vec2 uRes;
-uniform float uRot, uSeed, uBand, uRing, uPx;
-uniform vec3 uN, uL, uA, uB, uC;
-
-float hash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
-float noise(vec3 x) {
-  vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
-  return mix(mix(mix(hash(i), hash(i + vec3(1, 0, 0)), f.x), mix(hash(i + vec3(0, 1, 0)), hash(i + vec3(1, 1, 0)), f.x), f.y),
-             mix(mix(hash(i + vec3(0, 0, 1)), hash(i + vec3(1, 0, 1)), f.x), mix(hash(i + vec3(0, 1, 1)), hash(i + vec3(1, 1, 1)), f.x), f.y), f.z);
-}
-float fbm(vec3 p) { float v = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { v += a * noise(p); p = p * 2.02 + vec3(1.7, 9.2, 3.1); a *= 0.5; } return v; }
-float h2(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
-
-void main() {
-  vec2 q = (gl_FragCoord.xy / uRes * 2.0 - 1.0) * 1.55;
-  float r2 = dot(q, q), rr = sqrt(r2);
-  vec3 L = normalize(uL), N = normalize(uN);
-  vec3 T1 = normalize(cross(N, vec3(0.0, 0.0, 1.0)));
-  vec3 T2 = cross(N, T1);
-  float cover = clamp((1.0 - rr) * uPx + 0.5, 0.0, 1.0);
-  float zs = sqrt(max(1.0 - r2, 0.0));
-
-  // ---- ring (equatorial plane) ----
-  vec3 ringCol = vec3(0.0); float ringA = 0.0; bool front = false;
-  if (uRing > 0.001) {
-    float z = -(N.x * q.x + N.y * q.y) / N.z;
-    vec3 P = vec3(q, z);
-    float rad = length(P);
-    float inside = smoothstep(1.2, 1.235, rad) * (1.0 - smoothstep(1.455, 1.485, rad));
-    float bands = 0.65 + 0.35 * sin(rad * 61.0) * sin(rad * 17.0 + 1.0);
-    float gap = 1.0 - 0.8 * (1.0 - smoothstep(0.0, 0.018, abs(rad - 1.335)));
-    float dens = inside * bands * gap;
-    float b = dot(P, L);
-    float d = sqrt(max(dot(P, P) - b * b, 0.0));
-    float sh = b < 0.0 ? 1.0 - smoothstep(0.86, 1.0, d) : 0.0;
-    float sunSide = 0.55 + 0.45 * abs(dot(N, L));
-    ringCol = mix(vec3(0.70, 0.52, 0.54), vec3(0.52, 0.34, 0.38), smoothstep(1.2, 1.48, rad)) * sunSide * mix(1.0, 0.10, sh);
-    ringA = dens * uRing;
-    front = rr < 1.0 ? z > zs : z > 0.0;
-  }
-
-  // ---- sphere ----
-  vec3 sph = vec3(0.0);
-  float glowA = 0.0; vec3 glowC = vec3(0.0);
-  if (rr < 1.08) {
-    vec3 n = vec3(q, zs);
-    vec3 o = vec3(dot(n, T1), dot(n, N), dot(n, T2));
-    float cs = cos(uRot), sn = sin(uRot);
-    o = vec3(cs * o.x + sn * o.z, o.y, -sn * o.x + cs * o.z);
-    vec3 w = o * 1.7 + uSeed;
-    float warp = fbm(w * 1.3 + 4.0);
-    float hh = fbm(w + warp * 0.9);
-    float land = smoothstep(0.47, 0.58, hh);
-    float band = sin(o.y * uBand + warp * 3.0) * 0.5 + 0.5;
-    float cloud = fbm(o * 5.0 + uSeed * 1.7 + warp);
-    vec3 ocean = mix(uA, uA * 1.7 + 0.01, band * 0.55);
-    vec3 ground = mix(uB * 0.8, uB * 1.2, band);
-    vec3 base = mix(ocean, ground, land);
-    base = mix(base, uC, smoothstep(0.62, 0.82, hh) * 0.45 + smoothstep(0.58, 0.85, cloud) * 0.16);
-    base = mix(base, uC * 1.05, smoothstep(0.84, 0.97, abs(o.y)) * 0.35);
-    float d = dot(n, L);
-    float lit = smoothstep(-0.05, 0.34, d);
-    float diff = max(d, 0.0) * (0.82 + 0.36 * hh);
-    vec3 amb = vec3(0.026, 0.012, 0.014) + uA * 0.10;
-    vec3 c = base * (amb + vec3(1.0, 0.98, 0.94) * diff * 1.08 * lit);
-    vec3 H = normalize(L + vec3(0.0, 0.0, 1.0));
-    c += uC * pow(max(dot(n, H), 0.0), 40.0) * (1.0 - land) * 0.16 * lit;
-    c += uC * smoothstep(0.0, 0.1, d) * (1.0 - smoothstep(0.1, 0.34, d)) * 0.035;
-    float fr = pow(1.0 - zs, 2.8);
-    c += vec3(0.88, 0.34, 0.36) * fr * (0.10 + 0.60 * smoothstep(-0.35, 0.55, d));
-    sph = c;
-    // thin outer atmosphere
-    float dOut = dot(vec3(q / max(rr, 0.001), 0.0), L);
-    glowA = exp(-max(rr - 1.0, 0.0) * 75.0) * smoothstep(-0.45, 0.6, dOut) * 0.42 * (1.0 - cover);
-    glowC = vec3(0.95, 0.42, 0.40);
-  }
-
-  // ---- composite (premultiplied) ----
-  vec4 o4 = vec4(0.0);
-  if (!front) o4 = vec4(ringCol * ringA, ringA);
-  o4 = vec4(sph * cover, cover) + o4 * (1.0 - cover);
-  o4 += vec4(glowC * glowA, glowA) * (1.0 - o4.a);
-  if (front) o4 = vec4(ringCol * ringA, ringA) + o4 * (1.0 - ringA);
-  o4.rgb += (h2(gl_FragCoord.xy) - 0.5) / 255.0 * o4.a;
-  gl_FragColor = o4;
-}`;
-
-// Per-section looks (red family): A deep oxblood "ocean", B garnet land, C ember highlight, band count, seed, light yaw, light pitch.
+// Per-section modulation within the active world: light yaw, light pitch, rotation offset, cloud drift offset.
 const PRESETS: number[][] = [
-  [0.136, 0.025, 0.043, 0.304, 0.086, 0.123, 0.740, 0.443, 0.407, 7, 0.0, 0.0, 0.0],
-  [0.162, 0.021, 0.051, 0.336, 0.070, 0.139, 0.757, 0.417, 0.434, 8, 0.5, 0.12, 0.0],
-  [0.119, 0.025, 0.060, 0.272, 0.078, 0.164, 0.705, 0.426, 0.478, 6, 1.1, 0.25, 0.05],
-  [0.153, 0.043, 0.034, 0.320, 0.109, 0.098, 0.757, 0.494, 0.390, 9, 1.7, 0.4, -0.05],
-  [0.145, 0.034, 0.060, 0.360, 0.117, 0.172, 0.774, 0.512, 0.530, 7, 2.3, 0.2, 0.1],
-  [0.068, 0.043, 0.047, 0.208, 0.094, 0.107, 0.740, 0.288, 0.319, 10, 2.9, -0.2, 0.08],
-  [0.102, 0.021, 0.051, 0.264, 0.062, 0.139, 0.671, 0.357, 0.460, 6, 3.5, -0.35, 0.0],
-  [0.128, 0.034, 0.034, 0.288, 0.094, 0.107, 0.722, 0.426, 0.372, 8, 4.1, -0.1, -0.08],
+  [0.0, 0.0, 0.0, 0.0],
+  [0.12, 0.0, 0.06, 0.05],
+  [0.25, 0.05, 0.13, 0.11],
+  [0.4, -0.05, 0.20, 0.17],
+  [0.2, 0.1, 0.28, 0.23],
+  [-0.2, 0.08, 0.35, 0.29],
+  [-0.35, 0.0, 0.42, 0.35],
+  [-0.1, -0.08, 0.49, 0.41],
 ];
+const NP = 4;
 const HOME_SECTIONS: [number, string][] = [
   [1, '[data-tech-stack]'], [2, '#experience'], [3, '#selected-work'], [4, 'section[aria-label="Open source"]'],
   [5, 'section[aria-label="Research"]'], [6, 'section[aria-label="Community and speaking"]'], [7, 'section[aria-label="Education"]'],
@@ -142,8 +48,10 @@ function init() {
   let rDock = 100, cxDock = vw, dockOpacity = 0.9, rHero = 250, cxHero = vw, cyHero = vh * 0.5, dockCyTop = 0;
 
   // animated state
+  let drift = 0, debugTime = -1, debugFreeze = false, debugGeo: number[] | null = null;
   let ds = 1, ps = 0, setS = 0, rot = 0.6, vel = 0, px = 0, py = 0, tx = 0, ty = 0;
   const cur = PRESETS[0].slice();
+  const blend = createBlend(themeVec(currentTheme()));
   let tgtPreset = PRESETS[0];
   let lastT = 0, lastScroll = scrollY, lastActive = performance.now();
   let navigating = false, snapNext = false;
@@ -153,6 +61,7 @@ function init() {
   const ringTilt = -0.36, ringElev = 0.32;
   const axis = [Math.sin(ringTilt) * Math.cos(ringElev), Math.cos(ringTilt) * Math.cos(ringElev), Math.sin(ringElev)];
 
+  const pageHidden = () => document.documentElement.dataset.page === 'starfield';
   const fallback = (on: boolean) => root.classList.toggle('pl-fallback', on);
 
   const setup = () => {
@@ -231,7 +140,7 @@ function init() {
 
   let moving = true;
   const draw = (t: number) => {
-    if (!gl || lost) return;
+    if (!gl || lost || pageHidden()) return;
     const dt = lastT ? clamp(t - lastT, 0.001, 1 / 30) : 0.016;
     lastT = t;
     const now = performance.now();
@@ -245,19 +154,22 @@ function init() {
     if (snapNext) {   // jump straight to the new targets: no spring travel after navigation / resize / resume
       snapNext = false;
       ds = sT; ps = pT; setS = setT; vel = 0; px = tx; py = ty;
-      for (let i = 0; i < 13; i++) cur[i] = tgtPreset[i];
+      for (let i = 0; i < NP; i++) cur[i] = tgtPreset[i];
     }
     if (reduced) { ds = 1; ps = 0.12; setS = 0; vel = 0; }
     else {
       ds = chase(ds, sT, 3.2, dt); ps = chase(ps, pT, 5, dt); setS = chase(setS, setT, 4, dt);
       vel *= Math.exp(-dt * 2.4);
       rot += (vel + (now - lastActive < 10000 ? 0.035 : 0)) * dt;
-      for (let i = 0; i < 13; i++) cur[i] = chase(cur[i], tgtPreset[i], 2.2, dt);
+      for (let i = 0; i < NP; i++) cur[i] = chase(cur[i], tgtPreset[i], 2.2, dt);
+      rot += Math.sin(Math.PI * blend.e) * (blend.active ? 2.4 : 0) * dt;   // spin-up during a world morph
+      drift += dt * 0.022;
     }
+    const blending = debugFreeze ? false : blend.step(performance.now());
     px = chase(px, tx, 6, dt); py = chase(py, ty, 6, dt);
 
     // ---- geometry ----
-    const r = lerp(rDock, rHero, 1 - ds);
+    let r = lerp(rDock, rHero, 1 - ds);
     let cx = lerp(cxDock, cxHero, 1 - ds);
     const bob = reduced ? 0 : Math.sin(ps * 14) * 0.012 * vh + Math.sin(t * 0.35) * 2.5;
     const dockCy = mobile ? dockCyTop + ps * vh * 0.22 : dockCyTop + ps * (vh * 0.52 - dockCyTop) + bob;
@@ -266,6 +178,7 @@ function init() {
       const ft = footerEl.getBoundingClientRect().top;
       cy = lerp(cy, Math.min(cy + r * 0.2, ft + r * 0.3), setS);   // sink behind the footer's top edge like a horizon
     }
+    if (debugGeo) { [cx, cy, r] = debugGeo; }
     const opacity = lerp(dockOpacity, home && !mobile ? 0.88 : dockOpacity, 1 - ds);
 
     // ---- canvas sizing (only as large as the planet) ----
@@ -289,24 +202,31 @@ function init() {
     attrib(gl, prog.a('aPos'), tri, 2);
     gl.uniform2f(prog.u('uRes'), canvas.width, canvas.height);
     gl.uniform1f(prog.u('uPx'), canvas.width / (2 * 1.55));
-    gl.uniform1f(prog.u('uRot'), rot);
-    gl.uniform1f(prog.u('uSeed'), cur[10]);
-    gl.uniform1f(prog.u('uBand'), cur[9]);
-    gl.uniform1f(prog.u('uRing'), lerp(0.42, 0.55, 1 - ds));
+    const v = blend.v;
+    gl.uniform1f(prog.u('uR'), canvas.width / 3.1);
+    gl.uniform1f(prog.u('uOct'), clamp(2.0 + 1.15 * Math.log2(Math.max(canvas.width / 3.1, 20) / 40), 3, 6));
+    gl.uniform1f(prog.u('uRot'), rot + cur[2]);
+    gl.uniform1f(prog.u('uDrift'), drift + cur[3]);
+    gl.uniform1f(prog.u('uTime'), debugTime >= 0 ? debugTime : t);
+    gl.uniform1f(prog.u('uRing'), lerp(0.30, 0.40, 1 - ds) * v[18]);
     gl.uniform3f(prog.u('uN'), axis[0], axis[1], axis[2]);
-    const yaw = cur[11] + px * 0.14, pitch = cur[12] - py * 0.1;
-    const lx = -0.62, ly = 0.46, lz = 0.63;
+    const yaw = cur[0] + px * 0.14, pitch = cur[1] - py * 0.1;
+    const lx = -0.78, ly = 0.56, lz = 0.26;   // key light from upper-left, mostly side-on: ~60% of the disc lit
     gl.uniform3f(prog.u('uL'), lx * Math.cos(yaw) + lz * Math.sin(yaw), ly + pitch, -lx * Math.sin(yaw) + lz * Math.cos(yaw));
-    gl.uniform3f(prog.u('uA'), cur[0], cur[1], cur[2]);
-    gl.uniform3f(prog.u('uB'), cur[3], cur[4], cur[5]);
-    gl.uniform3f(prog.u('uC'), cur[6], cur[7], cur[8]);
+    gl.uniform3f(prog.u('uA'), v[0], v[1], v[2]);
+    gl.uniform3f(prog.u('uB'), v[3], v[4], v[5]);
+    gl.uniform3f(prog.u('uH'), v[6], v[7], v[8]);
+    gl.uniform3f(prog.u('uE'), v[9], v[10], v[11]);
+    gl.uniform3f(prog.u('uAtm'), v[12], v[13], v[14]);
+    gl.uniform3f(prog.u('uRC'), v[15], v[16], v[17]);
+    gl.uniform4f(prog.u('uW'), v[19], v[20], v[21], v[22]);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     if (!snapped) { snapped = true; root.classList.add('pl-ready'); }
 
     // ---- keep animating while anything is still easing ----
     let diff = Math.abs(ds - sT) * 4 + Math.abs(ps - pT) * 20 + Math.abs(setS - setT) * 4 + Math.abs(vel) * 0.5 + Math.abs(px - tx) + Math.abs(py - ty);
-    for (let i = 0; i < 13; i++) diff += Math.abs(cur[i] - tgtPreset[i]) * 0.5;
-    moving = diff > 0.004 && !reduced;
+    for (let i = 0; i < NP; i++) diff += Math.abs(cur[i] - tgtPreset[i]) * 0.5;
+    moving = (diff > 0.004 || blending) && !reduced;
     if (moving) loop.invalidate();
     else if (!reduced) { vel = 0; px = tx; py = ty; }
   };
@@ -314,7 +234,7 @@ function init() {
   const loop = createRenderer(canvas, {
     resize: () => {},
     draw,
-    animated: () => !reduced && !!gl && !lost && (performance.now() - lastActive < 10000),
+    animated: () => !reduced && !!gl && !lost && !pageHidden() && (performance.now() - lastActive < 10000),
     fps: 60,
     idleFps: 12,
     get maxDpr() { return opts.maxDpr; },
@@ -330,8 +250,22 @@ function init() {
     const ft = footerEl?.getBoundingClientRect().top ?? vh * 2;
     setS = smooth(vh, vh - Math.min(vh * 0.6, (footerEl?.offsetHeight ?? 0) + 60), ft);
   }
-  cur.splice(0, 13, ...PRESETS[activePreset()]);
+  cur.splice(0, NP, ...PRESETS[activePreset()]);
   loop.measure();
+
+  watchTheme((th) => { blend.to(themeVec(th), reduced || !snapped); loop.invalidate(); }, loop.signal);
+  if (location.search.includes('debug-planet')) {
+    const idx = (id: string) => themeVec(themeById(id));
+    (window as any).__planetDebug = {
+      setTheme: (id: string) => { debugFreeze = false; blend.to(idx(id), true); loop.invalidate(); },
+      setBlend: (t: number, a: string, b: string) => { debugFreeze = true; blend.freeze(idx(a), idx(b), t); loop.invalidate(); },
+      setGeo: (cx: number, cy: number, r: number) => { debugGeo = [cx, cy, r]; loop.invalidate(); },
+      setTime: (x: number) => { debugTime = x; loop.invalidate(); },
+      setRot: (x: number) => { rot = x; loop.invalidate(); },
+      info: () => ({ oct: 0, w: canvas.width, bufCss }),
+      perf: (n = 30) => { const a: number[] = []; const g = gl!; for (let i = 0; i < n; i++) { const t0 = performance.now(); draw(performance.now() / 1000); g.finish(); a.push(performance.now() - t0); } return a; },
+    };
+  }
 
   const opt = { signal: loop.signal, passive: true } as const;
   const resync = () => {   // forget any scroll jump, zero motion, snap to the new layout
@@ -344,7 +278,7 @@ function init() {
   }, opt);
   addEventListener('resize', () => { layout(); resync(); }, opt);
   addEventListener('load', () => { layout(); resync(); }, { signal: loop.signal, once: true });
-  document.addEventListener('astro:page-load', () => { layout(); resync(); }, { signal: loop.signal });
+  document.addEventListener('astro:page-load', () => { bufCss = 0; layout(); resync(); }, { signal: loop.signal });
   document.addEventListener('astro:before-preparation', () => { navigating = true; vel = 0; }, { signal: loop.signal });
   document.addEventListener('astro:after-swap', () => { lastScroll = scrollY; vel = 0; }, { signal: loop.signal });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) resync(); }, { signal: loop.signal });

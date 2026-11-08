@@ -1,3 +1,4 @@
+import { createBlend, currentTheme, watchTheme } from './gl/themeGl';
 import { attrib, createFullscreenTriangle, createProgram, createRenderer, getGL, prefersReducedMotion, type GL, type Program } from './gl/gl';
 
 const VS = `
@@ -18,6 +19,7 @@ uniform vec4 uArm;     // right shoulder, right elbow, left shoulder, left elbow
 uniform vec4 uLeg;     // right hip, right knee, left hip, left knee
 uniform vec3 uL;
 uniform float uPulse;
+uniform vec3 uAcc;     // theme accent: visor reflection, chest light, rim light
 
 mat3 gR; mat3 gH;
 const vec3 HC = vec3(0.0, 0.80, 0.03);
@@ -141,24 +143,24 @@ vec3 shade(vec3 pw, vec3 n, float id) {
   // rim: reads against black, strongest on the sun side edge and below
   float rimF = pow(1.0 - ndv, 2.6);
   vec3 rimD = normalize(vec3(0.55, 0.15, -0.6));
-  col += vec3(1.0, 0.62, 0.56) * rimF * (0.20 + 0.55 * max(dot(n, rimD) * 0.5 + 0.5, 0.0)) * ao * 0.9;
+  col += mix(uAcc, vec3(1.0), 0.35) * rimF * (0.20 + 0.55 * max(dot(n, rimD) * 0.5 + 0.5, 0.0)) * ao * 0.9;
 
   if (visor > 0.0) {
     vec3 rw = reflect(vec3(0.0, 0.0, -1.0), n);
-    vec3 vc = vec3(0.030, 0.012, 0.022);
+    vec3 vc = uAcc * 0.04;
     float sky = smoothstep(-0.3, 0.9, rw.y);
-    vc += vec3(0.10, 0.05, 0.07) * sky * 0.8;
+    vc += uAcc * 0.11 * sky * 0.8;
     float blob = smoothstep(0.50, 0.92, dot(rw, normalize(vec3(-0.45, 0.62, 0.64))));
-    vc += vec3(0.70, 0.22, 0.28) * blob * 0.85;
+    vc += uAcc * 0.72 * blob * 0.85;
     vec2 sc = rw.xy * 26.0 + 3.0; vec2 ci = floor(sc), cf = fract(sc);
     float hh = h21(ci);
     vc += vec3(0.8, 0.9, 1.0) * step(0.90, hh) * smoothstep(0.20, 0.0, length(cf - 0.3 - 0.4 * vec2(h21(ci + 4.1), h21(ci + 9.7)))) * 0.75;
     vc += vec3(1.0, 0.94, 0.92) * pow(max(dot(rw, L), 0.0), 70.0) * 1.1;
-    vc += vec3(0.55, 0.22, 0.26) * pow(1.0 - ndv, 3.0) * 0.5;
+    vc += uAcc * 0.55 * pow(1.0 - ndv, 3.0) * 0.5;
     col = mix(col, vc, visor);
   }
   col = mix(col, vec3(0.22, 0.26, 0.33) * (0.5 + 0.5 * key), trim * 0.65);
-  col += vec3(1.0, 0.36, 0.40) * glow * (0.85 + 0.25 * uPulse);
+  col += uAcc * 1.15 * glow * (0.85 + 0.25 * uPulse);
   return col;
 }
 
@@ -226,6 +228,8 @@ function init() {
   let lastT = 0, lastScroll = scrollY, lastActive = performance.now(), navigating = false, snapNext = false, ready = false, moving = true;
   let nextWave = 9, waveStart = -99, cyS = 0, cxS = 0;
   const opts = { maxDpr: 2 };
+  const blend = createBlend([...currentTheme().gl.astronautAccent]);
+  let blending = false;
 
   const setup = () => {
     gl = getGL(canvas);
@@ -267,13 +271,16 @@ function init() {
 
   const docMax = () => Math.max(1, document.documentElement.scrollHeight - vh);
   const progress = () => clamp(scrollY / docMax());
+  const pageHidden = () => document.documentElement.dataset.page === 'starfield';
   const heroT = () => (home && !reduced ? smooth(vh * 0.04, vh * 0.7, scrollY) : 1);
 
   const sm = [0, 0, 0];   // scratch
   const draw = (t: number) => {
-    if (!gl || lost || off) return;
+    if (!gl || lost || off || pageHidden()) return;
     const dt = lastT ? clamp(t - lastT, 0.001, 1 / 30) : 0.016;
     lastT = t;
+
+    blending = blend.step();
 
     // ---- motion state ----
     const dsT = heroT(), pT = progress();
@@ -354,19 +361,20 @@ function init() {
     gl.uniform4f(prog.u('uArm'), aR, bR, aL, bL);
     gl.uniform4f(prog.u('uLeg'), lR, kR, lL, kL);
     gl.uniform3f(prog.u('uL'), -0.62, 0.46, 0.63);
+    gl.uniform3f(prog.u('uAcc'), blend.v[0], blend.v[1], blend.v[2]);
     gl.uniform1f(prog.u('uPulse'), idle * Math.sin(t * 2.2));
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     if (!ready) { ready = true; canvas.style.opacity = dockOpacity + ''; }
 
     sm[0] = Math.abs(ds - dsT) * 4 + Math.abs(ps - pT) * 20 + Math.abs(vel) * 0.5 + Math.abs(omega) + Math.abs(rollOff) + Math.abs(hx - (tx - 0.5) * 0.9) + Math.abs(hy - (ty - 0.5) * 0.7) + Math.abs(cxS - cx) * 0.05 + Math.abs(cyS - cy) * 0.05;
     moving = !reduced && sm[0] > 0.004;
-    if (moving) loop.invalidate();
+    if (moving || blending) loop.invalidate();
   };
 
   const loop = createRenderer(canvas, {
     resize: () => {},
     draw,
-    animated: () => !reduced && !!gl && !lost && !off && (performance.now() - lastActive < IDLE_MS),
+    animated: () => !reduced && !!gl && !lost && !off && !pageHidden() && (performance.now() - lastActive < IDLE_MS),
     fps: 60,
     idleFps: 30,
     get maxDpr() { return opts.maxDpr; },
@@ -380,6 +388,7 @@ function init() {
   ds = heroT();
   if (!off) loop.measure();
 
+  watchTheme((t) => { blend.to([...t.gl.astronautAccent], reduced); loop.invalidate(); }, loop.signal);
   const poke = () => { lastActive = performance.now(); loop.invalidate(); };
   const sig = { signal: loop.signal };
   const opt = { signal: loop.signal, passive: true } as const;
@@ -394,7 +403,7 @@ function init() {
   }, opt);
   addEventListener('resize', () => { layout(); resync(); }, sig);
   addEventListener('load', () => { layout(); resync(); }, { signal: loop.signal, once: true });
-  document.addEventListener('astro:page-load', () => { layout(); resync(); }, sig);
+  document.addEventListener('astro:page-load', () => { bufCss = 0; layout(); resync(); }, sig);
   document.addEventListener('astro:before-preparation', () => { navigating = true; vel = 0; omega = 0; }, sig);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) resync(); }, sig);
   document.addEventListener('astro:after-swap', () => { lastScroll = scrollY; vel = 0; omega = 0; rollOff = 0; if (!root.isConnected) loop.dispose(), delete W.__astronaut; }, sig);

@@ -7,12 +7,16 @@ import Starfield from '../components/Starfield.astro';
 import CompanionPlanet from '../components/CompanionPlanet.astro';
 import CompanionAstronaut from '../components/CompanionAstronaut.astro';
 import '../styles/global.css';
+import ThemeStyles from '../components/ThemeStyles.astro';
+import { THEMES, DEFAULT_THEME, THEME_STORAGE_KEY, themeById } from '../data/themes';
 
 interface Props {
   title?: string;
   description?: string;
   image?: string;
   noindex?: boolean;
+  /** Page flag exposed as <html data-page>; the starfield page uses it to hide the companions. */
+  page?: string;
 }
 
 // Subtle depth transition: the old page recedes (scale .985 + fade), the new one settles in (1.015 -> 1).
@@ -21,6 +25,9 @@ const pair = {
   new: { name: 'vt-depth-in', duration: '0.4s', easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fillMode: 'backwards' },
 };
 const depth = { forwards: pair, backwards: pair };
+
+// Runs before first paint (and again after each ClientRouter swap, which replaces <html> attributes).
+const themeInit = `(function(){var ids=${JSON.stringify(THEMES.map((t) => t.id))},k=${JSON.stringify(THEME_STORAGE_KEY)},d=${JSON.stringify(DEFAULT_THEME)},c=${JSON.stringify(Object.fromEntries(THEMES.map((t) => [t.id, t.palette.paper])))};function a(){var t=d;try{var s=localStorage.getItem(k);if(s&&ids.indexOf(s)>-1)t=s}catch(e){}document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',c[t])}a();document.addEventListener('astro:after-swap',a)})();`;
 
 const home = await getEntry('pages', 'home');
 const profile = home?.data;
@@ -56,7 +63,7 @@ const structuredData = {
 ---
 
 <!doctype html>
-<html lang="en" transition:animate="none">
+<html lang="en" data-theme={DEFAULT_THEME} data-page={Astro.props.page} transition:animate="none">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
@@ -65,7 +72,9 @@ const structuredData = {
     <meta name="description" content={description} />
     {Astro.props.noindex && <meta name="robots" content="noindex, nofollow, noarchive" />}
     <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#0d0b0e" />
+    <meta name="theme-color" content={themeById(DEFAULT_THEME).palette.paper} />
+    <script is:inline set:html={themeInit}></script>
+    <ThemeStyles />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonical} />
     <meta property="og:type" content="website" />
@@ -92,6 +101,9 @@ const structuredData = {
     <Header name={name} />
     <main id="main-content" transition:name="page-content" transition:animate={depth}><slot /></main>
     <Footer name={name} email={profile?.email} githubUrl={profile?.githubUrl} linkedinUrl={profile?.linkedinUrl} xUrl={profile?.xUrl} />
+    <script>
+      import '../scripts/theme';
+    </script>
     <script>
       // Scale origin for the page-depth transition: the viewport centre, in each snapshot's own coordinates.
       const mainEl = () => document.getElementById('main-content');

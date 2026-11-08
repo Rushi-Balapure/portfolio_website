@@ -1,0 +1,168 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { THEMES, type RGB } from '../data/themes';
+
+const css = (c: RGB, k = 1) => `rgb(${c.map((x) => Math.round(Math.min(1, x * k) * 255)).join(' ')})`;
+const disc = (t: (typeof THEMES)[number]) => {
+  const g = t.gl;
+  return `radial-gradient(circle at 32% 28%, ${css(g.highlight, 0.95)} 0%, ${css(g.surfaceB)} 34%, ${css(g.surfaceA)} 66%, ${css(g.surfaceA, 0.35)} 100%)`;
+};
+const glow = (t: (typeof THEMES)[number]) => `0 0 2.2rem ${css(t.gl.atmosphere, 0.35)}, inset -0.7rem -0.5rem 1.2rem ${css(t.gl.emissive, 0.25)}`;
+---
+
+<BaseLayout
+  title="Starfield"
+  description="An interactive spiral galaxy with the four site-theme planets: orbit, zoom, fly to a world, spin it and pick it as the site theme."
+  page="starfield"
+>
+  <section class="sf" data-sf aria-labelledby="sf-title">
+    <h1 id="sf-title" class="sf-sr">Starfield</h1>
+    <p class="sf-sr">An interactive galaxy with four planets. Use Tab to reach a planet, Enter to visit it, arrow keys to spin it, plus and minus to zoom, Escape to return.</p>
+
+    <canvas class="sf-canvas" data-sf-canvas aria-hidden="true"></canvas>
+
+    <div class="sf-intro" data-sf-intro>
+      <p class="eyebrow">Starfield</p>
+      <p class="sf-line">Four worlds in one galaxy. Drag to look around, pick a planet to fly there.</p>
+    </div>
+
+    <div class="sf-overlay" data-sf-overlay>
+      {THEMES.map((t) => <button type="button" class="sf-planet" data-sf-planet={t.id} aria-label={`Visit ${t.name}`}></button>)}
+    </div>
+
+    <div class="sf-label" data-sf-label aria-hidden="true"><strong data-sf-label-name></strong><span data-sf-label-kind></span></div>
+
+    <aside class="sf-panel" data-sf-panel aria-label="Planet details" hidden>
+      <p class="eyebrow" data-sf-kind></p>
+      <h2 class="sf-name" data-sf-name></h2>
+      <p class="sf-fact" data-sf-fact></p>
+      <p class="sf-source" data-sf-source-wrap hidden>Source: <a data-sf-source target="_blank" rel="noreferrer"></a></p>
+      <div class="sf-actions">
+        <button type="button" class="button" data-sf-use></button>
+        <div class="sf-nav">
+          <button type="button" class="button button--quiet" data-sf-prev aria-label="Previous planet">‹ Prev</button>
+          <button type="button" class="button button--quiet" data-sf-next aria-label="Next planet">Next ›</button>
+        </div>
+        <button type="button" class="button button--quiet" data-sf-back>Back to galaxy</button>
+      </div>
+      <p class="sf-hint">Drag to spin · scroll or pinch to zoom · double-click to reset · Esc to go back</p>
+    </aside>
+
+    <ul class="sf-fallback" data-sf-fallback aria-label="Planets">
+      {THEMES.map((t) => (
+        <li class="sf-card">
+          <span class="sf-disc" style={`background:${disc(t)};box-shadow:${glow(t)}`} aria-hidden="true"></span>
+          <div>
+            <h2 class="sf-card-name">{t.name}</h2>
+            <p class="sf-card-kind">{t.kind}</p>
+            <p class="sf-card-fact">{t.fact}</p>
+            {t.source && <p class="sf-card-fact">Source: <a href={t.source.url} target="_blank" rel="noreferrer">{t.source.label}</a></p>}
+            <button type="button" class="button" data-use-theme={t.id}>Use this theme</button>
+          </div>
+        </li>
+      ))}
+    </ul>
+
+    <p class="sf-live sf-sr" data-sf-live aria-live="polite"></p>
+
+    <p class="sf-credit" data-sf-credit hidden></p>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  html[data-page='starfield'] { overflow: hidden; }
+  html[data-page='starfield'] footer { display: none; }
+  html[data-page='starfield'] main { min-height: 0; }
+
+  .sf {
+    position: fixed; z-index: 1; inset: var(--header-height) 0 0 0; overflow: hidden;
+    background: var(--paper); color: var(--ink);
+  }
+  .sf-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .sf-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; outline: none; }
+  .sf-canvas.is-dragging { cursor: grabbing; }
+  .sf-canvas.is-hover { cursor: pointer; }
+
+  .sf-intro { position: absolute; top: clamp(0.9rem, 2.5vw, 1.5rem); left: clamp(1rem, 3vw, 2rem); max-width: min(26rem, 70vw); pointer-events: none; transition: opacity 0.5s var(--ease); }
+  .sf-intro .eyebrow { margin: 0 0 0.35rem; }
+  .sf-line { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.45; text-shadow: 0 1px 8px var(--paper); }
+  .sf[data-mode='focus'] .sf-intro { opacity: 0; }
+  /* entry zoom-out: copy and labels wait until the pull-back is mostly done */
+  .sf[data-intro] .sf-intro, .sf[data-intro] .sf-label { opacity: 0; transition-duration: 0s; }
+  .sf:not([data-intro]) .sf-intro { transition-duration: 0.9s; }
+  .sf[data-intro] .sf-canvas { animation: sf-intro-in 0.9s ease-out both; }
+  @keyframes sf-intro-in { from { opacity: 0; } }
+
+  .sf-overlay { position: absolute; inset: 0; pointer-events: none; }
+  .sf-planet {
+    position: absolute; top: 0; left: 0; display: none; padding: 0; margin: 0; background: transparent; border: 0; border-radius: 50%;
+    pointer-events: none; will-change: transform;
+  }
+  .sf-planet.is-on { display: block; }
+  .sf-planet:focus-visible { outline: 2px solid var(--link); outline-offset: 5px; }
+
+  .sf-label {
+    position: absolute; top: 0; left: 0; display: none; padding: 0.4rem 0.65rem; pointer-events: none; text-align: center;
+    background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: 8px;
+    font-size: 0.82rem; line-height: 1.25; white-space: nowrap; will-change: transform;
+  }
+  .sf-label.is-on { display: block; }
+  .sf-label strong { display: block; color: var(--ink); font-weight: 600; }
+  .sf-label span { color: var(--muted); font-size: 0.72rem; }
+
+  .sf-panel {
+    position: absolute; right: clamp(0.75rem, 2vw, 1.5rem); top: 50%; z-index: 2; width: min(22.5rem, calc(100% - 1.5rem)); max-height: calc(100% - 2rem); overflow: auto;
+    padding: 1.3rem 1.3rem 1.1rem; background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); border-radius: var(--radius);
+    backdrop-filter: blur(14px) saturate(130%); box-shadow: 0 1.2rem 3rem var(--shadow);
+    opacity: 0; transform: translateY(-46%); transition: opacity 0.45s var(--ease) 0.5s, transform 0.45s var(--ease) 0.5s;
+  }
+  .sf-panel.is-open { opacity: 1; transform: translateY(-50%); }
+  .sf-panel[hidden] { display: none; }
+  .sf-panel .eyebrow { margin-bottom: 0.5rem; }
+  .sf-name { margin: 0 0 0.6rem; font-size: clamp(1.5rem, 3vw, 1.9rem); line-height: 1.15; }
+  .sf-fact { margin: 0 0 0.6rem; color: var(--muted); font-size: 0.95rem; line-height: 1.55; }
+  .sf-source { margin: 0 0 1rem; font-size: 0.85rem; color: var(--muted); }
+  .sf-source a { color: var(--link); }
+  .sf-actions { display: grid; gap: 0.6rem; }
+  .sf-actions .button { min-height: 2.6rem; width: 100%; }
+  .sf-actions .button[aria-pressed='true'] { cursor: default; background: transparent; color: var(--accent); transform: none; }
+  .sf-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .sf-hint { margin: 0.85rem 0 0; color: var(--muted); font-size: 0.72rem; line-height: 1.4; opacity: 0.85; }
+
+  .sf-credit {
+    position: absolute; left: clamp(1rem, 3vw, 2rem); bottom: 0.6rem; z-index: 1; max-width: min(36rem, calc(100% - 2rem)); margin: 0;
+    color: var(--muted); font-size: 0.68rem; line-height: 1.4; opacity: 0.8;
+  }
+  .sf-credit a { color: inherit; text-decoration-color: var(--line); text-underline-offset: 2px; }
+  .sf-credit a:hover { color: var(--link); }
+
+  .sf-fallback { position: absolute; inset: 0; display: none; margin: 0; padding: 7rem clamp(1rem, 4vw, 3rem) 3rem; list-style: none; overflow: auto; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1.25rem; align-content: start; }
+  .sf[data-fallback] .sf-fallback { display: grid; }
+  .sf[data-fallback] .sf-canvas, .sf[data-fallback] .sf-overlay, .sf[data-fallback] .sf-panel, .sf[data-fallback] .sf-label { display: none; }
+  .sf-card { display: flex; gap: 1.1rem; align-items: flex-start; padding: 1.2rem; background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); border-radius: var(--radius); }
+  .sf-disc { flex: none; width: 5.5rem; aspect-ratio: 1; border-radius: 50%; }
+  .sf-card-name { margin: 0; font-size: 1.2rem; }
+  .sf-card-kind { margin: 0.1rem 0 0.5rem; color: var(--accent); font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .sf-card-fact { margin: 0 0 0.6rem; color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+  .sf-card .button { min-height: 2.5rem; }
+  .sf-card .button[aria-pressed='true'] { background: transparent; color: var(--accent); cursor: default; transform: none; }
+
+  @media (max-width: 899px) {
+    .sf-panel { top: auto; right: 0.75rem; bottom: 2.4rem; left: 0.75rem; width: auto; max-height: 52%; padding: 1rem; transform: translateY(8%); }
+    .sf-panel.is-open { transform: none; }
+    .sf-hint { display: none; }
+    .sf-fact { font-size: 0.88rem; margin-bottom: 0.4rem; }
+    .sf-actions { grid-template-columns: 1fr 1fr; }
+    .sf-actions > .button:first-child, .sf-actions > .button:last-child { grid-column: 1 / -1; }
+    .sf-nav { display: contents; }
+    .sf-actions .button { min-height: 2.4rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sf-panel { transition: opacity 0.2s linear; transform: translateY(-50%); }
+    @media (max-width: 899px) { .sf-panel { transform: none; } }
+  }
+</style>
+
+<script>
+  import '../scripts/starfield-galaxy';
+</script>

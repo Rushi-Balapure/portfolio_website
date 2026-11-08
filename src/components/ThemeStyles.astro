@@ -1,0 +1,20 @@
+---
+import { THEMES } from '../data/themes';
+
+// One rule block per planet theme, mapping its palette onto the site's colour tokens.
+const css = THEMES.map(({ id, palette: p }) => `:root[data-theme="${id}"]{
+--paper:${p.paper};--visual-bg:${p.paper};--footer-bg:${p.paper};
+--surface:${p.surface};--menu-bg:${p.surface};
+--raised:${p.raised};--card-hover:${p.raised};--accent-soft:${p.raised};
+--ink:${p.ink};--prose:${p.ink};--footer-text:${p.ink};
+--muted:${p.muted};--footer-muted:${p.muted};
+--line:${p.line};--footer-line:${p.line};--profile-border:${p.line};
+--accent:${p.primary};--green:${p.primary};--footer-accent:${p.primary};--footer-button-bg:${p.primary};
+--secondary:${p.secondary};--burgundy:${p.secondary};
+--link:${p.accent};--coral:${p.accent};--footer-link:${p.accent};--link-decoration:${p.accent}b3;
+--accent-glow:${p.glow};
+--on-accent:${p.paper};--button-text:${p.paper};--footer-button-text:${p.paper};--selection-text:${p.paper};
+}`).join('\n');
+---
+
+<style is:inline set:html={css}></style>

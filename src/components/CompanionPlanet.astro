@@ -10,8 +10,8 @@
   .planet::before {
     position: absolute; top: 22vh; right: -3vw; width: 16vw; aspect-ratio: 1; border-radius: 50%; content: '';
     background:
-      radial-gradient(circle at 30% 26%, #7a3340 0%, #4a1a27 34%, #240d15 62%, #0b0608 86%);
-    box-shadow: inset -0.4vw -0.2vw 1.2vw rgba(255, 77, 90, 0.16), 0 0 0.5vw rgba(255, 77, 90, 0.09);
+      radial-gradient(circle at 30% 26%, color-mix(in srgb, var(--accent) 45%, var(--paper)) 0%, color-mix(in srgb, var(--accent) 22%, var(--paper)) 34%, color-mix(in srgb, var(--accent) 8%, var(--paper)) 62%, var(--paper) 86%);
+    box-shadow: inset -0.4vw -0.2vw 1.2vw color-mix(in srgb, var(--accent) 16%, transparent), 0 0 0.5vw color-mix(in srgb, var(--accent) 9%, transparent);
     opacity: 0.9;
   }
   .planet.pl-ready:not(.pl-fallback)::before { display: none; }
