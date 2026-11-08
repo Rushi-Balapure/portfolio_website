@@ -374,7 +374,7 @@ function init() {
   const loop = createRenderer(canvas, {
     resize: () => {},
     draw,
-    animated: () => !reduced && !!gl && !lost && !off && !pageHidden() && (.now() - lastActive < IDLE_MS),
+    animated: () => !reduced && !!gl && !lost && !off && !pageHidden() && (performance.now() - lastActive < IDLE_MS),
     fps: 60,
     idleFps: 30,
     get maxDpr() { return opts.maxDpr; },
