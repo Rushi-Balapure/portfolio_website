@@ -94,8 +94,9 @@ float cloudDens(vec3 c, float nOct) {
   float band2 = 0.5 + 0.5 * sin(latw * 31.0 + sw.z * 8.0);
   float cd = fbmn(c * vec3(3.0, 4.2, 3.0) + sw * 3.2, nOct);
   float dens = cd * 0.70 + band * 0.30 + band2 * 0.10 - 0.07;
+  if (nOct > 4.5) dens += (fbmn(c * 15.0 + sw * 4.0, 3.0) - 0.5) * 0.11;   // fine edge breakup
   gCd = smoothstep(0.62, 0.80, dens);
-  return smoothstep(0.50, 0.64, dens);
+  return smoothstep(0.53, 0.605, dens);
 }
 
 vec3 wPandora() {
@@ -132,20 +133,20 @@ vec3 wPandora() {
   if (lit0 > 0.01 && uOct > 3.5) cshadow = cloudDens(gOc + gLoc * 0.05, 4.0);
   surf *= 1.0 - cshadow * 0.5 * (1.0 - cloud);
 
-  float wr = wrapd(d, 0.10);
-  float day = smoothstep(-0.30, 0.55, d);
-  vec3 ambL = lin(uAtm) * 0.020 + vec3(0.002, 0.004, 0.006);
-  vec3 col = lin(surf) * (ambL + vec3(1.0, 0.98, 0.94) * wr * 1.10);
+  float wr = wrapd(d, 0.17);
+  float day = smoothstep(-0.18, 0.5, d);
+  vec3 ambL = lin(uAtm) * 0.010 + vec3(0.002, 0.004, 0.007);
+  vec3 col = lin(surf) * (ambL + vec3(1.0, 0.98, 0.94) * wr * 1.12);
   // twilight band
-  col += lin(uAtm) * smoothstep(-0.04, 0.05, d) * (1.0 - smoothstep(0.05, 0.28, d)) * 0.07 * (1.0 - cloud);
+  col += lin(uAtm) * smoothstep(-0.10, 0.02, d) * (1.0 - smoothstep(0.02, 0.26, d)) * 0.10 * (1.0 - cloud);
   // sun glint on the sea
   vec3 H = normalize(normalize(uL) + vec3(0.0, 0.0, 1.0));
   float nh = max(dot(n, H), 0.0);
   float fres = 0.02 + 0.98 * pow(1.0 - zs, 5.0);
-  float glint = (pow(nh, 160.0) * 1.9 + pow(nh, 24.0) * 0.20) * (1.0 - land) * (1.0 - cloud) * (0.4 + fres) * smoothstep(0.0, 0.2, d);
+  float glint = (pow(nh, 160.0) * 1.9 + pow(nh, 24.0) * 0.20) * (1.0 - 0.6 * land) * (1.0 - cloud) * (0.4 + fres) * smoothstep(0.0, 0.2, d);
   col += vec3(1.0, 0.97, 0.88) * glint;
   // cloud layer
-  vec3 cl = lin(uH) * (0.05 + 1.10 * wrapd(d, 0.22)) * (0.50 + 0.55 * cdet);
+  vec3 cl = lin(uH) * (0.02 + 1.10 * wrapd(d, 0.17)) * (0.50 + 0.55 * cdet);
   cl = mix(cl * vec3(0.78, 0.9, 1.05), cl, smoothstep(0.0, 0.5, d));
   cl += lin(uAtm) * 0.015;
   col = mix(col, cl, cloud * (0.50 + 0.45 * cdet));
@@ -157,7 +158,7 @@ vec3 wPandora() {
   col = mix(col, at * (0.10 + 0.5 * day), pow(lm, 1.3) * 0.16 * (0.3 + day));
 
   // bioluminescence on the night side
-  float nightF = 1.0 - smoothstep(-0.10, 0.36, d);
+  float nightF = 1.0 - smoothstep(-0.20, 0.05, d);
   if (nightF > 0.004 && uOct > 2.5) {
     float coast = exp(-abs(h - 0.535) * 26.0);
     float forest = land * smoothstep(0.28, 0.70, mott) * (0.55 + 0.45 * smoothstep(0.545, 0.62, h));
@@ -231,15 +232,15 @@ vec3 wCobalt() {
   c = mix(c, mix(uB, uH, 0.35 + 0.5 * arm2), m2 * 0.7 * step(0.0, dot(o, s2)));
 
   // tidally locked: bright, slightly washed day side; very dark night side
-  float wr = wrapd(d, 0.30);
-  float day = smoothstep(-0.25, 0.55, d);
-  vec3 col = lin(c) * (0.010 + 1.25 * wr);
+  float wr = wrapd(d, 0.17);
+  float day = smoothstep(-0.20, 0.55, d);
+  vec3 col = lin(c) * (vec3(0.007, 0.009, 0.013) + 1.30 * wr);
   col = mix(col, lin(uH) * 0.55 * wr, 0.14 * day);
   // glassy highlight
   vec3 H = normalize(normalize(uL) + vec3(0.0, 0.0, 1.0));
   col += lin(uAtm) * pow(max(dot(n, H), 0.0), 50.0) * 0.22 * day;
   // faint deep-red thermal glow on the night side
-  float nightF = 1.0 - smoothstep(-0.10, 0.34, d);
+  float nightF = 1.0 - smoothstep(-0.18, 0.12, d);
   vec3 therm = lin(uE) * vec3(1.0, 0.9, 0.9) * 2.6 * (0.55 + 0.9 * (1.0 - v) + 0.5 * (streak - 0.5));
   col += therm * nightF;
   // silicate haze + strong blue rim scattering
@@ -261,44 +262,63 @@ vec3 wLava() {
   float cr = fbmn(p * 2.6, 5.0);
   float fine = fbmn(p * 15.0, 3.0);
   float cH = craters(p * 5.0) + 0.6 * craters(p * 11.0 + 3.0);
-  vec3 crust = mix(uA, uB, smoothstep(0.36, 0.68, cr)) * (0.70 + 0.55 * fine) * (1.0 + 0.55 * cH);
+  // black / charcoal basalt: desaturated dark grey with only a faint brown cast from the palette
+  vec3 crust = mix(vec3(0.10, 0.10, 0.108), vec3(0.26, 0.255, 0.26), smoothstep(0.34, 0.70, cr));
+  crust = mix(crust, crust * (uB * 5.0 + 0.4), 0.12) * (0.65 + 0.6 * fine) * (1.0 + 0.5 * cH);
 
   float tm = uTime * 0.35;
   vec3 pw = p + 0.65 * (vec3(fbmn(p * 1.3 + vec3(1.7, 9.2, 3.1), 3.0), fbmn(p * 1.3 + vec3(8.3, 2.8, 5.1), 3.0), fbmn(p * 1.3 + vec3(4.1, 6.6, 7.7), 3.0)) - 0.5);
   pw += 0.012 * sin(vec3(tm * 1.7, tm * 1.3, tm * 2.1) + pw.yzx * 7.0);   // heat shimmer
+
+  // ridged-noise cracks: width varies along the crack and tapers to nothing
   float rid = 1.0 - abs(2.0 * fbmn(pw * 1.7, 5.0) - 1.0);
-  float major = smoothstep(0.935, 0.988, rid);
-  float halo = smoothstep(0.86, 0.97, rid);
-  float fis2 = 0.0;
-  if (uOct > 3.3) { float r2 = 1.0 - abs(2.0 * fbmn(pw * 4.8 + 7.0, 4.0) - 1.0); fis2 = smoothstep(0.965, 0.995, r2) * 0.55; }
-  float fis = max(major, fis2);
+  float wv = fbmn(pw * 2.3 + 11.0, 3.0);
+  float wid = 0.004 + 0.062 * smoothstep(0.38, 0.72, wv);
+  float xr = clamp((rid - (1.0 - wid)) / wid, 0.0, 1.0);          // 0 at the crack edge, 1 on its centreline
+  float bleed = pow(clamp((rid - (1.0 - wid * 6.0)) / (wid * 6.0), 0.0, 1.0), 2.5) * smoothstep(0.01, 0.045, wid);
+  float xr2 = 0.0;
+  if (uOct > 3.3) {
+    float r2 = 1.0 - abs(2.0 * fbmn(pw * 4.8 + 7.0, 4.0) - 1.0);
+    float w2 = 0.003 + 0.020 * smoothstep(0.35, 0.75, fbmn(pw * 5.5 + 2.0, 3.0));
+    xr2 = clamp((r2 - (1.0 - w2)) / w2, 0.0, 1.0) * 0.5;
+  }
+  float cx = max(xr, xr2);
 
   // offset hot spot: the substellar point rotated ~40 degrees around the view's vertical axis
   float hc = 0.76, hs_ = 0.65;
   vec3 hdir = normalize(vec3(normalize(uL).x * hc + normalize(uL).z * hs_, normalize(uL).y, -normalize(uL).x * hs_ + normalize(uL).z * hc));
   float hm = dot(n, hdir);
-  float sea = smoothstep(0.74, 0.97, hm + (fbmn(p * 2.4 + 3.0, 5.0) - 0.5) * 0.45);
-  float plates = smoothstep(0.50, 0.63, fbmn(pw * 3.1 + 1.0, 5.0));
-  float seaE = sea * (1.0 - plates * 0.82);
-  float temp = smoothstep(0.2, 1.0, sea * (1.0 - plates * 0.5) + 0.1 * (fbmn(p * 6.0, 3.0) - 0.5));
+  float sea = smoothstep(0.76, 0.97, hm + (fbmn(p * 2.4 + 3.0, 5.0) - 0.5) * 0.45);
+  float pn = fbmn(pw * 3.1 + 1.0, 5.0);
+  float plates = smoothstep(0.50, 0.535, pn);                       // dark floating crust plates
+  float plateEdge = exp(-abs(pn - 0.50) * 38.0);                    // glowing seams around each plate
+  float seaE = sea * (1.0 - plates);
+  float conv = fbmn(pw * 9.0 + vec3(tm * 0.35, 0.0, tm * 0.2), 4.0);  // convection mottling in the melt
 
-  float wr = wrapd(d, 0.05);
+  float wr = wrapd(d, 0.15);
   float dayK = smoothstep(-0.05, 0.4, d);
-  vec3 col = lin(crust * 1.3) * (0.015 + 0.50 * wr);
-  col += lin(uE) * smoothstep(0.4, 0.95, hm) * 0.03 * (1.0 - fis);   // crust glowing dully near the hot spot
+  vec3 col = lin(crust) * (vec3(0.010, 0.012, 0.016) + 2.0 * wr * vec3(0.95, 0.97, 1.0));   // dark rock under starlight
+  col += lin(uE) * smoothstep(0.4, 0.95, hm) * 0.012 * (1.0 - cx);
 
   float shim = 1.0 + 0.06 * sin(uTime * 2.6 + fbmn(p * 5.0, 2.0) * 18.0);
-  float fk = mix(1.45, 0.95, dayK);                     // fissures strongest at night
-  vec3 em = lin(uE) * (fis * 1.25 + halo * 0.07) * fk;
-  em += lin(mix(uE, uH, 0.4)) * fis * fis * 0.6 * fk;
-  vec3 lavaC = mix(lin(uE) * 1.0, lin(vec3(1.0, 0.74, 0.32)) * 1.6, smoothstep(0.55, 1.0, temp));
-  em += lavaC * seaE * 0.85 + lin(uE) * 0.45 * sea * plates * (fis + halo * 0.5);
+  float fk = mix(1.5, 1.0, dayK);                                   // fissures strongest at night
+  vec3 red = vec3(0.55, 0.035, 0.0), org = lin(uE) * 1.1, hot = vec3(1.6, 1.25, 0.65);
+  vec3 vein = mix(red, org, smoothstep(0.0, 0.45, cx));
+  vein = mix(vein, hot, smoothstep(0.62, 1.0, cx));
+  vec3 em = vein * smoothstep(0.0, 0.12, cx) * (0.55 + 0.9 * cx) * 1.3 * fk;
+  em += lin(mix(uE, red, 0.35)) * bleed * 0.22 * fk * (1.0 - cx);   // faint glow bleeding into the crust
+  float temp = clamp(0.05 + 0.65 * conv + 0.35 * (hm - 0.75), 0.0, 1.0);
+  vec3 lavaC = mix(red * 1.3, org * 1.2, smoothstep(0.15, 0.55, temp));
+  lavaC = mix(lavaC, hot * 0.9, smoothstep(0.62, 0.98, temp));
+  em += lavaC * seaE * 0.8;
+  em += mix(org, hot, 0.4) * plateEdge * sea * 0.6;
+  em += red * 0.12 * sea * plates * cx;                    // plates are cracked and red-lit from below
   col += em * shim;
 
   // thin orange heat-haze limb
   float lm = 1.0 - zs;
   vec3 at = lin(uAtm);
-  col += at * (pow(lm, 3.6) * 0.8 + pow(lm, 9.0) * 1.1) * (0.38 + 0.8 * dayK);
+  col += at * (pow(lm, 4.5) * 0.4 + pow(lm, 10.0) * 1.0) * (0.22 + 0.8 * dayK);
   return col;
 }
 
@@ -326,12 +346,12 @@ vec3 wMagenta() {
   c *= 0.92 + 0.16 * fbmn(o * 9.0 + 2.0, 3.0);
   c *= 1.0 - 0.28 * smoothstep(0.78, 0.98, abs(o.y));   // dusky poles
 
-  float wr = wrapd(d, 0.22);
-  float day = smoothstep(-0.3, 0.5, d);
+  float wr = wrapd(d, 0.17);
+  float day = smoothstep(-0.2, 0.5, d);
   c = mix(c, vec3(dot(c, vec3(0.3, 0.5, 0.2))), 0.16);
-  vec3 col = lin(c) * (0.020 + 0.92 * wr);
+  vec3 col = lin(c) * (0.012 + 0.96 * wr);
   // young and warm: self-emission, strongest on the night side, belts glow a little more
-  float nightF = 1.0 - smoothstep(-0.10, 0.30, d);
+  float nightF = 1.0 - smoothstep(-0.18, 0.12, d);
   vec3 em = lin(uE) * (0.55 + 0.9 * (1.0 - v)) * (0.35 + 0.65 * (streak * 0.5 + 0.5));
   col += em * (0.30 + 0.9 * nightF) * 1.1;
   // ring shadow on the planet
@@ -622,7 +642,7 @@ function init() {
     gl.uniform1f(prog.u('uRing'), lerp(0.30, 0.40, 1 - ds) * v[18]);
     gl.uniform3f(prog.u('uN'), axis[0], axis[1], axis[2]);
     const yaw = cur[0] + px * 0.14, pitch = cur[1] - py * 0.1;
-    const lx = -0.62, ly = 0.46, lz = 0.63;
+    const lx = -0.78, ly = 0.56, lz = 0.26;   // key light from upper-left, mostly side-on: ~60% of the disc lit
     gl.uniform3f(prog.u('uL'), lx * Math.cos(yaw) + lz * Math.sin(yaw), ly + pitch, -lx * Math.sin(yaw) + lz * Math.cos(yaw));
     gl.uniform3f(prog.u('uA'), v[0], v[1], v[2]);
     gl.uniform3f(prog.u('uB'), v[3], v[4], v[5]);
