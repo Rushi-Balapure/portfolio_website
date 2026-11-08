@@ -1,3 +1,5 @@
+import { createBlend, currentTheme, watchTheme } from './gl/themeGl';
+import type { PlanetTheme } from '../data/themes';
 import { attrib, createFullscreenTriangle, createProgram, createRenderer, getGL, prefersReducedMotion, type GL, type Program } from './gl/gl';
 
 const STAR_VS = `
@@ -78,12 +80,13 @@ void main() {
 const WARP_FS = `
 precision mediump float;
 uniform float uAlpha;
+uniform vec3 uWarp, uWarpT;
 varying float vAcross, vHalfW, vAlong, vB;
 void main() {
   float edge = 1.0 - smoothstep(vHalfW - 0.4, vHalfW + 0.8, abs(vAcross));
   float along = 1.0 - vAlong;                       // 1 at head, 0 at tail
   float a = edge * (0.04 + 0.96 * along * along) * vB * uAlpha;
-  vec3 col = mix(vec3(1.0, 0.80, 0.78), vec3(1.0, 0.97, 0.95), along);
+  vec3 col = mix(uWarpT, uWarp, along);
   gl_FragColor = vec4(col * a, a);
 }`;
 
@@ -92,23 +95,25 @@ const FX_FS = `
 precision mediump float;
 uniform vec2 uRes;
 uniform float uVig, uGlow;
+uniform vec3 uWarp;
 void main() {
   vec2 q = (gl_FragCoord.xy / uRes - 0.5) * vec2(uRes.x / uRes.y, 1.0);
   float r = length(q);
   float vig = smoothstep(0.3, 0.95, r) * uVig;
   float g = exp(-r * r * 22.0) * uGlow;
-  gl_FragColor = vec4(vec3(1.0, 0.90, 0.88) * g, min(1.0, vig + g));
+  gl_FragColor = vec4(uWarp * g, min(1.0, vig + g));
 }`;
 
 const VS_TRI = `
 attribute vec2 aPos;
 void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
 
-// Low-resolution nebula: a few very faint fbm clouds (crimson + burgundy).
+// Low-resolution nebula: a few very faint fbm clouds tinted by the active theme (nebulaA / nebulaB).
 const NEBULA_FS = `
 precision mediump float;
 uniform vec2 uRes;
 uniform float uTime, uScroll;
+uniform vec3 uNA, uNB;
 float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float n(vec2 p) {
   vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -128,7 +133,7 @@ void main() {
   vec2 q = vec2(uv.x, uv.y + s);
   float crim = cloud(q + vec2(t, 0.0), vec2(0.08 * asp, 0.55), 0.75, 3.0) + 0.6 * cloud(q - vec2(t, 0.0), vec2(0.95 * asp, 0.12 + s * 0.5), 0.55, 11.0);
   float vio = cloud(q + vec2(0.0, t), vec2(0.85 * asp, 0.92), 0.8, 21.0) + 0.7 * cloud(q - vec2(t, 0.0), vec2(0.35 * asp, 0.15), 0.6, 33.0);
-  vec3 c = vec3(1.0, 0.30, 0.36) * crim * 0.045 + vec3(0.70, 0.12, 0.34) * vio * 0.05;
+  vec3 c = uNA * crim * 0.045 + uNB * vio * 0.05;
   gl_FragColor = vec4(c, 1.0);
 }`;
 
@@ -188,6 +193,10 @@ function init() {
   let lastX = innerWidth / 2, lastY = innerHeight / 2, speed = 0, travel = 0, lastFrame = 0, cx = 0.5, cy = 0.5;
   const debug = location.search.includes('debug-warp');
   let frozen = false;
+  // theme colours: nebulaA(3) nebulaB(3) warp(3); tail tint of the warp streaks is the warp colour nudged toward nebulaA
+  const themeVec = (t: PlanetTheme) => [...t.gl.nebulaA, ...t.gl.nebulaB, ...t.gl.warp];
+  const blend = createBlend(themeVec(currentTheme()));
+  let blending = false;
   const mobile = matchMedia('(pointer: coarse)').matches || innerWidth < 720;
   const WARP_N = mobile ? 350 : 800, VMAX = 7;
   const profile = () => (window as any).__sfProfile as number[] | undefined;
@@ -279,6 +288,9 @@ function init() {
     if (!gl || lost) return;
     const t0 = profile() ? performance.now() : 0;
     const time = reduced ? 0 : t, sc = reduced ? 0 : scroll;
+    blending = blend.step();
+    if (blending) loop.invalidate();
+    const tv = blend.v;
     const dt = lastFrame ? Math.min(0.05, t - lastFrame) : 0.016;
     lastFrame = speed > 0 || warpPhase ? t : 0;
     stepWarp(dt);
@@ -296,6 +308,8 @@ function init() {
     gl.uniform2f(neb.u('uRes'), lw, lh);
     gl.uniform1f(neb.u('uTime'), time);
     gl.uniform1f(neb.u('uScroll'), sc);
+    gl.uniform3f(neb.u('uNA'), tv[0], tv[1], tv[2]);
+    gl.uniform3f(neb.u('uNB'), tv[3], tv[4], tv[5]);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     // Pass 2: upscale (linear) + dither onto the canvas, then stars on top.
@@ -333,12 +347,15 @@ function init() {
       gl.uniform1f(wrp.u('uFocal'), Math.hypot(cssW, cssH) * 0.25);
       gl.uniform1f(wrp.u('uTravel'), travel);
       gl.uniform1f(wrp.u('uSpeed'), speed);
+      gl.uniform3f(wrp.u('uWarp'), tv[6], tv[7], tv[8]);
+      gl.uniform3f(wrp.u('uWarpT'), tv[6] * 0.82 + tv[0] * 0.18, tv[7] * 0.82 + tv[1] * 0.18, tv[8] * 0.82 + tv[2] * 0.18);
       gl.uniform1f(wrp.u('uAlpha'), Math.min(1, speed / 0.45));
       gl.drawArrays(gl.TRIANGLES, 0, WARP_N * 6);
 
       gl.useProgram(fx.p);
       attrib(gl, fx.a('aPos'), triBuf, 2);
       gl.uniform2f(fx.u('uRes'), canvas.width, canvas.height);
+      gl.uniform3f(fx.u('uWarp'), tv[6], tv[7], tv[8]);
       gl.uniform1f(fx.u('uVig'), 0.22 * sm);
       gl.uniform1f(fx.u('uGlow'), 0.07 * Math.max(0, Math.min(1, (speed - 0.8) / 0.2)));
       gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -358,6 +375,7 @@ function init() {
 
   setup();
   loop.measure();
+  watchTheme((t) => { blend.to(themeVec(t), reduced); loop.invalidate(); }, loop.signal);
   document.addEventListener('astro:before-preparation', (e) => {
     const ev = e as any;
     if (reduced || !gl || lost) return;
