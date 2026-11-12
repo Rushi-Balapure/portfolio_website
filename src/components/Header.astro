@@ -8,7 +8,6 @@ interface Props {
 const { name } = Astro.props;
 const path = Astro.url.pathname;
 const links = [
-  { href: '/starfield/', label: 'Starfield' },
   { href: '/experience/', label: 'Experience' },
   { href: '/projects/', label: 'Projects' },
   { href: '/open-source/', label: 'Open Source' },
@@ -16,6 +15,7 @@ const links = [
   { href: '/publications/', label: 'Publications' },
   { href: '/blogs/', label: 'Writing' },
   { href: '/resume.pdf', label: 'Resume', external: true },
+  { href: '/starfield/', label: 'Starfield' },
 ];
 ---
 

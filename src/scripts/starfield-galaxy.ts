@@ -1,4 +1,5 @@
-// /starfield: an interactive procedural galaxy with the four theme planets, a fly-to close-up view and a spaceship.
+// /starfield: an interactive star system: a central star, the four theme planets on Keplerian orbits, an asteroid belt,
+// an outer icy belt, a fly-to close-up view and a spaceship.
 // Raw WebGL, one canvas, one perspective camera. Initialised on astro:page-load, torn down on astro:before-swap.
 import { THEMES, type PlanetTheme } from '../data/themes';
 import { getTheme, setTheme } from './theme';
@@ -9,27 +10,108 @@ import { angDiff, clamp, easeInOut, easeInOutSine, lerp, m4, quat, rng, v3, type
 import { createShip, SHIP_CREDIT, type Ship } from './gl/ship';
 
 // ---- shaders -----------------------------------------------------------------------------------------------------------
+// Distant sky (rotation-only view): field stars plus a faint Milky Way band. aD = size px, brightness, haze flag, random.
 const STAR_VS = `
 attribute vec3 aPos; attribute vec4 aD;
-uniform mat4 uVP; uniform float uF, uTime, uKind, uDpr, uMaxPt, uTw, uGain;
-uniform vec3 uA, uB, uCore;
+uniform mat4 uVP; uniform float uTime, uDpr, uMaxPt, uTw;
+uniform vec3 uA, uB;
 varying vec3 vCol; varying float vA;
 float h(float x) { return fract(sin(x * 127.1) * 43758.5453); }
 void main() {
   vec4 c = uVP * vec4(aPos, 1.0);
   gl_Position = c;
-  float ps = uKind > 1.5 ? aD.x * uDpr : aD.x * uF / max(c.w, 0.01);
-  float tw = 1.0 + uTw * 0.35 * sin(uTime * (1.2 + aD.w * 2.5) + aD.w * 60.0) * step(0.55, fract(aD.w * 13.7));
+  float ps = aD.x * uDpr;
   float pc = clamp(ps, 1.0, uMaxPt);
   gl_PointSize = pc;
   float m = h(aD.w * 91.7);
-  vec3 arm = mix(uB, uA, m);
-  vec3 col = mix(uCore, mix(vec3(0.78, 0.86, 1.0) * 0.6 + arm * 0.5, arm, 0.45), smoothstep(0.04, 0.55, aD.z));
-  if (uKind > 1.5) col = mix(vec3(0.85, 0.9, 1.0), vec3(1.0, 0.92, 0.82), m);
-  else if (uKind > 0.5) col = arm;
-  float near = uKind > 1.5 ? 1.0 : smoothstep(0.8, 4.0, c.w);
-  vCol = col;
-  vA = aD.y * tw * min(1.0, (ps * ps) / (pc * pc)) * near * uGain;
+  float tw = 1.0 + uTw * 0.3 * sin(uTime * (1.2 + aD.w * 2.5) + aD.w * 60.0) * step(0.6, fract(aD.w * 13.7)) * (1.0 - aD.z);
+  vec3 star = m < 0.14 ? vec3(0.68, 0.78, 1.0) : (m > 0.8 ? vec3(1.0, 0.84, 0.66) : vec3(0.95, 0.95, 1.0));
+  vec3 haze = mix(uA, uB, m) * 0.45 + vec3(0.42, 0.38, 0.34);
+  vCol = mix(star, haze, aD.z);
+  vA = aD.y * tw * min(1.0, (ps * ps) / (pc * pc));
+}`;
+// Asteroids: each one is a Keplerian orbit evaluated in the shader (inner rocks lap outer ones), drawn as a tiny
+// sun-lit sphere so it shows a real phase. aO = orbit radius, start angle, height, size; aR = colour random, icy flag.
+const ROCK_VS = `
+attribute vec4 aO; attribute vec2 aR;
+uniform mat4 uVP; uniform mat3 uVR; uniform float uF, uAng, uMaxPt;
+varying vec3 vCol; varying float vA; varying vec3 vL;
+void main() {
+  float a = aO.y + uAng * pow(4.5 / aO.x, 1.5);
+  vec3 p = vec3(cos(a) * aO.x, aO.z, sin(a) * aO.x);
+  vec4 c = uVP * vec4(p, 1.0);
+  gl_Position = c;
+  float ps = aO.w * uF / max(c.w, 0.01);
+  float pc = clamp(ps, 1.0, uMaxPt);
+  gl_PointSize = pc;
+  vL = normalize(uVR * normalize(-p));
+  vec3 rock = mix(vec3(0.52, 0.49, 0.46), vec3(0.66, 0.53, 0.40), aR.x);
+  vec3 ice = mix(vec3(0.60, 0.66, 0.74), vec3(0.74, 0.72, 0.70), aR.x);
+  vCol = mix(rock, ice * 0.75, aR.y);
+  vA = min(1.0, (ps * ps) / (pc * pc)) * smoothstep(0.3, 1.6, c.w);
+}`;
+const ROCK_FS = `
+precision mediump float;
+varying vec3 vCol; varying float vA; varying vec3 vL;
+void main() {
+  vec2 q = gl_PointCoord * 2.0 - 1.0; q.y = -q.y;
+  float r2 = dot(q, q);
+  if (r2 > 1.0) discard;
+  vec3 n = vec3(q, sqrt(1.0 - r2));
+  float d = max(dot(n, vL), 0.0);
+  float cov = (1.0 - smoothstep(0.6, 1.0, r2)) * vA;
+  gl_FragColor = vec4(vCol * (0.07 + 1.1 * d) * cov, cov);
+}`;
+// Camera-facing quad around a body (star or planet): used for the star itself and for depth-only occluder discs.
+const BODY_VS = `
+attribute vec2 aC;
+uniform mat4 uVP; uniform vec3 uC, uRt, uUp; uniform float uRad, uK;
+varying vec2 vC;
+void main() {
+  vC = aC * uK;
+  gl_Position = uVP * vec4(uC + (uRt * aC.x + uUp * aC.y) * uRad * uK, 1.0);
+}`;
+const DISC_FS = `
+precision mediump float;
+varying vec2 vC;
+void main() { if (dot(vC, vC) > 1.0) discard; gl_FragColor = vec4(0.0); }`;
+// The star: limb-darkened photosphere with animated granulation, plus a corona that fades out to the quad edge.
+const SUN_FS = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 vC;
+uniform vec3 uRt, uUp, uBk; uniform float uT, uK, uPx, uSpin;
+float hash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float noise(vec3 x) {
+  vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(hash(i), hash(i + vec3(1, 0, 0)), f.x), mix(hash(i + vec3(0, 1, 0)), hash(i + vec3(1, 1, 0)), f.x), f.y),
+             mix(mix(hash(i + vec3(0, 0, 1)), hash(i + vec3(1, 0, 1)), f.x), mix(hash(i + vec3(0, 1, 1)), hash(i + vec3(1, 1, 1)), f.x), f.y), f.z);
+}
+float fbm(vec3 p) { float a = 0.5, s = 0.0; for (int i = 0; i < 5; i++) { s += a * noise(p); p = p * 2.03 + vec3(1.7, 9.2, 3.1); a *= 0.5; } return s; }
+void main() {
+  float r = length(vC);
+  vec3 col = vec3(0.0); float alpha = 0.0;
+  if (r < 1.0) {
+    float mu = sqrt(1.0 - r * r);
+    vec3 n = normalize(uRt * vC.x + uUp * vC.y + uBk * mu);
+    float c = cos(uSpin), s = sin(uSpin);
+    n = vec3(c * n.x + s * n.z, n.y, -s * n.x + c * n.z);
+    float g = fbm(n * 11.0 + vec3(0.0, uT * 0.05, 0.0));
+    float m = fbm(n * 3.0 - vec3(uT * 0.01));
+    float limb = 0.32 + 0.68 * pow(mu, 0.6);
+    vec3 hot = vec3(1.0, 0.93, 0.74), warm = vec3(1.0, 0.5, 0.14);
+    col = mix(warm, hot, pow(mu, 0.7)) * limb * (0.9 + 0.3 * g) * (0.92 + 0.14 * m) * 1.4;
+    alpha = clamp((1.0 - r) * uPx, 0.0, 1.0);
+    col *= alpha;
+  }
+  float d = max(r, 1.0) - 1.0;
+  float ang = atan(vC.y, vC.x);
+  float streak = 0.7 + 0.6 * noise(vec3(cos(ang) * 3.5, sin(ang) * 3.5, uT * 0.06));
+  float glow = (exp(-d * 4.5) * 1.0 + exp(-d * 1.3) * 0.32 * streak) * (1.0 - smoothstep(uK * 0.55, uK, r));
+  gl_FragColor = vec4(col + vec3(1.0, 0.7, 0.36) * glow * (1.0 - alpha), alpha);
 }`;
 const STAR_FS = `
 precision mediump float;
@@ -74,25 +156,31 @@ void main() { gl_FragColor = vec4(uColor * uAlpha, 1.0); }`;
 
 // ---- scene constants ---------------------------------------------------------------------------------------------------
 const FOV = 0.8;
-const GALAXY_R = 12;
-const ROT_SPEED = 0.028;       // galaxy rad/s
+const ROT_SPEED = 0.04;        // orbital clock: rad/s at r = 4.5, other orbits scale as r^-1.5 (Kepler)
+const SUN_R = 1.0;
+const SUN_K = 4.0;             // star quad half-size in star radii (room for the corona)
 const NEAR = 0.05, FAR = 200;
 const PANEL_W = 384;           // desktop panel footprint incl. margins
-const DEF_YAW = 0.35, DEF_PITCH = 0.62, DEF_DIST = 22;
-const DIST_MIN = 9, DIST_MAX = 34;
+const DEF_YAW = 0.35, DEF_PITCH = 0.62, DEF_DIST = 25;
+const DIST_MIN = 8, DIST_MAX = 40;
 const ZOOM_MIN = 0.7, ZOOM_MAX = 2.2;
-// Entry zoom-out: start just above the bright core, looking almost straight down, then pull back and tilt out to the
-// default view while the galaxy unwinds a little faster than its idle spin.
-const INTRO_DUR = 3.2, INTRO_DIST = 1.4, INTRO_PITCH = 1.42, INTRO_YAW = -1.1, INTRO_SPIN = 0.9;
+// Entry zoom-out: start just above the star, looking almost straight down at it, then pull back and tilt out to the
+// default view while the orbits run a little faster than their idle pace.
+const INTRO_DUR = 3.4, INTRO_DIST = 2.6, INTRO_PITCH = 1.42, INTRO_YAW = -1.1, INTRO_SPIN = 0.6;
 const CORE: V3 = [0, 0, 0];
 
+// Ordered like a real system (all in one ecliptic plane, compressed distances): the lava world hugs the star, the hot
+// Jupiter sits just outside it, the ocean world is in the temperate zone, the asteroid belt comes next, then the young
+// giant out past the belt and an icy Kuiper-style belt at the edge. Indexed like THEMES.
 interface PlanetDef { orbit: number; a0: number; y: number; r: number; pole: V3; spin: number; }
 const DEFS: PlanetDef[] = [
-  { orbit: 4.3, a0: 0.7, y: 0.15, r: 0.6, pole: [0.2, 1, 0.12], spin: 0.06 },    // pandora
-  { orbit: 6.2, a0: 2.55, y: -0.25, r: 0.78, pole: [-0.1, 1, 0.22], spin: 0.045 }, // hd189733b
-  { orbit: 7.7, a0: 4.2, y: 0.3, r: 0.46, pole: [0.15, 1, -0.2], spin: 0.03 },     // cancri55e
-  { orbit: 9.3, a0: 5.6, y: -0.1, r: 0.68, pole: [-0.18, 1, -0.08], spin: 0.05 },   // gj504b
+  { orbit: 5.7, a0: 0.7, y: 0, r: 0.52, pole: [0.2, 1, 0.12], spin: 0.06 },      // pandora: temperate zone
+  { orbit: 4.25, a0: 2.55, y: 0, r: 0.66, pole: [-0.1, 1, 0.22], spin: 0.045 },  // hd189733b: hot Jupiter
+  { orbit: 2.85, a0: 4.2, y: 0, r: 0.36, pole: [0.15, 1, -0.2], spin: 0.03 },    // cancri55e: innermost lava world
+  { orbit: 10.6, a0: 5.6, y: 0, r: 0.78, pole: [-0.18, 1, -0.08], spin: 0.05 },  // gj504b: outer giant
 ];
+const BELT = { inner: 6.9, outer: 8.7, mid: 7.75, sd: 0.33, gaps: [7.45, 8.05] };   // main belt, with Kirkwood-style gaps
+const KUIPER = { inner: 12.4, span: 4.6 };
 
 interface Cam { yaw: number; pitch: number; dist: number; t: V3; sx: number; sy: number; }
 interface Flight { t0: number; dur: number; camFrom: Cam; camTo: () => Cam; planet: number; shipTo: 'planet' | 'idle'; p0: V3; d0: V3; scale0: number; }
@@ -100,48 +188,49 @@ interface ShipState { pos: V3; q: Quat; scale: number; mode: 'idle' | 'flight' |
 
 const hexToRgb = (hex: string): V3 => { const n = parseInt(hex.slice(1), 16); return [(n >> 16) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]; };
 
-// ---- galaxy point cloud ------------------------------------------------------------------------------------------------
-function makeGalaxy() {
+// ---- asteroid belts ---------------------------------------------------------------------------------------------------
+function makeBelts() {
   const rand = rng(20240607);
   const gauss = () => { let s = 0; for (let i = 0; i < 4; i++) s += rand(); return (s - 2) * 1.7; };
-  const N = 30000, DUST = 900;
-  const pos = new Float32Array((N + DUST) * 3), dat = new Float32Array((N + DUST) * 4);
-  const put = (i: number, x: number, y: number, z: number, size: number, bright: number, rn: number) => {
-    pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z;
-    dat[i * 4] = size; dat[i * 4 + 1] = bright; dat[i * 4 + 2] = rn; dat[i * 4 + 3] = rand();
-  };
-  const spiral = (r: number, arm: number) => arm * Math.PI + 3.2 * Math.log(1 + r / 2.2);
+  const MAIN = 5200, OUTER = 3600, N = MAIN + OUTER;
+  const orb = new Float32Array(N * 4), dat = new Float32Array(N * 2);
   for (let i = 0; i < N; i++) {
-    const size = 0.022 + 0.085 * Math.pow(rand(), 3.5);
-    if (i < N * 0.2) {   // bulge
-      const rad = 2.4 * Math.pow(rand(), 1.8), th = rand() * Math.PI * 2, ph = Math.acos(2 * rand() - 1);
-      put(i, rad * Math.sin(ph) * Math.cos(th), rad * Math.cos(ph) * 0.62, rad * Math.sin(ph) * Math.sin(th), size * 1.1, 0.35 + 0.65 * rand(), rad / GALAXY_R);
-      continue;
-    }
-    let r = -0.34 * GALAXY_R * Math.log(1 - rand() * 0.985);
-    if (r > GALAXY_R) r = rand() * GALAXY_R;
-    r = Math.max(r, 0.3);
-    const inArm = rand() < 0.78;
-    const arm = Math.floor(rand() * 2);
-    let th = inArm ? spiral(r, arm) + gauss() * (0.13 + 0.05 * Math.sqrt(r)) / Math.max(0.35, Math.sqrt(r) * 0.55) : rand() * Math.PI * 2;
-    const y = gauss() * (0.07 + 0.3 * Math.exp(-r / 2.6));
-    put(i, Math.cos(th) * r, y, Math.sin(th) * r, size, (inArm ? 0.45 : 0.22) + 0.55 * rand(), r / GALAXY_R);
+    const icy = i >= MAIN;
+    let r: number;
+    if (!icy) {
+      do r = BELT.mid + gauss() * BELT.sd;
+      while (r < BELT.inner || r > BELT.outer || BELT.gaps.some((g) => Math.abs(r - g) < 0.045));
+    } else r = KUIPER.inner + Math.pow(rand(), 0.8) * KUIPER.span + gauss() * 0.15;
+    const y = gauss() * (icy ? 0.32 : 0.11);
+    const big = rand() < 0.012;
+    const size = big ? 0.08 + 0.05 * rand() : (icy ? 0.02 : 0.018) + 0.05 * Math.pow(rand(), 4);
+    orb.set([r, rand() * Math.PI * 2, y, size], i * 4);
+    dat.set([rand(), icy ? 1 : 0], i * 2);
   }
-  for (let j = 0; j < DUST; j++) {   // soft nebular sprites hugging the arms
-    const r = 1.5 + rand() * (GALAXY_R - 2), arm = Math.floor(rand() * 2);
-    const th = spiral(r, arm) + gauss() * 0.16;
-    put(N + j, Math.cos(th) * r, gauss() * 0.14, Math.sin(th) * r, 1.0 + rand() * 1.9, 0.012 + 0.02 * rand(), r / GALAXY_R);
-  }
-  return { pos, dat, n: N, dust: DUST };
+  return { orb, dat, n: N };
 }
 
+// Distant sky: isotropic field stars plus a dense, dim band tilted ~60 degrees to the ecliptic (our galaxy seen edge-on).
 function makeBackdrop() {
-  const rand = rng(777), N = 2600;
+  const rand = rng(777), FIELD = 2400, BAND = 5200, HAZE = 900, N = FIELD + BAND + HAZE, R = 60;
+  const gauss = () => { let s = 0; for (let i = 0; i < 4; i++) s += rand(); return (s - 2) * 1.7; };
+  const nrm = v3.norm([0.42, 0.78, 0.46]), bu = v3.norm(v3.cross(nrm, [0, 0, 1])), bv = v3.cross(nrm, bu);
   const pos = new Float32Array(N * 3), dat = new Float32Array(N * 4);
   for (let i = 0; i < N; i++) {
-    const th = rand() * Math.PI * 2, y = 2 * rand() - 1, s = Math.sqrt(1 - y * y);
-    pos.set([Math.cos(th) * s * 60, y * 60, Math.sin(th) * s * 60], i * 3);
-    dat.set([0.7 + 1.5 * Math.pow(rand(), 3), 0.2 + 0.6 * Math.pow(rand(), 2), 0.5, rand()], i * 4);
+    let p: V3;
+    if (i < FIELD) {
+      const th = rand() * Math.PI * 2, y = 2 * rand() - 1, s = Math.sqrt(1 - y * y);
+      p = [Math.cos(th) * s, y, Math.sin(th) * s];
+      dat.set([0.7 + 1.5 * Math.pow(rand(), 3), 0.2 + 0.6 * Math.pow(rand(), 2), 0, rand()], i * 4);
+    } else {
+      const haze = i >= FIELD + BAND;
+      // denser toward the galactic centre direction (longitude 0)
+      const lon = (rand() < 0.45 ? gauss() * 0.55 : rand() * Math.PI * 2), lat = gauss() * (haze ? 0.07 : 0.1) * (1 + 0.6 * Math.exp(-lon * lon));
+      const cl = Math.cos(lat);
+      p = v3.add(v3.add(v3.scale(bu, Math.cos(lon) * cl), v3.scale(bv, Math.sin(lon) * cl)), v3.scale(nrm, Math.sin(lat)));
+      dat.set(haze ? [7 + 5 * rand(), 0.025 + 0.03 * rand(), 1, rand()] : [0.6 + 0.6 * rand(), 0.08 + 0.3 * Math.pow(rand(), 2), 0, rand()], i * 4);
+    }
+    pos.set(v3.scale(p, R), i * 3);
   }
   return { pos, dat, n: N };
 }
@@ -227,19 +316,23 @@ function start(root: HTMLElement): Instance {
   };
   if (!gl) return fail(null);
 
-  let planetProg: Program, starProg: Program, glowProg: Program, lineProg: Program;
+  let planetProg: Program, starProg: Program, glowProg: Program, lineProg: Program, rockProg: Program, discProg: Program, sunProg: Program;
   let ship: Ship;
   try {
     planetProg = createProgram(gl, PLANET_VS, PLANET_FS);
     starProg = createProgram(gl, STAR_VS, STAR_FS);
+    rockProg = createProgram(gl, ROCK_VS, ROCK_FS);
+    discProg = createProgram(gl, BODY_VS, DISC_FS);
+    sunProg = createProgram(gl, BODY_VS, SUN_FS);
     glowProg = createProgram(gl, GLOW_VS, GLOW_FS);
     lineProg = createProgram(gl, LINE_VS, LINE_FS);
     ship = createShip(gl);
   } catch (e) { return fail(e); }
 
   const tri = createFullscreenTriangle(gl);
-  const galaxy = makeGalaxy(), back = makeBackdrop();
-  const gPos = createBuffer(gl, galaxy.pos), gDat = createBuffer(gl, galaxy.dat);
+  const belts = makeBelts(), back = makeBackdrop();
+  const rOrb = createBuffer(gl, belts.orb), rDat = createBuffer(gl, belts.dat);
+  const quadBuf = createBuffer(gl, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]));
   const bPos = createBuffer(gl, back.pos), bDat = createBuffer(gl, back.dat);
   const circ = new Float32Array(130);
   for (let i = 0; i <= 64; i++) { circ[i * 2] = Math.cos((i / 64) * Math.PI * 2); circ[i * 2 + 1] = Math.sin((i / 64) * Math.PI * 2); }
@@ -283,7 +376,7 @@ function start(root: HTMLElement): Instance {
   const dprNow = () => (mode === 'focus' || flight ? 1.5 : 1.25);
 
   // ----- planets -----
-  const pAngle = (j: number) => DEFS[j].a0 + gAng * (4.5 / DEFS[j].orbit);
+  const pAngle = (j: number) => DEFS[j].a0 + gAng * Math.pow(4.5 / DEFS[j].orbit, 1.5);
   const planetPos = (j: number): V3 => { const d = DEFS[j], a = pAngle(j); return [Math.cos(a) * d.orbit, d.y, Math.sin(a) * d.orbit]; };
   const lightDirOf = (j: number): V3 => v3.norm(v3.sub(CORE, planetPos(j)));
   const orbitBasis = (): [V3, V3] => { const n = v3.norm([0.35, 1, 0.2]); const u = v3.norm(v3.cross(n, [0, 0, 1])); return [u, v3.cross(n, u)]; };
@@ -463,7 +556,7 @@ function start(root: HTMLElement): Instance {
     root.querySelector('[data-sf-overlay]')?.removeAttribute('inert');
     if (!opts.fromHash) setHash(null, false);
     startFlight('galaxy', prev);
-    announce('Back to the galaxy view');
+    announce('Back to the system view');
     (buttons[prev] as HTMLElement | undefined)?.focus({ preventScroll: true });
     loop.invalidate();
   };
@@ -673,6 +766,8 @@ function start(root: HTMLElement): Instance {
       ps.on = s.w > NEAR * 4 && s.x + r * 1.7 > 0 && s.x - r * 1.7 < W && s.y + r * 1.7 > 0 && s.y - r * 1.7 < H;
     });
 
+    const sunS = project(CORE);
+
     // ----- render -----
     gl.viewport(0, 0, canvas.width, canvas.height);
     const paper: V3 = [tv[9], tv[10], tv[11]];
@@ -683,34 +778,22 @@ function start(root: HTMLElement): Instance {
     gl.blendFunc(gl.ONE, gl.ONE);
     const D = canvas.width / W;   // actual device px per css px
 
-    // stars
+    // distant sky (rotation only, so it sits at infinity)
     gl.useProgram(starProg.p);
-    gl.uniform1f(starProg.u('uF'), f * D);
     gl.uniform1f(starProg.u('uTime'), reduced ? 0 : t);
     gl.uniform1f(starProg.u('uDpr'), D);
     gl.uniform1f(starProg.u('uMaxPt'), Math.min(maxPt, 12 * D));
     gl.uniform1f(starProg.u('uTw'), reduced ? 0 : 1);
     gl.uniform3f(starProg.u('uA'), tv[0], tv[1], tv[2]);
     gl.uniform3f(starProg.u('uB'), tv[3], tv[4], tv[5]);
-    gl.uniform3f(starProg.u('uCore'), 1.0, 0.86, 0.62);
-    // distant background (rotation only)
     const vr = new Float32Array(view); vr[12] = vr[13] = vr[14] = 0;
     gl.uniformMatrix4fv(starProg.u('uVP'), false, m4.mul(m4.perspective(FOV, W / H, 1, 200, cam.sx, cam.sy), vr));
-    gl.uniform1f(starProg.u('uKind'), 2); gl.uniform1f(starProg.u('uGain'), 1);
     bindStars(bPos, bDat);
     gl.drawArrays(gl.POINTS, 0, back.n);
-    // galaxy
-    gl.uniformMatrix4fv(starProg.u('uVP'), false, m4.mul(vp, m4.rotY(gAng)));
-    bindStars(gPos, gDat);
-    gl.uniform1f(starProg.u('uKind'), 1); gl.uniform1f(starProg.u('uGain'), 1);
-    gl.drawArrays(gl.POINTS, galaxy.n, galaxy.dust);
-    gl.uniform1f(starProg.u('uKind'), 0);
-    gl.drawArrays(gl.POINTS, 0, galaxy.n);
 
-    // glow points for this frame: core, planets, highlight, engine glows, trail
+    // glow points for this frame: planets, highlight, engine glows, trail
     let gn = 0;
     const gpush = (p: V3, size: number, a: number) => { glowData.set([p[0], p[1], p[2], size, a], gn * 5); return gn++; };
-    const coreIdx = gpush(CORE, 5.2, 0.5), coreIdx2 = gpush(CORE, 1.8, 0.7);
     const pGlow = DEFS.map((d, j) => (screen[j].on && screen[j].r * 5 < maxPt / D * 0.9 ? gpush(planetPos(j), d.r * 5.2, mode === 'focus' && j !== focusIdx ? 0.18 : 0.34) : -1));
     const hl = kbFocus >= 0 && mode === 'galaxy' ? kbFocus : mode === 'galaxy' ? hover : -1;
     const hlIdx = hl >= 0 && screen[hl].on ? gpush(planetPos(hl), DEFS[hl].r * 3.0, 0.95) : -1;
@@ -731,19 +814,68 @@ function start(root: HTMLElement): Instance {
     engPts.forEach((ep) => gpush([ep[0], ep[1], ep[2]], shipS.scale * ship.engineSize * 2.2, (flying ? 1 : 0.6) * flick));
     gl.bindBuffer(gl.ARRAY_BUFFER, glowBuf);
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, glowData.subarray(0, gn * 5));
-
     gl.useProgram(glowProg.p);
+    gl.uniformMatrix4fv(glowProg.u('uVP'), false, vp);
     gl.uniform1f(glowProg.u('uF'), f * D);
     gl.uniform1f(glowProg.u('uMaxPt'), maxPt);
-    glowAttribs();
-    gl.uniformMatrix4fv(glowProg.u('uVP'), false, vp);
-    gl.uniform1f(glowProg.u('uMode'), 0);
-    gl.uniform3f(glowProg.u('uColor'), 1.0, 0.78, 0.5);
-    gl.drawArrays(gl.POINTS, coreIdx, 1);
-    gl.uniform3f(glowProg.u('uColor'), 1.0, 0.92, 0.75);
-    gl.drawArrays(gl.POINTS, coreIdx2, 1);
 
-    // orbit rings
+    // Occluder discs: the star and every planet write depth (no colour), so belts, orbit lines and the ship are hidden
+    // behind bodies and shown in front of them instead of everything blending through everything.
+    gl.useProgram(discProg.p);
+    attrib(gl, discProg.a('aC'), quadBuf, 2);
+    gl.uniformMatrix4fv(discProg.u('uVP'), false, vp);
+    gl.uniform3f(discProg.u('uRt'), camRight[0], camRight[1], camRight[2]);
+    gl.uniform3f(discProg.u('uUp'), camUp[0], camUp[1], camUp[2]);
+    gl.uniform1f(discProg.u('uK'), 1);
+    gl.colorMask(false, false, false, false);
+    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true);
+    const disc = (c: V3, r: number) => {
+      const toEye = v3.sub(eye, c), w = v3.len(toEye);
+      if (w < r * 1.05) return;
+      // placed at the sphere's front so a line through its centre stays hidden; shrunk to keep the same screen size
+      const k = r / w;
+      gl.uniform3fv(discProg.u('uC'), v3.madd(c, v3.scale(toEye, 1 / w), r * 0.98));
+      gl.uniform1f(discProg.u('uRad'), r * (1 - k * 0.98));
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    };
+    disc(CORE, SUN_R);
+    DEFS.forEach((d, j) => { if (screen[j].on) disc(planetPos(j), d.r); });
+    gl.colorMask(true, true, true, true);
+    gl.disable(gl.DEPTH_TEST);
+
+    // the star and the planets, far to near (painter's order; no depth test)
+    const items: { j: number; w: number }[] = [{ j: -1, w: sunS.w }];
+    DEFS.forEach((_, j) => { if (screen[j].on) items.push({ j, w: screen[j].w }); });
+    items.sort((a, b) => b.w - a.w);
+    for (const it of items) {
+      if (it.j < 0) { drawSun(t, D); continue; }
+      const j = it.j, ps = screen[j];
+      if (pGlow[j] >= 0) {
+        gl.blendFunc(gl.ONE, gl.ONE);
+        gl.useProgram(glowProg.p); glowAttribs();
+        gl.uniform1f(glowProg.u('uMode'), 0);
+        const g = THEMES[j].gl.atmosphere;
+        gl.uniform3f(glowProg.u('uColor'), g[0], g[1], g[2]);
+        gl.drawArrays(gl.POINTS, pGlow[j], 1);
+      }
+      drawPlanet(j, ps, t, D);
+    }
+
+    // depth-tested, not depth-writing from here on: belts and orbit lines
+    gl.enable(gl.DEPTH_TEST); gl.depthMask(false);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.useProgram(rockProg.p);
+    attrib(gl, rockProg.a('aO'), rOrb, 4);
+    attrib(gl, rockProg.a('aR'), rDat, 2);
+    gl.uniformMatrix4fv(rockProg.u('uVP'), false, vp);
+    gl.uniformMatrix3fv(rockProg.u('uVR'), false, viewRot);
+    gl.uniform1f(rockProg.u('uF'), f * D);
+    gl.uniform1f(rockProg.u('uAng'), gAng);
+    gl.uniform1f(rockProg.u('uMaxPt'), Math.min(maxPt, 40 * D));
+    gl.drawArrays(gl.POINTS, 0, belts.n);
+    gl.disableVertexAttribArray(rockProg.a('aR'));
+
+    gl.blendFunc(gl.ONE, gl.ONE);
     gl.useProgram(lineProg.p);
     gl.uniformMatrix4fv(lineProg.u('uVP'), false, vp);
     attrib(gl, lineProg.a('aC'), circBuf, 2);
@@ -751,34 +883,14 @@ function start(root: HTMLElement): Instance {
     DEFS.forEach((d, j) => {
       gl.uniform1f(lineProg.u('uRad'), d.orbit);
       gl.uniform1f(lineProg.u('uY'), d.y);
-      gl.uniform1f(lineProg.u('uAlpha'), (mode === 'focus' ? 0.08 : j === hl ? 0.34 : 0.16));
+      gl.uniform1f(lineProg.u('uAlpha'), (mode === 'focus' ? 0.07 : j === hl ? 0.34 : 0.14));
       gl.drawArrays(gl.LINE_STRIP, 0, 65);
     });
+    gl.depthMask(true);
+    gl.disable(gl.DEPTH_TEST);
 
-    // planets and the ship, far to near
-    type Item = { kind: 'planet' | 'ship'; j: number; w: number };
-    const items: Item[] = [];
-    DEFS.forEach((_, j) => { if (screen[j].on) items.push({ kind: 'planet', j, w: screen[j].w }); });
-    const sc = project(shipS.pos);
-    items.push({ kind: 'ship', j: -1, w: sc.w });
-    items.sort((a, b) => b.w - a.w);
-
-    for (const it of items) {
-      if (it.kind === 'planet') {
-        const j = it.j, ps = screen[j];
-        if (pGlow[j] >= 0) {
-          gl.blendFunc(gl.ONE, gl.ONE);
-          gl.useProgram(glowProg.p); glowAttribs();
-          gl.uniform1f(glowProg.u('uMode'), 0);
-          const g = THEMES[j].gl.atmosphere;
-          gl.uniform3f(glowProg.u('uColor'), g[0], g[1], g[2]);
-          gl.drawArrays(gl.POINTS, pGlow[j], 1);
-        }
-        drawPlanet(j, ps, t, D);
-      } else {
-        drawShip(shipM, trailStart, trailCount, engStart, tv);
-      }
-    }
+    // the ship last, depth-tested against the bodies
+    drawShip(shipM, trailStart, trailCount, engStart, tv);
     if (hlIdx >= 0) {
       gl.blendFunc(gl.ONE, gl.ONE);
       gl.useProgram(glowProg.p); glowAttribs();
@@ -793,6 +905,25 @@ function start(root: HTMLElement): Instance {
     if (!document.documentElement.dataset.sfReady) document.documentElement.dataset.sfReady = '1';
     if (!loaded) { loaded = true; lazyShip(); }
     if (debug) (window as any).__sf = { screen, cam, mode, focusIdx, shipS, flight: !!flight };
+  };
+
+  const drawSun = (t: number, D: number) => {
+    const toEye = v3.sub(eye, CORE), w = v3.len(toEye), bk = v3.scale(toEye, 1 / Math.max(w, 1e-4));
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.useProgram(sunProg.p);
+    attrib(gl, sunProg.a('aC'), quadBuf, 2);
+    const u = sunProg.u;
+    gl.uniformMatrix4fv(u('uVP'), false, vp);
+    gl.uniform3fv(u('uC'), CORE);
+    gl.uniform3f(u('uRt'), camRight[0], camRight[1], camRight[2]);
+    gl.uniform3f(u('uUp'), camUp[0], camUp[1], camUp[2]);
+    gl.uniform3f(u('uBk'), bk[0], bk[1], bk[2]);
+    gl.uniform1f(u('uRad'), SUN_R);
+    gl.uniform1f(u('uK'), SUN_K);
+    gl.uniform1f(u('uPx'), Math.max(1, (SUN_R * fpx() * D) / Math.max(w, 0.01)));
+    gl.uniform1f(u('uT'), reduced ? 3 : t);
+    gl.uniform1f(u('uSpin'), reduced ? 0 : t * 0.015);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
 
   const drawPlanet = (j: number, ps: { x: number; y: number; r: number }, t: number, D: number) => {
@@ -841,7 +972,6 @@ function start(root: HTMLElement): Instance {
   const drawShip = (model: Mat4, trailStart: number, trailCount: number, engStart: number, tv: ArrayLike<number>) => {
     const acc: V3 = [tv[6], tv[7], tv[8]];
     gl.disable(gl.BLEND);
-    gl.clear(gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true);
     const ld = v3.norm(v3.sub(CORE, shipS.pos));
     ship.draw({ viewProj: vp, model, eye, lightDir: ld, lightColor: [1.25, 1.1, 0.95], accent: acc });
@@ -937,8 +1067,8 @@ function start(root: HTMLElement): Instance {
       clearTimeout(fadeTimer);
       try {
         ship.dispose();
-        for (const b of [gPos, gDat, bPos, bDat, circBuf, glowBuf, tri]) gl.deleteBuffer(b);
-        for (const p of [planetProg, starProg, glowProg, lineProg]) gl.deleteProgram(p.p);
+        for (const b of [rOrb, rDat, quadBuf, bPos, bDat, circBuf, glowBuf, tri]) gl.deleteBuffer(b);
+        for (const p of [planetProg, starProg, glowProg, lineProg, rockProg, discProg, sunProg]) gl.deleteProgram(p.p);
         gl.getExtension('WEBGL_lose_context')?.loseContext();
       } catch { /* context already gone */ }
       delete root.dataset.mode;
