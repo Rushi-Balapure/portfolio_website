@@ -12,18 +12,18 @@ const glow = (t: (typeof THEMES)[number]) => `0 0 2.2rem ${css(t.gl.atmosphere, 
 
 <BaseLayout
   title="Starfield"
-  description="An interactive spiral galaxy with the four site-theme planets: orbit, zoom, fly to a world, spin it and pick it as the site theme."
+  description="An interactive star system with the four site-theme planets orbiting one star: orbit, zoom, fly to a world, spin it and pick it as the site theme."
   page="starfield"
 >
   <section class="sf" data-sf aria-labelledby="sf-title">
     <h1 id="sf-title" class="sf-sr">Starfield</h1>
-    <p class="sf-sr">An interactive galaxy with four planets. Use Tab to reach a planet, Enter to visit it, arrow keys to spin it, plus and minus to zoom, Escape to return.</p>
+    <p class="sf-sr">An interactive star system: a central star, four planets, an asteroid belt and an outer icy belt. Use Tab to reach a planet, Enter to visit it, arrow keys to spin it, plus and minus to zoom, Escape to return.</p>
 
     <canvas class="sf-canvas" data-sf-canvas aria-hidden="true"></canvas>
 
     <div class="sf-intro" data-sf-intro>
       <p class="eyebrow">Starfield</p>
-      <p class="sf-line">Four worlds in one galaxy. Drag to look around, pick a planet to fly there.</p>
+      <p class="sf-line">Four worlds around one star. Drag to look around, pick a planet to fly there.</p>
     </div>
 
     <div class="sf-overlay" data-sf-overlay>
@@ -43,7 +43,7 @@ const glow = (t: (typeof THEMES)[number]) => `0 0 2.2rem ${css(t.gl.atmosphere, 
           <button type="button" class="button button--quiet" data-sf-prev aria-label="Previous planet">‹ Prev</button>
           <button type="button" class="button button--quiet" data-sf-next aria-label="Next planet">Next ›</button>
         </div>
-        <button type="button" class="button button--quiet" data-sf-back>Back to galaxy</button>
+        <button type="button" class="button button--quiet" data-sf-back>Back to the system</button>
       </div>
       <p class="sf-hint">Drag to spin · scroll or pinch to zoom · double-click to reset · Esc to go back</p>
     </aside>
