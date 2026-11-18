@@ -15,9 +15,14 @@ const weeks: ContributionWeek[] = activity.weeks;
 const updated = activity.updatedAt
   ? new Date(activity.updatedAt).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })
   : undefined;
+
+const invaderFrames = [
+  ['..X.....X..', '...X...X...', '..XXXXXXX..', '.XX.XXX.XX.', 'XXXXXXXXXXX', 'X.XXXXXXX.X', 'X.X.....X.X', '...XX.XX...'],
+  ['..X.....X..', 'X..X...X..X', 'X.XXXXXXX.X', 'XXX.XXX.XXX', 'XXXXXXXXXXX', '.XXXXXXXXX.', '..X.....X..', '.X.......X.'],
+].map((rows) => rows.flatMap((row, y) => [...row].flatMap((cell, x) => (cell === 'X' ? [{ x, y }] : []))));
 ---
 
-<div class="activity" data-reveal>
+<div class="activity" data-reveal data-github-activity>
   <div class="activity-top">
     <div>
       <p class="eyebrow">GitHub pulse</p>
@@ -34,6 +39,19 @@ const updated = activity.updatedAt
     </div>
   </div>}
 
+  {weeks.length > 0 && <>
+    <div class="invader-beam" data-invader-beam aria-hidden="true"></div>
+    <div class="invader" data-invader aria-hidden="true">
+      <svg viewBox="0 0 11 8" width="33" height="24" shape-rendering="crispEdges">
+        {invaderFrames.map((pixels, frame) => (
+          <g class={`invader-frame-${frame}`}>
+            {pixels.map(({ x, y }) => <rect x={x} y={y} width="1" height="1" />)}
+          </g>
+        ))}
+      </svg>
+    </div>
+  </>}
+
   <div class="activity-bottom">
     <p>
       {activity.weeks.length
@@ -46,8 +64,228 @@ const updated = activity.updatedAt
   </div>
 </div>
 
+<script>
+  // Module state survives ClientRouter navigations and resets on a full reload.
+  const destroyed = new Set<number>();
+
+  const MAX_SPEED = 320;
+  const AIM_MS = 200;
+  const BEAM_MS = 170;
+  const COOLDOWN_MS = 360;
+  const HOVER_GAP = 26;
+
+  type Mode = 'away' | 'hunting' | 'leaving';
+  type Phase = 'move' | 'aim' | 'fire' | 'cool';
+
+  function initInvader(root: HTMLElement, signal: AbortSignal) {
+    const scroller = root.querySelector<HTMLElement>('.calendar-scroll');
+    const ship = root.querySelector<HTMLElement>('[data-invader]');
+    const beam = root.querySelector<HTMLElement>('[data-invader-beam]');
+    const cells = [...root.querySelectorAll<HTMLElement>('.calendar span')];
+    if (!scroller || !ship || !beam || !cells.length) return;
+
+    destroyed.forEach((index) => cells[index]?.classList.add('is-destroyed'));
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let mode: Mode = 'away';
+    let phase: Phase = 'move';
+    let phaseEnd = 0;
+    let target = -1;
+    let x = 0;
+    let y = 0;
+    let tilt = 0;
+    let raf = 0;
+    let last = 0;
+
+    const origin = () => {
+      const box = root.getBoundingClientRect();
+      return { left: box.left + root.clientLeft, top: box.top + root.clientTop };
+    };
+    const center = (el: Element) => {
+      const o = origin();
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2 - o.left, y: r.top + r.height / 2 - o.top };
+    };
+    const hoverY = () => scroller.getBoundingClientRect().top - origin().top - HOVER_GAP;
+    const isVisible = (index: number) => {
+      const view = scroller.getBoundingClientRect();
+      const r = cells[index].getBoundingClientRect();
+      return r.left >= view.left && r.right <= view.right;
+    };
+
+    const pickTarget = () => {
+      const candidates: { index: number; distance: number }[] = [];
+      cells.forEach((_, index) => {
+        if (!destroyed.has(index) && isVisible(index)) candidates.push({ index, distance: Math.abs(center(cells[index]).x - x) });
+      });
+      if (!candidates.length) return -1;
+      candidates.sort((a, b) => a.distance - b.distance);
+      return candidates[Math.floor(Math.random() * Math.min(8, candidates.length))].index;
+    };
+
+    const explode = (index: number) => {
+      const cell = cells[index];
+      destroyed.add(index);
+      cell.classList.add('is-destroyed');
+      const flash = getComputedStyle(root).getPropertyValue('--link').trim() || '#fff';
+      cell.animate(
+        [
+          { transform: 'scale(1)', background: flash, boxShadow: `0 0 10px ${flash}`, opacity: 1 },
+          { transform: 'scale(1.7)', background: flash, boxShadow: `0 0 16px ${flash}`, opacity: 1, offset: 0.3 },
+          { transform: 'scale(0.55)', opacity: 0.35 },
+        ],
+        { duration: 420, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
+      );
+      const { x: cx, y: cy } = center(cell);
+      for (let i = 0; i < 7; i++) {
+        const shard = document.createElement('i');
+        shard.className = 'invader-debris';
+        shard.style.left = `${cx}px`;
+        shard.style.top = `${cy}px`;
+        root.append(shard);
+        const angle = (Math.PI * 2 * i) / 7 + Math.random() * 0.6;
+        const reach = 12 + Math.random() * 18;
+        shard
+          .animate(
+            [
+              { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+              { transform: `translate(calc(-50% + ${Math.cos(angle) * reach}px), calc(-50% + ${Math.sin(angle) * reach}px)) scale(0.3)`, opacity: 0 },
+            ],
+            { duration: 480 + Math.random() * 220, easing: 'cubic-bezier(0.1, 0.7, 0.3, 1)' },
+          )
+          .finished.then(() => shard.remove(), () => shard.remove());
+      }
+    };
+
+    const setFiring = (firing: boolean, targetY = 0) => {
+      beam.classList.toggle('is-firing', firing);
+      if (!firing) return;
+      const top = y + 12;
+      beam.style.transform = `translate(${x - 1}px, ${top}px)`;
+      beam.style.height = `${Math.max(0, targetY - top)}px`;
+    };
+
+    const frame = (now: number) => {
+      const dt = Math.min(0.05, last ? (now - last) / 1000 : 0);
+      last = now;
+      const width = root.clientWidth;
+      const hy = hoverY();
+      let tx = width / 2;
+      let ty = hy;
+      let targetY = 0;
+
+      if (mode === 'leaving') {
+        tx = width + 60;
+        ty = hy - 50;
+      } else {
+        if (target < 0 || destroyed.has(target) || !isVisible(target)) {
+          target = pickTarget();
+          phase = 'move';
+          setFiring(false);
+        }
+        if (target >= 0) {
+          const c = center(cells[target]);
+          tx = c.x;
+          targetY = c.y;
+        } else if (destroyed.size === cells.length) {
+          mode = 'leaving';
+        }
+      }
+
+      const dx = tx - x;
+      const dy = ty - y;
+      const distance = Math.hypot(dx, dy);
+      const step = Math.min(distance, Math.max(distance * (1 - Math.exp(-6 * dt)), 40 * dt), MAX_SPEED * dt);
+      const prevX = x;
+      if (distance > 0) {
+        x += (dx / distance) * step;
+        y += (dy / distance) * step;
+      }
+      const velocity = dt ? (x - prevX) / dt : 0;
+      tilt += (Math.max(-16, Math.min(16, velocity / 18)) - tilt) * Math.min(1, dt * 10);
+      ship.style.transform = `translate(${x - 16.5}px, ${y - 12}px) rotate(${tilt}deg)`;
+      ship.classList.toggle('is-alt', Math.floor(now / 320) % 2 === 1);
+
+      if (mode === 'hunting' && target >= 0) {
+        const arrived = distance < 1.5;
+        if (!arrived) {
+          if (phase !== 'move') setFiring(false);
+          phase = 'move';
+        } else if (phase === 'move') {
+          phase = 'aim';
+          phaseEnd = now + AIM_MS;
+        } else if (now >= phaseEnd) {
+          if (phase === 'aim') {
+            phase = 'fire';
+            phaseEnd = now + BEAM_MS;
+          } else if (phase === 'fire') {
+            setFiring(false);
+            explode(target);
+            phase = 'cool';
+            phaseEnd = now + COOLDOWN_MS;
+          } else {
+            target = -1;
+          }
+        }
+        if (phase === 'fire') setFiring(true, targetY);
+      }
+
+      if (mode === 'leaving' && x > width + 40) {
+        mode = 'away';
+        ship.classList.remove('is-active');
+        raf = 0;
+        last = 0;
+        return;
+      }
+      raf = requestAnimationFrame(frame);
+    };
+
+    const arrive = () => {
+      if (destroyed.size === cells.length) return;
+      if (mode === 'away') {
+        x = root.clientWidth + 40;
+        y = hoverY() - 30;
+        target = -1;
+      }
+      mode = 'hunting';
+      ship.classList.add('is-active');
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
+    const retreat = () => {
+      if (mode !== 'hunting') return;
+      mode = 'leaving';
+      phase = 'move';
+      setFiring(false);
+    };
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.intersectionRatio >= 0.5) arrive();
+        else if (!entry.isIntersecting || entry.intersectionRatio < 0.15) retreat();
+      },
+      { threshold: [0, 0.15, 0.5] },
+    );
+    observer.observe(root);
+
+    signal.addEventListener('abort', () => {
+      observer.disconnect();
+      cancelAnimationFrame(raf);
+    });
+  }
+
+  let controller: AbortController | undefined;
+  const init = () => {
+    controller?.abort();
+    controller = new AbortController();
+    const { signal } = controller;
+    document.querySelectorAll<HTMLElement>('[data-github-activity]').forEach((root) => initInvader(root, signal));
+  };
+  document.addEventListener('astro:page-load', init);
+  document.addEventListener('astro:before-swap', () => controller?.abort());
+</script>
+
 <style>
-  .activity { padding: clamp(1.5rem, 4vw, 2.5rem); color: var(--ink); background: radial-gradient(ellipse at 100% 0, var(--accent-glow), transparent 60%), color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .activity { position: relative; padding: clamp(1.5rem, 4vw, 2.5rem); color: var(--ink); background: radial-gradient(ellipse at 100% 0, var(--accent-glow), transparent 60%), color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
   .activity .eyebrow { color: var(--accent); }
   .activity-top, .activity-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; }
   h3 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.4rem); font-weight: 500; letter-spacing: -0.045em; line-height: 1.2; }
@@ -60,6 +298,17 @@ const updated = activity.updatedAt
   .calendar .level-2, .legend .level-2 { background: color-mix(in srgb, var(--accent) 50%, var(--surface)); }
   .calendar .level-3, .legend .level-3 { background: color-mix(in srgb, var(--accent) 78%, var(--surface)); }
   .calendar .level-4, .legend .level-4 { background: var(--link); }
+  .calendar span { transition: background 300ms ease, border-color 300ms ease, opacity 300ms ease, transform 300ms ease; }
+  .calendar span.is-destroyed { background: transparent; border-style: dashed; border-color: color-mix(in srgb, var(--muted) 45%, transparent); opacity: 0.35; transform: scale(0.55); }
+  .invader, .invader-beam, .activity :global(.invader-debris) { position: absolute; top: 0; left: 0; pointer-events: none; }
+  .invader { z-index: 2; width: 33px; height: 24px; visibility: hidden; color: var(--link); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--link) 70%, transparent)); will-change: transform; }
+  .invader.is-active { visibility: visible; }
+  .invader svg { display: block; fill: currentColor; }
+  .invader .invader-frame-1, .invader.is-alt .invader-frame-0 { display: none; }
+  .invader.is-alt .invader-frame-1 { display: inline; }
+  .invader-beam { z-index: 1; width: 2px; height: 0; opacity: 0; background: linear-gradient(var(--link), color-mix(in srgb, var(--link) 40%, white)); border-radius: 1px; box-shadow: 0 0 8px var(--link); transition: opacity 80ms ease; }
+  .invader-beam.is-firing { opacity: 1; }
+  .activity :global(.invader-debris) { z-index: 1; width: 4px; height: 4px; background: var(--link); border-radius: 1px; }
   .activity-bottom { align-items: center; margin-top: 1.5rem; color: var(--muted); font-size: 0.75rem; }
   .activity-bottom p { margin: 0; }
   .legend { display: flex; align-items: center; gap: 0.25rem; white-space: nowrap; }
