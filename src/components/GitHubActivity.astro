@@ -86,7 +86,7 @@ const invaderFrames = [
   .calendar .level-4, .legend .level-4 { background: var(--link); }
   .calendar span { transition: background 300ms ease, border-color 300ms ease, opacity 300ms ease, transform 300ms ease; }
   .calendar span.is-destroyed { background: transparent; border-style: dashed; border-color: color-mix(in srgb, var(--muted) 45%, transparent); opacity: 0.35; transform: scale(0.55); }
-  .invader, .invader-beam, .activity :global(.invader-debris) { position: absolute; top: 0; left: 0; pointer-events: none; }
+  .invader, .invader-beam, .activity :global(.invader-debris), .activity :global(.invader-burst) { position: absolute; top: 0; left: 0; pointer-events: none; }
   .invader { z-index: 2; width: 33px; height: 24px; visibility: hidden; color: var(--link); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--link) 70%, transparent)); will-change: transform; }
   .invader.is-active { visibility: visible; }
   .invader svg { display: block; fill: currentColor; }
@@ -94,6 +94,7 @@ const invaderFrames = [
   .invader.is-alt .invader-frame-1 { display: inline; }
   .invader-beam { z-index: 1; width: 2px; height: 0; opacity: 0; background: linear-gradient(var(--link), color-mix(in srgb, var(--link) 40%, white)); border-radius: 1px; box-shadow: 0 0 8px var(--link); transition: opacity 80ms ease; }
   .invader-beam.is-firing { opacity: 1; }
+  .activity :global(.invader-burst) { z-index: 1; width: 0.72rem; height: 0.72rem; background: var(--link); border-radius: 0.18rem; box-shadow: 0 0 14px var(--link); }
   .activity :global(.invader-debris) { z-index: 1; width: 4px; height: 4px; background: var(--link); border-radius: 1px; }
   .activity-bottom { align-items: center; margin-top: 1.5rem; color: var(--muted); font-size: 0.75rem; }
   .activity-bottom p { margin: 0; }

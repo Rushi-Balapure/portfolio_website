@@ -69,10 +69,11 @@ function createSpritePilot(root: HTMLElement): Pilot | null {
 function explode(root: HTMLElement, cell: HTMLElement) {
   cell.classList.add('is-destroyed');
   const flash = getComputedStyle(root).getPropertyValue('--link').trim() || '#fff';
+  // The cell never grows: edge cells would overflow the scrolling calendar and flash a scrollbar.
   cell.animate(
     [
-      { transform: 'scale(1)', background: flash, boxShadow: `0 0 10px ${flash}`, opacity: 1 },
-      { transform: 'scale(1.7)', background: flash, boxShadow: `0 0 16px ${flash}`, opacity: 1, offset: 0.3 },
+      { transform: 'scale(1)', background: flash, opacity: 1 },
+      { transform: 'scale(1)', background: flash, opacity: 1, offset: 0.3 },
       { transform: 'scale(0.55)', opacity: 0.35 },
     ],
     { duration: 420, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
@@ -80,6 +81,21 @@ function explode(root: HTMLElement, cell: HTMLElement) {
   const box = root.getBoundingClientRect();
   const c = centerOf(cell);
   const cx = c.x - box.left - root.clientLeft, cy = c.y - box.top - root.clientTop;
+  const burst = document.createElement('i');
+  burst.className = 'invader-burst';
+  burst.style.left = `${cx}px`;
+  burst.style.top = `${cy}px`;
+  root.append(burst);
+  burst
+    .animate(
+      [
+        { transform: 'translate(-50%, -50%) scale(1)', opacity: 1, offset: 0 },
+        { transform: 'translate(-50%, -50%) scale(1.7)', opacity: 0.9, offset: 0.3 },
+        { transform: 'translate(-50%, -50%) scale(2.4)', opacity: 0 },
+      ],
+      { duration: 420, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
+    )
+    .finished.then(() => burst.remove(), () => burst.remove());
   for (let i = 0; i < 7; i++) {
     const shard = document.createElement('i');
     shard.className = 'invader-debris';
