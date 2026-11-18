@@ -2,8 +2,8 @@
 // Targeting, explosions and the destroyed set live here; a Pilot (3D WebGL fighter or 2D sprite fallback) does the flying.
 import { createGlPilot } from './invader3d';
 
-/** Client-space (viewport px) position of the square to shoot, and the y the ship should hover at above the grid. */
-export interface Aim { x: number; y: number; hoverY: number; }
+/** Client-space (viewport px) position of the square to shoot, the y to hover at above the grid, and the grid's bounds. */
+export interface Aim { x: number; y: number; hoverY: number; grid: DOMRect; }
 
 export interface Pilot {
   /** Place the ship at its spawn point and make it visible. */
@@ -121,7 +121,6 @@ function initInvader(root: HTMLElement, signal: AbortSignal) {
     const r = cells[index].getBoundingClientRect();
     return r.left >= view.left && r.right <= view.right;
   };
-  const hoverY = () => scroller.getBoundingClientRect().top - 26;
   const pickTarget = (fromX: number) => {
     const candidates: { index: number; distance: number }[] = [];
     cells.forEach((cell, index) => {
@@ -144,14 +143,14 @@ function initInvader(root: HTMLElement, signal: AbortSignal) {
         target = pickTarget(lastAimX);
         phase = 'move';
       }
+      const grid = scroller.getBoundingClientRect();
       if (target >= 0) {
         const c = centerOf(cells[target]);
-        aim = { x: c.x, y: c.y, hoverY: hoverY() };
+        aim = { x: c.x, y: c.y, hoverY: grid.top - 26, grid };
       } else if (destroyed.size === cells.length) {
         mode = 'leaving';
       } else {
-        const s = scroller.getBoundingClientRect();
-        aim = { x: s.left + s.width / 2, y: s.top, hoverY: hoverY() };
+        aim = { x: grid.left + grid.width / 2, y: grid.top + grid.height / 2, hoverY: grid.top - 26, grid };
       }
       if (aim) lastAimX = aim.x;
     }

@@ -1,16 +1,26 @@
 // The Starfield fighter as the GitHub pulse invader: one fixed, click-through WebGL canvas over the page.
 // World units are CSS px with y up; the camera is placed so the z = 0 plane lines up exactly with the viewport,
 // which lets the ship aim at DOM squares. Deep space is far down -z, so arriving reads as diving out of the starfield.
+// While hunting it parks close to the camera off the grid's lower-right corner, nose into the screen: a chase view
+// that shares the reader's point of view, with the laser travelling into depth to hit each square.
 import { createProgram, type GL, type Program } from './gl/gl';
 import { clamp, easeInOut, lerp, m4, quat, smoothstep, v3, type Mat4, type Quat, type V3 } from './gl/math';
 import { createShip, type Ship } from './gl/ship';
 import { watchTheme } from './gl/themeGl';
-import type { Pilot } from './invader';
+import type { Aim, Pilot } from './invader';
 
 const FOV = (38 * Math.PI) / 180;
-const SHIP_LEN = 64;
-const HOVER_Z = 40;
-const HOVER_LIFT = 18;
+const SHIP_LEN = 50;
+/** Apparent scale at the chase position; > 1 puts the ship in front of the page plane, toward the reader. */
+const CHASE_SCALE = 2.3;
+/** Keeps the nose nearly level while aiming (the beam covers the rest) so the camera looks down on the ship's back. */
+const AIM_PITCH = 0.3;
+/** Nose-down dip (as a slope against depth) that tips the ship's back toward the camera. */
+const CHASE_DIP = 0.38;
+/** How far the chase position leans toward the current target (0 = fixed in the corner). */
+const CHASE_FOLLOW = 0.14;
+/** Max nose error (radians) before the ship may fire. */
+const AIM_TOLERANCE = 0.04;
 /** Apparent size (relative to the screen plane) where the ship appears out of, and vanishes back into, deep space. */
 const SPAWN_SCALE = 0.025;
 const GONE_SCALE = 0.02;
@@ -127,15 +137,24 @@ export function createGlPilot(): Pilot | null {
     vel = dt ? v3.scale(v3.sub(p, prev), 1 / dt) : [0, 0, 0];
   };
 
+  /** Screen point the ship parks at: just off the grid's lower-right corner, leaning slightly toward the target. */
+  const chasePoint = (aim: Aim) => {
+    const g = aim.grid;
+    const ax = g.right - Math.min(110, g.width * 0.14), ay = Math.min(g.bottom + 60, H - 80);
+    return { x: ax + (aim.x - ax) * CHASE_FOLLOW, y: ay + (aim.y - ay) * CHASE_FOLLOW };
+  };
+  const forward = (): V3 => { const m = quat.toMat3(q); return [-m[6], -m[7], -m[8]]; };
+  const aimDir = (at: V3): V3 => { const d = v3.sub(at, p); return v3.norm([d[0], d[1] * AIM_PITCH - Math.abs(d[2]) * CHASE_DIP, d[2]]); };
+
   const orient = (dt: number, aimAt: V3 | null) => {
     const speed = v3.len(vel);
-    const hoverFwd = aimAt ? v3.norm(v3.sub(aimAt, p)) : v3.norm([0, -1, -0.3]);
+    const hoverFwd = aimAt ? aimDir(aimAt) : v3.norm([0, -CHASE_DIP, -1]);
     const w = smoothstep(120, 700, speed);
     const f = v3.norm(v3.lerp(hoverFwd, v3.scale(vel, 1 / (speed || 1)), w));
-    const hint: V3 = Math.abs(f[2]) > 0.92 ? [0, 1, 0] : [0, 0, 1];
+    const hint: V3 = Math.abs(f[1]) > 0.92 ? [0, 0, 1] : [0, 1, 0];
     const right0 = v3.norm(v3.cross(f, hint));
     const up0 = v3.cross(right0, f);
-    const roll = clamp(-vel[0] * 0.0011, -0.7, 0.7) * (1 - w * 0.5);
+    const roll = clamp(-f[0] * 1.1 - vel[0] * 0.0008, -0.6, 0.6) * (1 - w * 0.5);
     const c = Math.cos(roll), s = Math.sin(roll);
     const right = v3.add(v3.scale(right0, c), v3.scale(up0, s));
     const up = v3.sub(v3.scale(up0, c), v3.scale(right0, s));
@@ -194,7 +213,6 @@ export function createGlPilot(): Pilot | null {
     gl.uniform3f(glow.u('uC'), eng[0], eng[1], eng[2]);
     gl.drawArrays(gl.POINTS, trailCount, engineCount);
     if (beamCount) {
-      gl.disable(gl.DEPTH_TEST);
       gl.uniform3f(glow.u('uC'), a[0] * 0.7 + 0.3, a[1] * 0.7 + 0.3, a[2] * 0.7 + 0.3);
       gl.drawArrays(gl.POINTS, trailCount + engineCount, beamCount);
     }
@@ -211,23 +229,24 @@ export function createGlPilot(): Pilot | null {
       vel = [0, 0, 0];
       state = 'gone';
       trails.length = 0;
-      const f = v3.norm(v3.sub(toWorld(W * 0.5, H * 0.5, HOVER_Z), p));
+      const f = v3.norm(v3.sub(toWorld(W * 0.5, H * 0.5, depthAt(CHASE_SCALE)), p));
       const right = v3.norm(v3.cross(f, [0, 1, 0]));
       q = quat.fromBasis(right, v3.cross(right, f), v3.scale(f, -1));
     },
     fly(dt, now, aim, firing) {
       if (g.lost) return { arrived: false, visible: false };
       layout();
-      const goal = aim ? toWorld(aim.x, aim.hoverY - HOVER_LIFT, HOVER_Z) : p;
+      const chase = aim ? chasePoint(aim) : null;
+      const goal = chase ? toWorld(chase.x, chase.y, depthAt(CHASE_SCALE)) : p;
 
       if (aim && (state === 'gone' || state === 'leave')) begin('enter', now);
       if (!aim && (state === 'enter' || state === 'hunt')) begin('leave', now);
 
-      if (state === 'enter' && aim) {
+      if (state === 'enter' && chase) {
         const e = clamp((now - t0) / ENTER_MS), k = easeInOut(e);
-        const gx = aim.x, gy = aim.hoverY - HOVER_LIFT, dx = gx - from.x, dy = gy - from.y, len = Math.hypot(dx, dy) || 1;
+        const dx = chase.x - from.x, dy = chase.y - from.y, len = Math.hypot(dx, dy) || 1;
         const swoop = Math.sin(Math.PI * k) * SWOOP_PX;
-        glide(dt, lerp(from.x, gx, k) - (dy / len) * swoop, lerp(from.y, gy, k) + (dx / len) * swoop, from.s * Math.pow(scaleAt(HOVER_Z) / from.s, k));
+        glide(dt, lerp(from.x, chase.x, k) - (dy / len) * swoop, lerp(from.y, chase.y, k) + (dx / len) * swoop, from.s * Math.pow(CHASE_SCALE / from.s, k));
         if (e >= 1) { state = 'hunt'; vel = [0, 0, 0]; }
       } else if (state === 'hunt') {
         const acc = v3.sub(v3.scale(v3.sub(goal, p), HUNT_STIFFNESS), v3.scale(vel, 2 * Math.sqrt(HUNT_STIFFNESS)));
@@ -237,18 +256,18 @@ export function createGlPilot(): Pilot | null {
         p = v3.madd(p, vel, dt);
       } else if (state === 'leave') {
         const e = clamp((now - t0) / LEAVE_MS), k = e * e;
-        glide(dt, lerp(from.x, W * 0.92, k), lerp(from.y, H * 0.04, k), from.s * Math.pow(GONE_SCALE / from.s, k));
+        glide(dt, lerp(from.x, W * 0.62, k), lerp(from.y, H * 0.3, k), from.s * Math.pow(GONE_SCALE / from.s, k));
         if (e >= 1) state = 'gone';
       }
 
       const target = aim ? toWorld(aim.x, aim.y, 0) : null;
-      orient(dt, state === 'hunt' && v3.len(v3.sub(goal, p)) < 60 ? target : null);
+      orient(dt, state === 'hunt' ? target : null);
       const visible = state !== 'gone';
       if (visible) draw(now, firing && state === 'hunt' && target ? target : null);
       else canvas.style.display = 'none';
-      const off = v3.sub(goal, p);
-      const arrived = state === 'hunt' && Math.hypot(off[0], off[1]) < 3 && Math.abs(off[2]) < 25 && v3.len(vel) < 120;
-      return { arrived, visible };
+      const settled = state === 'hunt' && v3.len(v3.sub(goal, p)) * CHASE_SCALE < 6 && v3.len(vel) < 120;
+      const aligned = !!target && Math.acos(clamp(v3.dot(forward(), aimDir(target)), -1, 1)) < AIM_TOLERANCE;
+      return { arrived: settled && aligned, visible };
     },
     hide() {
       canvas.style.display = 'none';
